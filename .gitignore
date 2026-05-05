@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+.venv/
 Screenshot*.png
 Screenshot*.jpg
 Screenshot*.jpeg

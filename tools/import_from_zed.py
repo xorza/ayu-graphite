@@ -25,6 +25,7 @@ import json
 import os
 import re
 from dataclasses import dataclass
+from typing import Any
 
 # ---- knobs ----
 GAMMA  = 1.10   # > 1 brightens midtones (lifts dark backgrounds)
@@ -100,11 +101,11 @@ def adj_channel(c: int, k: float) -> int:
 
 
 def scale_sat(r: int, g: int, b: int, factor: float, light_factor: float = 1.0):
-    h, l, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
+    h, light, s = colorsys.rgb_to_hls(r / 255, g / 255, b / 255)
     s = max(0.0, min(1.0, s * factor))
     if s > 0.3:
-        l = max(0.0, min(1.0, l * light_factor))
-    rr, gg, bb = colorsys.hls_to_rgb(h, l, s)
+        light = max(0.0, min(1.0, light * light_factor))
+    rr, gg, bb = colorsys.hls_to_rgb(h, light, s)
     return round(rr * 255), round(gg * 255), round(bb * 255)
 
 
@@ -161,7 +162,7 @@ def transform(value: str, key: str) -> str:
     return fmt(r, g, b, a)
 
 
-def walk(node, key: str = ""):
+def walk(node: Any, key: str = "") -> Any:
     if isinstance(node, dict):
         return {k: walk(v, k) for k, v in node.items()}
     if isinstance(node, list):

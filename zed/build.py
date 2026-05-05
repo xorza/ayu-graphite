@@ -9,6 +9,7 @@ import json
 import os
 import tomllib
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -87,7 +88,7 @@ def alpha(hex6: str, aa: str) -> str:
     return hex6 + aa
 
 
-def syn(color: str, italic: bool = False, bold: bool = False) -> dict:
+def syn(color: str, italic: bool = False, bold: bool = False) -> dict[str, Any]:
     return {
         "color": opaque(color),
         "font_style": "italic" if italic else None,
@@ -95,8 +96,8 @@ def syn(color: str, italic: bool = False, bold: bool = False) -> dict:
     }
 
 
-def build_zed(p: Palette) -> dict:
-    style = {
+def build_zed(p: Palette) -> dict[str, Any]:
+    style: dict[str, Any] = {
         "background":              opaque(p.title_bar),
         "border":                  opaque(p.border),
         "border.disabled":         opaque(p.panel),
