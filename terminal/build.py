@@ -141,7 +141,8 @@ def nscolor_archive(hex6: str) -> bytes:
 
 
 TERMINAL_BG = "#1a1a1a"   # darker than palette.bg (#252525) for terminal-only contrast
-FONT_NAME = "JetBrainsMonoNerdFontMono-Regular"
+FONT_NAME = "JetBrainsMonoNFM-Regular"   # PostScript name, not filename. Read it from the
+                                          # font's `name` table (nameID 6) — full names won't work.
 FONT_SIZE = 15
 
 
