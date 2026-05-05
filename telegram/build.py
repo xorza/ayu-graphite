@@ -25,6 +25,9 @@ class Palette:
     title_bar: str
     title_bar_inactive: str
 
+    border: str
+    border_focused: str
+
     text: str
     text_muted: str
     text_disabled: str
@@ -34,10 +37,25 @@ class Palette:
     warning: str
     error: str
 
+    info_bg: str
+    info_border: str
+    hint_bg: str
+    hint_border: str
+    success_bg: str
+    success_border: str
+    warning_bg: str
+    warning_border: str
+    error_bg: str
+    error_border: str
+
     created: str
     created_bg: str
     deleted: str
     deleted_bg: str
+
+    ansi_blue: str
+    ansi_magenta: str
+    ansi_cyan: str
 
     syn_keyword: str
     syn_function: str
@@ -47,9 +65,11 @@ class Palette:
     syn_number: str
     syn_type: str
     syn_operator: str
-
-    info_bg: str
-    info_border: str
+    syn_attribute: str
+    syn_punctuation: str
+    syn_doc: str
+    syn_string_special: str
+    syn_predictive: str
 
 
 def load_palette(path: str) -> Palette:

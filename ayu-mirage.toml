@@ -1,6 +1,6 @@
-# Ayu Mirage High Contrast — semantic palette
-# Generated from src/ayu-source.json by zed/build.py.
-# Consumed by claude/build.py and telegram/build.py.
+# Ayu Mirage High Contrast — semantic palette (single source of truth)
+# Re-seeded by tools/import_from_zed.py from src/ayu-source.json.
+# Hand-edit me; the target builders are pure transformers.
 
 [backgrounds]
 bg = "#252525"
@@ -13,6 +13,10 @@ elem_selected = "#4b4b4b"
 title_bar = "#414141"
 title_bar_inactive = "#343434"
 
+[borders]
+border = "#363636"
+border_focused = "#105577"
+
 [text]
 text = "#e2dfd3"
 text_muted = "#aaaaa8"
@@ -24,11 +28,28 @@ success = "#daff58"
 warning = "#ffd44a"
 error = "#ff5e44"
 
+[status_bg]
+info_bg = "#2c4a60"
+info_border = "#4a8ab0"
+hint_bg = "#0f3e58"
+hint_border = "#255d79"
+success_bg = "#486a15"
+success_border = "#668a2f"
+warning_bg = "#5f4617"
+warning_border = "#81632b"
+error_bg = "#4f191a"
+error_border = "#703130"
+
 [diff]
 created = "#daff58"
 created_bg = "#486a15"
 deleted = "#ff5e44"
 deleted_bg = "#4f191a"
+
+[ansi]
+ansi_blue = "#4ad4ff"
+ansi_magenta = "#1ee8ff"
+ansi_cyan = "#69ffd2"
 
 [syntax]
 syn_keyword = "#ffa63d"
@@ -39,7 +60,8 @@ syn_comment = "#617182"
 syn_number = "#d897ff"
 syn_type = "#4cd3ff"
 syn_operator = "#ff8a3f"
-
-[overrides]
-info_bg = "#2c4a60"
-info_border = "#4a8ab0"
+syn_attribute = "#4ad4ff"
+syn_punctuation = "#c7c6bf"
+syn_doc = "#ababa9"
+syn_string_special = "#ffdd8c"
+syn_predictive = "#7091b3"

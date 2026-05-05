@@ -7,15 +7,15 @@
       "name": "Ayu Mirage High Contrast",
       "appearance": "dark",
       "style": {
+        "background": "#414141ff",
         "border": "#363636ff",
-        "border.variant": "#323232ff",
+        "border.disabled": "#343434ff",
         "border.focused": "#105577ff",
         "border.selected": "#105577ff",
         "border.transparent": "#00000000",
-        "border.disabled": "#343434ff",
+        "border.variant": "#252525ff",
         "elevated_surface.background": "#343434ff",
         "surface.background": "#343434ff",
-        "background": "#414141ff",
         "element.background": "#343434ff",
         "element.hover": "#3e3e3eff",
         "element.active": "#4b4b4bff",
@@ -51,7 +51,7 @@
         "pane.focused_border": null,
         "scrollbar.thumb.background": "#a4a4a44c",
         "scrollbar.thumb.hover_background": "#3e3e3eff",
-        "scrollbar.thumb.border": "#323232ff",
+        "scrollbar.thumb.border": "#363636ff",
         "scrollbar.track.background": "#12121200",
         "scrollbar.track.border": "#2e2e2eff",
         "editor.foreground": "#e2dfd3ff",
@@ -156,9 +156,9 @@
             "selection": "#ffa63d3d"
           },
           {
-            "cursor": "#d697ffff",
+            "cursor": "#d897ffff",
             "background": "#a4a4a4ff",
-            "selection": "#d697ff3d"
+            "selection": "#d897ff3d"
           },
           {
             "cursor": "#69ffd2ff",
@@ -258,7 +258,7 @@
             "font_weight": null
           },
           "link_uri": {
-            "color": "#daff58ff",
+            "color": "#d9ff57ff",
             "font_style": null,
             "font_weight": null
           },
