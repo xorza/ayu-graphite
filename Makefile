@@ -1,12 +1,9 @@
-.PHONY: all build port install fetch-source clean
+.PHONY: all build install fetch-source clean
 
-all: build port
+all: build
 
 build:
-	python3 zed/build.py
-
-port: build
-	python3 claude/port.py
+	python3 build.py
 
 # Symlink generated themes into Zed and Claude theme dirs.
 install: all

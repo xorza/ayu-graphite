@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Build a high-contrast variant of Zed's Ayu Mirage.
+"""Build a high-contrast Ayu Mirage for Zed and port it to Claude Code.
 
-Reads ../src/ayu-source.json (upstream Zed Ayu themes file) and writes
-ayu-mirage-high-contrast.json next to this script.
+Reads src/ayu-source.json (upstream Zed Ayu themes file) and writes:
+  zed/ayu-mirage-high-contrast.json   processed Zed theme
+  claude/ayu-mirage.json              ported Claude Code theme
 
 Pipeline per color:
   1. Per-channel: gamma lift (brightens), then S-curve around MID (boosts contrast).
@@ -14,6 +15,10 @@ Pipeline per color:
      pastels into vivid colors.
   4. Diagnostic backgrounds (error/warning/created/...): contrast bump only,
      hue preserved.
+
+Manual fixes baked into the Claude port:
+  - suggestion = warning yellow (highlighted slash-command picker row)
+  - userMessageBackground = element.background (visible prompt block)
 """
 import colorsys
 import json
@@ -57,6 +62,8 @@ SAT_NEUTRAL_KEYS = {
     "editor.document_highlight.write_background",
 }
 
+HEX_RE = re.compile(r"#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?")
+
 
 def adj_channel(c: int, k: float) -> int:
     x = (c / 255) ** (1 / GAMMA)
@@ -73,9 +80,6 @@ def scale_sat(r: int, g: int, b: int, factor: float, light_factor: float = 1.0):
     return round(rr * 255), round(gg * 255), round(bb * 255)
 
 
-HEX_RE = re.compile(r"#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?")
-
-
 def parse(s: str):
     m = HEX_RE.fullmatch(s)
     if not m:
@@ -86,6 +90,12 @@ def parse(s: str):
 
 def fmt(r, g, b, a):
     return "#%02x%02x%02x%s" % (r, g, b, a)
+
+
+def strip_alpha(c: str) -> str:
+    """#rrggbbaa -> #rrggbb (Claude accepts only 6-digit hex)."""
+    m = HEX_RE.fullmatch(c)
+    return "#" + m.group(1).lower() if m else c
 
 
 def is_diagnostic_bg(key: str) -> bool:
@@ -124,25 +134,97 @@ def walk(node, key: str = ""):
     return node
 
 
-def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    src = json.load(open(os.path.join(repo, "src", "ayu-source.json")))
+def build_zed(src: dict) -> dict:
     theme = next(t for t in src["themes"] if t["name"] == "Ayu Mirage")
     theme = walk(theme)
     theme["name"] = "Ayu Mirage High Contrast"
     theme["appearance"] = "dark"
-
-    out = {
+    return {
         "$schema": "https://zed.dev/schema/themes/v0.2.0.json",
         "name": "Ayu Mirage High Contrast",
         "author": "xxorza",
         "themes": [theme],
     }
-    out_path = os.path.join(here, "ayu-mirage-high-contrast.json")
-    with open(out_path, "w") as f:
-        json.dump(out, f, indent=2)
-    print(f"wrote {out_path}")
+
+
+def build_claude(zed_theme: dict) -> dict:
+    style = zed_theme["themes"][0]["style"]
+    syntax = style["syntax"]
+
+    def s(key):
+        return strip_alpha(style[key])
+
+    def syn(key):
+        return strip_alpha(syntax[key]["color"])
+
+    overrides = {
+        "background":              s("editor.background"),
+        "userMessageBackground":   s("element.background"),
+        "bashMessageBackgroundColor": s("element.background"),
+        "memoryBackgroundColor":   s("element.background"),
+
+        "text":         s("text"),
+        "inverseText":  s("editor.background"),
+        "inactive":     s("text.muted"),
+        "subtle":       syn("comment"),
+        "suggestion":   s("warning"),
+        "remember":     syn("number"),
+
+        "claude":         syn("keyword"),
+        "claudeShimmer":  syn("function"),
+        "claudeBlue_FOR_SYSTEM_SPINNER":        s("text.accent"),
+        "claudeBlueShimmer_FOR_SYSTEM_SPINNER": syn("type"),
+
+        "success":          s("success"),
+        "error":            s("error"),
+        "warning":          s("warning"),
+        "warningShimmer":   syn("function"),
+
+        "permission":         s("warning"),
+        "permissionShimmer":  syn("function"),
+        "planMode":           s("text.accent"),
+        "ide":                s("text.accent"),
+        "autoAccept":         s("success"),
+        "promptBorder":         s("text.accent"),
+        "promptBorderShimmer":  syn("type"),
+        "bashBorder":           syn("number"),
+
+        "diffAdded":           s("created.background"),
+        "diffAddedDimmed":     s("created.background"),
+        "diffAddedWord":       s("created"),
+        "diffAddedWordDimmed": s("created"),
+        "diffRemoved":         s("deleted.background"),
+        "diffRemovedDimmed":   s("deleted.background"),
+        "diffRemovedWord":     s("deleted"),
+        "diffRemovedWordDimmed": s("deleted"),
+
+        "red_FOR_SUBAGENTS_ONLY":    s("error"),
+        "blue_FOR_SUBAGENTS_ONLY":   s("text.accent"),
+        "green_FOR_SUBAGENTS_ONLY":  s("success"),
+        "yellow_FOR_SUBAGENTS_ONLY": s("warning"),
+        "purple_FOR_SUBAGENTS_ONLY": syn("number"),
+        "orange_FOR_SUBAGENTS_ONLY": syn("keyword"),
+        "pink_FOR_SUBAGENTS_ONLY":   syn("operator"),
+        "cyan_FOR_SUBAGENTS_ONLY":   syn("string.regex"),
+        "professionalBlue":          s("text.accent"),
+    }
+    return {"name": "Ayu Mirage", "base": "dark", "overrides": overrides}
+
+
+def write_json(path: str, data: dict) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+    print(f"wrote {path}")
+
+
+def main() -> None:
+    here = os.path.dirname(os.path.abspath(__file__))
+    src = json.load(open(os.path.join(here, "src", "ayu-source.json")))
+    zed = build_zed(src)
+    claude = build_claude(zed)
+    write_json(os.path.join(here, "zed", "ayu-mirage-high-contrast.json"), zed)
+    write_json(os.path.join(here, "claude", "ayu-mirage.json"), claude)
 
 
 if __name__ == "__main__":
