@@ -211,10 +211,118 @@ def build_claude(zed_theme: dict) -> dict:
     return {"name": "Ayu Mirage", "base": "dark", "overrides": overrides}
 
 
+def build_telegram(zed_theme: dict) -> str:
+    """Emit a .tdesktop-theme palette. Telegram falls back to defaults for any
+    constant we don't define, so we cover the visible ~50 keys."""
+    style = zed_theme["themes"][0]["style"]
+    syntax = style["syntax"]
+
+    def s(key):
+        return strip_alpha(style[key])
+
+    def syn(key):
+        return strip_alpha(syntax[key]["color"])
+
+    bg          = s("editor.background")
+    panel       = s("panel.background")
+    surface     = s("surface.background")
+    elem        = s("element.background")
+    elem_hover  = s("element.hover")
+    elem_sel    = s("element.selected")
+    text_fg     = s("text")
+    text_mut    = s("text.muted")
+    accent      = s("text.accent")
+    success_fg  = s("success")
+    error_fg    = s("error")
+    warn_fg     = s("warning")
+    string_fg   = syn("string")
+    func_fg     = syn("function")
+
+    pairs = [
+        ("windowBg",                  bg),
+        ("windowBgOver",              elem_hover),
+        ("windowBgRipple",            elem_sel),
+        ("windowBgActive",            accent),
+        ("windowFg",                  text_fg),
+        ("windowFgOver",              text_fg),
+        ("windowSubTextFg",           text_mut),
+        ("windowSubTextFgOver",       text_mut),
+        ("windowBoldFg",              text_fg),
+        ("windowBoldFgOver",          text_fg),
+        ("windowFgActive",            bg),
+        ("windowActiveTextFg",        accent),
+
+        ("sideBarBg",                 panel),
+        ("sideBarBgActive",           elem_sel),
+        ("topBarBg",                  s("title_bar.background")),
+
+        ("dialogsBg",                 panel),
+        ("dialogsBgOver",             elem_hover),
+        ("dialogsBgActive",           elem_sel),
+        ("dialogsNameFg",             text_fg),
+        ("dialogsNameFgActive",       text_fg),
+        ("dialogsTextFg",             text_mut),
+        ("dialogsTextFgActive",       text_fg),
+        ("dialogsDateFg",             text_mut),
+        ("dialogsDateFgActive",       text_mut),
+        ("dialogsUnreadBg",           accent),
+        ("dialogsUnreadBgMuted",      elem),
+        ("dialogsUnreadFg",           bg),
+        ("dialogsUnreadFgActive",     bg),
+
+        ("msgInBg",                   surface),
+        ("msgInBgSelected",           elem_sel),
+        ("msgOutBg",                  elem),
+        ("msgOutBgSelected",          elem_sel),
+        ("msgInDateFg",               text_mut),
+        ("msgOutDateFg",              text_mut),
+        ("msgInServiceFg",            accent),
+        ("msgOutServiceFg",           accent),
+        ("msgInMonoFg",               string_fg),
+        ("msgOutMonoFg",              string_fg),
+        ("msgInReplyBarColor",        accent),
+        ("msgOutReplyBarColor",       func_fg),
+        ("msgServiceBg",              panel),
+        ("msgServiceFg",              text_mut),
+
+        ("activeButtonBg",            accent),
+        ("activeButtonBgOver",        accent),
+        ("activeButtonFg",            bg),
+        ("activeButtonFgOver",        bg),
+        ("lightButtonBg",             elem),
+        ("lightButtonBgOver",         elem_hover),
+        ("lightButtonFg",             accent),
+        ("lightButtonFgOver",         accent),
+
+        ("scrollBg",                  s("scrollbar.track.background")),
+        ("scrollBgOver",              s("scrollbar.track.background")),
+        ("scrollBarBg",               s("scrollbar.thumb.background")),
+        ("scrollBarBgOver",           s("scrollbar.thumb.hover_background")),
+
+        ("boxTextFgGood",             success_fg),
+        ("boxTextFgError",            error_fg),
+        ("activeLineFgError",         error_fg),
+        ("attentionButtonFg",         warn_fg),
+
+        ("mentionBg",                 elem),
+        ("mentionFg",                 accent),
+    ]
+    lines = ["// Ayu Mirage High Contrast — Telegram Desktop palette", ""]
+    lines += [f"{k}: {v};" for k, v in pairs]
+    return "\n".join(lines) + "\n"
+
+
 def write_json(path: str, data: dict) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
+    print(f"wrote {path}")
+
+
+def write_text(path: str, text: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(text)
     print(f"wrote {path}")
 
 
@@ -223,8 +331,10 @@ def main() -> None:
     src = json.load(open(os.path.join(here, "src", "ayu-source.json")))
     zed = build_zed(src)
     claude = build_claude(zed)
+    telegram = build_telegram(zed)
     write_json(os.path.join(here, "zed", "ayu-mirage-high-contrast.json"), zed)
     write_json(os.path.join(here, "claude", "ayu-mirage.json"), claude)
+    write_text(os.path.join(here, "telegram", "ayu-mirage.tdesktop-theme"), telegram)
 
 
 if __name__ == "__main__":

@@ -5,11 +5,12 @@ A higher-contrast variant of [Ayu Mirage](https://github.com/dempfi/ayu) for [Ze
 ## Layout
 
 ```
-src/ayu-source.json                  upstream Zed Ayu theme (Mirage + Dark, both variants)
-build.py                             single pipeline: processes Zed theme + ports it to Claude
-zed/ayu-mirage-high-contrast.json    generated Zed theme
-claude/ayu-mirage.json               generated Claude theme
-Makefile                             convenience targets
+src/ayu-source.json                    upstream Zed Ayu theme (Mirage + Dark, both variants)
+build.py                               single pipeline: processes Zed theme + ports to Claude + Telegram
+zed/ayu-mirage-high-contrast.json      generated Zed theme
+claude/ayu-mirage.json                 generated Claude theme
+telegram/ayu-mirage.tdesktop-theme     generated Telegram Desktop palette
+Makefile                               convenience targets
 ```
 
 ## Usage
@@ -23,6 +24,7 @@ make fetch-source   # refresh src/ayu-source.json from zed-industries/zed main
 
 In Zed: settings → theme → "Ayu Mirage High Contrast".
 In Claude Code: `/config` → theme → "Ayu Mirage".
+In Telegram Desktop: Settings → Chat Settings → scroll down → "Browse..." next to Custom theme, pick `telegram/ayu-mirage.tdesktop-theme`.
 
 ## Tuning
 
@@ -53,3 +55,7 @@ After processing the Zed theme, `build.py` maps its values into Claude Code's cu
 
 - `suggestion` ← `warning` so the highlighted row in the slash-command picker is visible.
 - `userMessageBackground` ← `element.background` so prompts stand out from the editor background.
+
+## Telegram port
+
+`build_telegram` in `build.py` emits a `.tdesktop-theme` palette (~50 keys covering window chrome, sidebar, chat list, message bubbles, buttons, scrollbar, mentions). Telegram Desktop falls back to its dark defaults for any constant we don't define. Telegram supports `#rrggbbaa`, but every value here is opaque (alpha is stripped on the way out, same as the Claude port).
