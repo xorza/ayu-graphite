@@ -25,7 +25,7 @@ text_muted = "#aaaaa8"
 text_disabled = "#878a8d"
 
 [accent_status]
-accent = "#9adbfb"
+accent = "#59d4ff"
 success = "#daff58"
 warning = "#ffd44a"
 error = "#ff5e44"

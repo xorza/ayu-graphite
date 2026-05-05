@@ -43,10 +43,10 @@ BG_SAT = 0.0  # chroma kept on chrome backgrounds (0 = pure gray)
 FG_SAT = 1.30  # chroma multiplier for foreground/accent colors (> 1 = punchier)
 FG_LIGHT = 0.88  # lightness multiplier for foreground (< 1 deepens / vivid; > 1 brightens / pastel)
 ACCENT_SAT = (
-    0.65  # saturation multiplier for accent keys (text.accent, link_text.hover) —
+    0.95  # saturation multiplier for accent keys (text.accent, link_text.hover) —
 )
 # < 1 mutes them so they don't read as shouty when used as a button fill
-ACCENT_LIGHT = 1.00  # lightness multiplier for accent keys
+ACCENT_LIGHT = 0.90  # lightness multiplier for accent keys
 
 # Chrome flattening: after channel adj + desat, lerp every chrome value toward
 # CHROME_TARGET by CHROME_COMPRESS. 0 = preserve original spread; 1 = all chrome
