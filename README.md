@@ -35,6 +35,7 @@ Knobs at the top of `build.py`:
 | `GAMMA` | > 1 brightens midtones (lifts dark backgrounds). |
 | `K_BG` | S-curve strength on chrome — stronger means deeper blacks and brighter chrome highs. |
 | `K_FG` | S-curve strength on foreground — kept lower so saturated channels don't clamp to 255. |
+| `K_DIAG` | S-curve strength on diagnostic tints (`info.background`, `error.background`, …). Gentler than `K_BG` so the dim channel doesn't clip to 0 and oversaturate. |
 | `MID` | S-curve midpoint. Lower than 0.5 because the theme is dark-leaning. |
 | `BG_SAT` | Chroma kept on chrome backgrounds. 0 = pure neutral gray. |
 | `FG_SAT` | Chroma multiplier on foreground/accent colors. |

@@ -32,6 +32,8 @@ import zlib
 GAMMA  = 1.10   # > 1 brightens midtones (lifts dark backgrounds)
 K_BG   = 1.40   # contrast boost for chrome (S-curve around MID)
 K_FG   = 1.15   # contrast boost for foreground — kept lower so saturated channels don't clamp
+K_DIAG = 1.10   # contrast boost for diagnostic tints (info/error/warning/created backgrounds);
+                # gentler than K_BG so the dark blue/red/yellow channel doesn't clip to 0 and oversaturate
 MID    = 0.40   # midpoint of the S-curve (theme is dark, so < 0.5)
 BG_SAT = 0.0    # chroma kept on chrome backgrounds (0 = pure gray)
 FG_SAT = 1.30   # chroma multiplier for foreground/accent colors (> 1 = punchier)
@@ -122,7 +124,7 @@ def transform(value: str, key: str) -> str:
         g = round(g * (1 - f) + CHROME_TARGET * f)
         b = round(b * (1 - f) + CHROME_TARGET * f)
     elif is_diagnostic_bg(key):
-        r, g, b = adj_channel(r, K_BG), adj_channel(g, K_BG), adj_channel(b, K_BG)
+        r, g, b = adj_channel(r, K_DIAG), adj_channel(g, K_DIAG), adj_channel(b, K_DIAG)
     else:
         r, g, b = scale_sat(r, g, b, FG_SAT, FG_LIGHT)
         r, g, b = adj_channel(r, K_FG), adj_channel(g, K_FG), adj_channel(b, K_FG)
