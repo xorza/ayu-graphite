@@ -69,6 +69,11 @@ SAT_NEUTRAL_KEYS = {
     "editor.document_highlight.write_background",
 }
 
+# Foreground colors that ALSO get used as fill behind dark text (project chip,
+# notification action button, etc.). Skip the FG_SAT/FG_LIGHT boost so they
+# stay close to upstream tone — still readable as text, not shouty as a fill.
+ACCENT_KEYS = {"text.accent", "link_text.hover"}
+
 HEX_RE = re.compile(r"#([0-9a-fA-F]{6})([0-9a-fA-F]{2})?")
 
 
@@ -125,6 +130,8 @@ def transform(value: str, key: str) -> str:
         b = round(b * (1 - f) + CHROME_TARGET * f)
     elif is_diagnostic_bg(key):
         r, g, b = adj_channel(r, K_DIAG), adj_channel(g, K_DIAG), adj_channel(b, K_DIAG)
+    elif key in ACCENT_KEYS:
+        r, g, b = adj_channel(r, K_FG), adj_channel(g, K_FG), adj_channel(b, K_FG)
     else:
         r, g, b = scale_sat(r, g, b, FG_SAT, FG_LIGHT)
         r, g, b = adj_channel(r, K_FG), adj_channel(g, K_FG), adj_channel(b, K_FG)
