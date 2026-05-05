@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Build a high-contrast Ayu Mirage Zed theme and the shared semantic palette.
+"""Build the high-contrast Ayu Mirage Zed theme and the shared semantic palette.
 
-Reads src/ayu-source.json (upstream Zed Ayu themes file) and writes:
-  zed/ayu-mirage-high-contrast.json   processed Zed theme (full key set)
-  ayu-mirage.toml                     semantic palette consumed by the other
-                                      target generators (Claude, Telegram).
+Reads ../src/ayu-source.json (upstream Zed Ayu themes file) and writes:
+  ./ayu-mirage-high-contrast.json   processed Zed theme (full key set)
+  ../ayu-mirage.toml                semantic palette consumed by the other
+                                    target generators (claude/build.py,
+                                    telegram/build.py).
 
 Pipeline per color:
   1. Per-channel: gamma lift (brightens), then S-curve around MID (boosts contrast).
@@ -303,8 +304,8 @@ def write_palette_toml(path: str, p: Palette) -> None:
     ]
     d = p.as_dict()
     lines = ["# Ayu Mirage High Contrast — semantic palette",
-             "# Generated from src/ayu-source.json by src/build_palette.py.",
-             "# Consumed by build.py to produce Claude / Telegram themes.",
+             "# Generated from src/ayu-source.json by zed/build.py.",
+             "# Consumed by claude/build.py and telegram/build.py.",
              ""]
     for section, keys in sections:
         lines.append(f"[{section}]")
@@ -325,12 +326,12 @@ def write_json(path: str, data: dict) -> None:
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))   # .../src
+    here = os.path.dirname(os.path.abspath(__file__))   # .../zed
     repo = os.path.dirname(here)
-    src = json.load(open(os.path.join(here, "ayu-source.json")))
+    src = json.load(open(os.path.join(repo, "src", "ayu-source.json")))
     zed = build_zed(src)
     palette = palette_from_zed(zed)
-    write_json(os.path.join(repo, "zed", "ayu-mirage-high-contrast.json"), zed)
+    write_json(os.path.join(here, "ayu-mirage-high-contrast.json"), zed)
     write_palette_toml(os.path.join(repo, "ayu-mirage.toml"), palette)
 
 

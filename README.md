@@ -6,23 +6,27 @@ A higher-contrast variant of [Ayu Mirage](https://github.com/dempfi/ayu) for [Ze
 
 ```
 src/ayu-source.json                    upstream Zed Ayu theme (Mirage + Dark, both variants)
-src/build_palette.py                   contrast pipeline; emits Zed theme + palette TOML
-ayu-mirage.toml                generated semantic palette (contract for downstream targets)
-build.py                               reads palette TOML, emits Claude + Telegram themes
+ayu-mirage.toml                        generated semantic palette (contract for downstream targets)
+build.py                               orchestrator — runs every target builder
+zed/build.py                           contrast pipeline; emits zed theme + palette TOML
 zed/ayu-mirage-high-contrast.json      generated Zed theme
+claude/build.py                        reads palette, emits Claude theme
 claude/ayu-mirage.json                 generated Claude theme
+telegram/build.py                      reads palette, emits Telegram theme
 telegram/ayu-mirage.tdesktop-theme     generated Telegram Desktop palette
 Makefile                               convenience targets
 ```
 
-The build is two stages:
+Each target has its own `build.py` next to its outputs:
 
-1. **`src/build_palette.py`** runs the contrast pipeline (`GAMMA`, `K_BG`, chrome flatten, accent desat, border darken, etc.) against `src/ayu-source.json`. Output: the full Zed theme (`zed/ayu-mirage-high-contrast.json`) and a small semantic palette extracted from the processed style (`ayu-mirage.toml`).
-2. **`build.py`** reads `ayu-mirage.toml` and emits the smaller targets — Claude Code (`claude/ayu-mirage.json`) and Telegram Desktop (`telegram/ayu-mirage.tdesktop-theme`).
+1. **`zed/build.py`** runs the contrast pipeline (`GAMMA`, `K_BG`, chrome flatten, accent desat, border darken, etc.) against `src/ayu-source.json`. Output: the full Zed theme (`zed/ayu-mirage-high-contrast.json`) and the semantic palette `ayu-mirage.toml` extracted from the processed style.
+2. **`claude/build.py`** and **`telegram/build.py`** read `ayu-mirage.toml` and emit their target. They never look at upstream Zed JSON.
 
-Zed sits in stage 1 because it needs the full upstream key set (~600 keys: `players[]`, `terminal.ansi.*`, every `syntax.*`, etc.), not just palette tokens. Targets that *do* fit in ~30 semantic tokens (Claude, Telegram) live in stage 2 and never see the upstream JSON.
+`build.py` at the root is just an orchestrator — it shells out to the three target scripts in order (`zed` first, since it writes the palette). Each target builder is self-contained: you can run any one of them alone (`python3 telegram/build.py`) when iterating, as long as the palette TOML already exists.
 
-To add a new target (Sublime, iTerm, …), write a `build_<target>(p: Palette)` function in `build.py` — no need to touch the pipeline.
+Zed gets its own pipeline because it needs the full upstream key set (~600 keys: `players[]`, `terminal.ansi.*`, every `syntax.*`, etc.), not just palette tokens. Targets that *do* fit in ~30 semantic tokens (Claude, Telegram) consume the palette directly.
+
+To add a new target (Sublime, iTerm, …), drop a `<target>/build.py` next to its sibling outputs and add the directory name to `TARGETS` in the root `build.py`.
 
 ## Usage
 
@@ -39,7 +43,7 @@ In Telegram Desktop: Settings → Chat Settings → scroll down → "Browse..." 
 
 ## Tuning
 
-Knobs at the top of `src/build_palette.py`:
+Knobs at the top of `zed/build.py`:
 
 | Knob | Effect |
 |---|---|

@@ -1,16 +1,21 @@
-.PHONY: all palette themes install fetch-source clean
+.PHONY: all build zed claude telegram install fetch-source clean
 
-all: themes
+all: build
 
-# Run the contrast pipeline against src/ayu-source.json. Produces the Zed
-# theme and the shared palette/ayu-mirage.toml.
-palette:
-	python3 src/build_palette.py
-
-# Read palette/ayu-mirage.toml and produce the smaller targets (Claude,
-# Telegram). Implicit dependency on palette via the file.
-themes: palette
+# Run every target builder in dependency order (zed first — it produces
+# ayu-mirage.toml; claude/telegram consume it).
+build:
 	python3 build.py
+
+# Per-target builders, runnable independently when iterating on one target.
+zed:
+	python3 zed/build.py
+
+claude:
+	python3 claude/build.py
+
+telegram:
+	python3 telegram/build.py
 
 # Copy generated themes into Zed and Claude theme dirs.
 install: all

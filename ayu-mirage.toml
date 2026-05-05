@@ -1,6 +1,6 @@
 # Ayu Mirage High Contrast — semantic palette
-# Generated from src/ayu-source.json by src/build_palette.py.
-# Consumed by build.py to produce Claude / Telegram themes.
+# Generated from src/ayu-source.json by zed/build.py.
+# Consumed by claude/build.py and telegram/build.py.
 
 [backgrounds]
 bg = "#252525"
