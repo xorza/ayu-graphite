@@ -14,7 +14,7 @@
     "remember": "#d897ff",
     "claude": "#ffa63d",
     "claudeShimmer": "#ffd54c",
-    "claudeBlue_FOR_SYSTEM_SPINNER": "#7ee3ff",
+    "claudeBlue_FOR_SYSTEM_SPINNER": "#9adbfb",
     "claudeBlueShimmer_FOR_SYSTEM_SPINNER": "#4cd3ff",
     "success": "#daff58",
     "error": "#ff5e44",
@@ -22,10 +22,10 @@
     "warningShimmer": "#ffd54c",
     "permission": "#ffd44a",
     "permissionShimmer": "#ffd54c",
-    "planMode": "#7ee3ff",
-    "ide": "#7ee3ff",
+    "planMode": "#9adbfb",
+    "ide": "#9adbfb",
     "autoAccept": "#daff58",
-    "promptBorder": "#7ee3ff",
+    "promptBorder": "#9adbfb",
     "promptBorderShimmer": "#4cd3ff",
     "bashBorder": "#d897ff",
     "diffAdded": "#486a15",
@@ -37,13 +37,13 @@
     "diffRemovedWord": "#ff5e44",
     "diffRemovedWordDimmed": "#ff5e44",
     "red_FOR_SUBAGENTS_ONLY": "#ff5e44",
-    "blue_FOR_SUBAGENTS_ONLY": "#7ee3ff",
+    "blue_FOR_SUBAGENTS_ONLY": "#9adbfb",
     "green_FOR_SUBAGENTS_ONLY": "#daff58",
     "yellow_FOR_SUBAGENTS_ONLY": "#ffd44a",
     "purple_FOR_SUBAGENTS_ONLY": "#d897ff",
     "orange_FOR_SUBAGENTS_ONLY": "#ffa63d",
     "pink_FOR_SUBAGENTS_ONLY": "#ff8a3f",
     "cyan_FOR_SUBAGENTS_ONLY": "#69ffd1",
-    "professionalBlue": "#7ee3ff"
+    "professionalBlue": "#9adbfb"
   }
 }

@@ -38,6 +38,9 @@ MID    = 0.40   # midpoint of the S-curve (theme is dark, so < 0.5)
 BG_SAT = 0.0    # chroma kept on chrome backgrounds (0 = pure gray)
 FG_SAT = 1.30   # chroma multiplier for foreground/accent colors (> 1 = punchier)
 FG_LIGHT = 0.88 # lightness multiplier for foreground (< 1 deepens / vivid; > 1 brightens / pastel)
+ACCENT_SAT   = 0.65 # saturation multiplier for accent keys (text.accent, link_text.hover) —
+                    # < 1 mutes them so they don't read as shouty when used as a button fill
+ACCENT_LIGHT = 1.00 # lightness multiplier for accent keys
 
 # Chrome flattening: after channel adj + desat, lerp every chrome value toward
 # CHROME_TARGET by CHROME_COMPRESS. 0 = preserve original spread; 1 = all chrome
@@ -131,6 +134,7 @@ def transform(value: str, key: str) -> str:
     elif is_diagnostic_bg(key):
         r, g, b = adj_channel(r, K_DIAG), adj_channel(g, K_DIAG), adj_channel(b, K_DIAG)
     elif key in ACCENT_KEYS:
+        r, g, b = scale_sat(r, g, b, ACCENT_SAT, ACCENT_LIGHT)
         r, g, b = adj_channel(r, K_FG), adj_channel(g, K_FG), adj_channel(b, K_FG)
     else:
         r, g, b = scale_sat(r, g, b, FG_SAT, FG_LIGHT)
