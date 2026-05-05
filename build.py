@@ -45,7 +45,8 @@ ACCENT_LIGHT = 1.00 # lightness multiplier for accent keys
 # Chrome flattening: after channel adj + desat, lerp every chrome value toward
 # CHROME_TARGET by CHROME_COMPRESS. 0 = preserve original spread; 1 = all chrome
 # becomes the same gray.
-CHROME_TARGET   = 45   # RGB component for the chrome mid-gray (~#2d2d2d)
+CHROME_TARGET   = 55   # RGB component for the chrome mid-gray (~#373737); high enough that
+                       # element / ghost_element bgs read as raised pills above editor dark.
 CHROME_COMPRESS = 0.40
 
 CHROME_KEYS = {
