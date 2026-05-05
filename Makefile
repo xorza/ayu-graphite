@@ -1,4 +1,4 @@
-.PHONY: all build zed claude telegram reseed install fetch-source clean
+.PHONY: all build zed claude telegram terminal reseed install fetch-source clean
 
 all: build
 
@@ -17,6 +17,9 @@ claude:
 telegram:
 	python3 telegram/build.py
 
+terminal:
+	python3 terminal/build.py
+
 # One-shot: re-seed ayu-mirage.toml from upstream tools/ayu-source.json by
 # running the legacy contrast pipeline. Review the diff before committing.
 reseed:
@@ -34,4 +37,4 @@ fetch-source:
 # ayu-mirage.toml is a source file (hand-edited single source of truth);
 # never delete it here.
 clean:
-	rm -f zed/ayu-mirage-high-contrast.json claude/ayu-mirage.json telegram/ayu-mirage.tdesktop-theme
+	rm -f zed/ayu-mirage-high-contrast.json claude/ayu-mirage.json telegram/ayu-mirage.tdesktop-theme terminal/ayu-mirage.terminal

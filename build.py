@@ -15,7 +15,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TARGETS = ("zed", "claude", "telegram")
+TARGETS = ("zed", "claude", "telegram", "terminal")
 
 
 def main() -> None:

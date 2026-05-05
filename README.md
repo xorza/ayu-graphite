@@ -10,9 +10,11 @@ build.py                               orchestrator (runs every target builder)
 zed/build.py                           palette → ayu-mirage-high-contrast.json
 claude/build.py                        palette → ayu-mirage.json
 telegram/build.py                      palette → ayu-mirage.tdesktop-theme (zip)
+terminal/build.py                      palette → ayu-mirage.terminal (macOS Terminal.app)
 zed/ayu-mirage-high-contrast.json      generated Zed theme
 claude/ayu-mirage.json                 generated Claude theme
 telegram/ayu-mirage.tdesktop-theme     generated Telegram theme
+terminal/ayu-mirage.terminal           generated macOS Terminal theme
 tools/ayu-source.json                    upstream Zed Ayu (only used by tools/import_from_zed.py)
 tools/import_from_zed.py               one-shot pipeline: tools/ayu-source.json → ayu-mirage.toml
 Makefile                               convenience targets
@@ -36,6 +38,7 @@ make fetch-source   # refresh tools/ayu-source.json from zed-industries/zed main
 In Zed: settings → theme → "Ayu Mirage High Contrast".
 In Claude Code: `/config` → theme → "Ayu Mirage".
 In Telegram Desktop: Settings → Chat Settings → scroll down → "Browse..." next to Custom theme, pick `telegram/ayu-mirage.tdesktop-theme`.
+In macOS Terminal: double-click `terminal/ayu-mirage.terminal` (or `open terminal/ayu-mirage.terminal`) — Terminal imports it as a profile. Then Terminal → Settings → Profiles → "Ayu Mirage" → "Default" to make it the default.
 
 ## Tuning
 
