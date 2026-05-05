@@ -7,7 +7,7 @@ A higher-contrast variant of [Ayu Mirage](https://github.com/dempfi/ayu) for [Ze
 ```
 src/ayu-source.json                    upstream Zed Ayu theme (Mirage + Dark, both variants)
 src/build_palette.py                   contrast pipeline; emits Zed theme + palette TOML
-palette/ayu-mirage.toml                generated semantic palette (contract for downstream targets)
+ayu-mirage.toml                generated semantic palette (contract for downstream targets)
 build.py                               reads palette TOML, emits Claude + Telegram themes
 zed/ayu-mirage-high-contrast.json      generated Zed theme
 claude/ayu-mirage.json                 generated Claude theme
@@ -17,8 +17,8 @@ Makefile                               convenience targets
 
 The build is two stages:
 
-1. **`src/build_palette.py`** runs the contrast pipeline (`GAMMA`, `K_BG`, chrome flatten, accent desat, border darken, etc.) against `src/ayu-source.json`. Output: the full Zed theme (`zed/ayu-mirage-high-contrast.json`) and a small semantic palette extracted from the processed style (`palette/ayu-mirage.toml`).
-2. **`build.py`** reads `palette/ayu-mirage.toml` and emits the smaller targets — Claude Code (`claude/ayu-mirage.json`) and Telegram Desktop (`telegram/ayu-mirage.tdesktop-theme`).
+1. **`src/build_palette.py`** runs the contrast pipeline (`GAMMA`, `K_BG`, chrome flatten, accent desat, border darken, etc.) against `src/ayu-source.json`. Output: the full Zed theme (`zed/ayu-mirage-high-contrast.json`) and a small semantic palette extracted from the processed style (`ayu-mirage.toml`).
+2. **`build.py`** reads `ayu-mirage.toml` and emits the smaller targets — Claude Code (`claude/ayu-mirage.json`) and Telegram Desktop (`telegram/ayu-mirage.tdesktop-theme`).
 
 Zed sits in stage 1 because it needs the full upstream key set (~600 keys: `players[]`, `terminal.ansi.*`, every `syntax.*`, etc.), not just palette tokens. Targets that *do* fit in ~30 semantic tokens (Claude, Telegram) live in stage 2 and never see the upstream JSON.
 

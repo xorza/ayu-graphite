@@ -3,7 +3,7 @@
 
 Reads src/ayu-source.json (upstream Zed Ayu themes file) and writes:
   zed/ayu-mirage-high-contrast.json   processed Zed theme (full key set)
-  palette/ayu-mirage.toml             semantic palette consumed by the other
+  ayu-mirage.toml                     semantic palette consumed by the other
                                       target generators (Claude, Telegram).
 
 Pipeline per color:
@@ -331,7 +331,7 @@ def main() -> None:
     zed = build_zed(src)
     palette = palette_from_zed(zed)
     write_json(os.path.join(repo, "zed", "ayu-mirage-high-contrast.json"), zed)
-    write_palette_toml(os.path.join(repo, "palette", "ayu-mirage.toml"), palette)
+    write_palette_toml(os.path.join(repo, "ayu-mirage.toml"), palette)
 
 
 if __name__ == "__main__":

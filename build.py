@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read palette/ayu-mirage.toml (produced by src/build_palette.py) and emit
+"""Read ayu-mirage.toml (produced by src/build_palette.py) and emit
 the small theme outputs that consume the shared semantic palette:
 
   claude/ayu-mirage.json              Claude Code custom theme
@@ -259,7 +259,7 @@ def write_telegram(path: str, palette: str, bg_hex: str) -> None:
 
 def main() -> None:
     here = os.path.dirname(os.path.abspath(__file__))
-    p = load_palette(os.path.join(here, "palette", "ayu-mirage.toml"))
+    p = load_palette(os.path.join(here, "ayu-mirage.toml"))
     write_json(os.path.join(here, "claude", "ayu-mirage.json"), build_claude(p))
     write_telegram(os.path.join(here, "telegram", "ayu-mirage.tdesktop-theme"),
                    build_telegram(p), p.bg)
