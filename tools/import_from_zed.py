@@ -51,7 +51,7 @@ ACCENT_LIGHT = 0.90  # lightness multiplier for accent keys
 # Chrome flattening: after channel adj + desat, lerp every chrome value toward
 # CHROME_TARGET by CHROME_COMPRESS. 0 = preserve original spread; 1 = all chrome
 # becomes the same gray.
-CHROME_TARGET = 30  # RGB component for the chrome mid-gray (~#141414)
+CHROME_TARGET = 40  # RGB component for the chrome mid-gray (~#141414)
 CHROME_COMPRESS = 0.65
 
 # Borders flatten to a darker target than chrome bgs so separators read as
