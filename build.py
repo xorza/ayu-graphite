@@ -48,6 +48,11 @@ ACCENT_LIGHT = 1.00 # lightness multiplier for accent keys
 CHROME_TARGET   = 45   # RGB component for the chrome mid-gray (~#2d2d2d)
 CHROME_COMPRESS = 0.40
 
+# Borders flatten to a darker target than chrome bgs so separators read as
+# subtle cracks below panel level instead of mid-gray ridges.
+BORDER_TARGET   = 30
+BORDER_COMPRESS = 0.75
+
 CHROME_KEYS = {
     "background", "editor.background", "editor.gutter.background",
     "editor.subheader.background", "editor.active_line.background",
@@ -62,9 +67,13 @@ CHROME_KEYS = {
     "scrollbar.track.background", "scrollbar.thumb.background",
     "scrollbar.thumb.hover_background",
     "terminal.ansi.black", "terminal.ansi.dim_black",
-    # Neutral chrome borders — flatten to gray same as chrome bgs so panel
-    # separators don't read with a blue tint. Status borders (info/error/...)
-    # and focused/selected borders are NOT here — they keep hue.
+}
+
+# Neutral chrome borders — flatten to a darker, desaturated target so panel
+# separators don't read with a blue tint and sit below panel level. Status
+# borders (info/error/warning/created.border) and focused/selected borders are
+# NOT here — they keep hue.
+BORDER_KEYS = {
     "border", "border.variant", "border.disabled",
     "hidden.border", "ignored.border", "unreachable.border",
     "scrollbar.thumb.border", "scrollbar.track.border",
@@ -137,6 +146,12 @@ def transform(value: str, key: str) -> str:
         r = round(r * (1 - f) + CHROME_TARGET * f)
         g = round(g * (1 - f) + CHROME_TARGET * f)
         b = round(b * (1 - f) + CHROME_TARGET * f)
+    elif key in BORDER_KEYS:
+        r, g, b = scale_sat(r, g, b, BG_SAT)
+        f = BORDER_COMPRESS
+        r = round(r * (1 - f) + BORDER_TARGET * f)
+        g = round(g * (1 - f) + BORDER_TARGET * f)
+        b = round(b * (1 - f) + BORDER_TARGET * f)
     elif is_diagnostic_bg(key):
         r, g, b = adj_channel(r, K_DIAG), adj_channel(g, K_DIAG), adj_channel(b, K_DIAG)
     elif key in ACCENT_KEYS:
