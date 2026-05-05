@@ -86,6 +86,32 @@ def hex_to_rgb(hex6: str) -> tuple[float, float, float]:
             int(h[4:6], 16) / 255.0)
 
 
+def nsfont_archive(ps_name: str, size: float) -> bytes:
+    """NSKeyedArchiver-encoded NSFont. ps_name is the PostScript name (e.g.
+    'JetBrainsMonoNerdFontMono-Regular' — find it in
+    `system_profiler SPFontsDataType`)."""
+    archive: dict[str, Any] = {
+        "$version": 100000,
+        "$archiver": "NSKeyedArchiver",
+        "$top": {"root": UID(1)},
+        "$objects": [
+            "$null",
+            {
+                "$class": UID(3),
+                "NSName": UID(2),
+                "NSSize": float(size),
+                "NSfFlags": 16,
+            },
+            ps_name,
+            {
+                "$classname": "NSFont",
+                "$classes": ["NSFont", "NSObject"],
+            },
+        ],
+    }
+    return plistlib.dumps(archive, fmt=plistlib.FMT_BINARY)
+
+
 def nscolor_archive(hex6: str) -> bytes:
     """Build NSKeyedArchiver-encoded NSColor (sRGB) as a binary plist.
 
@@ -114,6 +140,11 @@ def nscolor_archive(hex6: str) -> bytes:
     return plistlib.dumps(archive, fmt=plistlib.FMT_BINARY)
 
 
+TERMINAL_BG = "#1a1a1a"   # darker than palette.bg (#252525) for terminal-only contrast
+FONT_NAME = "JetBrainsMonoNerdFontMono-Regular"
+FONT_SIZE = 15
+
+
 def build_terminal(p: Palette) -> dict[str, Any]:
     c = nscolor_archive
     return {
@@ -121,14 +152,16 @@ def build_terminal(p: Palette) -> dict[str, Any]:
         "type": "Window Settings",
         "ProfileCurrentVersion": 2.09,
 
-        "BackgroundColor": c(p.bg),
+        "Font": nsfont_archive(FONT_NAME, FONT_SIZE),
+
+        "BackgroundColor": c(TERMINAL_BG),
         "TextColor":       c(p.text),
         "TextBoldColor":   c(p.text),
         "CursorColor":     c(p.accent),
         "SelectionColor":  c(p.elem_selected),
 
         # Base ANSI 8 — semantic roles match our palette.
-        "ANSIBlackColor":   c(p.bg),
+        "ANSIBlackColor":   c(TERMINAL_BG),
         "ANSIRedColor":     c(p.error),
         "ANSIGreenColor":   c(p.success),
         "ANSIYellowColor":  c(p.warning),
