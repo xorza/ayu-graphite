@@ -1,0 +1,45 @@
+# Ayu Mirage High Contrast — semantic palette
+# Generated from src/ayu-source.json by build.py.
+# All theme generators (Zed / Claude / Telegram) consume this palette.
+
+[backgrounds]
+bg = "#252525"
+panel = "#343434"
+surface = "#343434"
+elem = "#343434"
+elem_hover = "#3e3e3e"
+elem_active = "#4b4b4b"
+elem_selected = "#4b4b4b"
+title_bar = "#414141"
+title_bar_inactive = "#343434"
+
+[text]
+text = "#e2dfd3"
+text_muted = "#aaaaa8"
+text_disabled = "#878a8d"
+
+[accent_status]
+accent = "#9adbfb"
+success = "#daff58"
+warning = "#ffd44a"
+error = "#ff5e44"
+
+[diff]
+created = "#daff58"
+created_bg = "#486a15"
+deleted = "#ff5e44"
+deleted_bg = "#4f191a"
+
+[syntax]
+syn_keyword = "#ffa63d"
+syn_function = "#ffd54c"
+syn_string = "#d9ff57"
+syn_string_regex = "#69ffd1"
+syn_comment = "#617182"
+syn_number = "#d897ff"
+syn_type = "#4cd3ff"
+syn_operator = "#ff8a3f"
+
+[overrides]
+info_bg = "#2c4a60"
+info_border = "#4a8ab0"

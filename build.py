@@ -21,12 +21,14 @@ Manual fixes baked into the Claude port:
   - userMessageBackground = element.background (visible prompt block)
 """
 import colorsys
+import dataclasses
 import json
 import os
 import re
 import struct
 import zipfile
 import zlib
+from dataclasses import dataclass
 
 # ---- knobs ----
 GAMMA  = 1.10   # > 1 brightens midtones (lifts dark backgrounds)
@@ -173,6 +175,100 @@ def walk(node, key: str = ""):
     return node
 
 
+@dataclass
+class Palette:
+    """Semantic color tokens shared across all generated themes. Hex values are
+    `#rrggbb` (alpha stripped)."""
+    # Backgrounds — chrome family, sorted dark → light
+    bg: str               # editor.background — darkest panel (chat area, terminal)
+    panel: str            # panel.background — sidebar / dialog list
+    surface: str          # surface.background — incoming bubble / dropdown surface
+    elem: str             # element.background — button / chip neutral fill
+    elem_hover: str       # element.hover
+    elem_active: str      # element.active
+    elem_selected: str    # element.selected — pressed / row selected
+    title_bar: str        # title_bar.background
+    title_bar_inactive: str  # title_bar.inactive_background
+
+    # Text
+    text: str             # primary text
+    text_muted: str       # secondary text / dates / placeholders
+    text_disabled: str
+
+    # Accent + status
+    accent: str           # text.accent — primary accent (links, highlights)
+    success: str
+    warning: str
+    error: str
+
+    # Diff fills (pairs: bg = block tint, fg = inline word highlight)
+    created: str
+    created_bg: str
+    deleted: str
+    deleted_bg: str
+
+    # Syntax (pulled from Zed syntax map; every theme that ships code colors uses these)
+    syn_keyword: str
+    syn_function: str
+    syn_string: str
+    syn_string_regex: str
+    syn_comment: str
+    syn_number: str
+    syn_type: str
+    syn_operator: str
+
+    # Manual override — drives Zed title-bar project chip when open
+    info_bg: str
+    info_border: str
+
+    def as_dict(self) -> dict:
+        return dataclasses.asdict(self)
+
+
+def palette_from_zed(zed_theme: dict) -> Palette:
+    style = zed_theme["themes"][0]["style"]
+    syntax = style["syntax"]
+
+    def s(key):
+        return strip_alpha(style[key])
+
+    def syn(key):
+        return strip_alpha(syntax[key]["color"])
+
+    return Palette(
+        bg=s("editor.background"),
+        panel=s("panel.background"),
+        surface=s("surface.background"),
+        elem=s("element.background"),
+        elem_hover=s("element.hover"),
+        elem_active=s("element.active"),
+        elem_selected=s("element.selected"),
+        title_bar=s("title_bar.background"),
+        title_bar_inactive=s("title_bar.inactive_background"),
+        text=s("text"),
+        text_muted=s("text.muted"),
+        text_disabled=s("text.disabled"),
+        accent=s("text.accent"),
+        success=s("success"),
+        warning=s("warning"),
+        error=s("error"),
+        created=s("created"),
+        created_bg=s("created.background"),
+        deleted=s("deleted"),
+        deleted_bg=s("deleted.background"),
+        syn_keyword=syn("keyword"),
+        syn_function=syn("function"),
+        syn_string=syn("string"),
+        syn_string_regex=syn("string.regex"),
+        syn_comment=syn("comment"),
+        syn_number=syn("number"),
+        syn_type=syn("type"),
+        syn_operator=syn("operator"),
+        info_bg=s("info.background"),
+        info_border=s("info.border"),
+    )
+
+
 def build_zed(src: dict) -> dict:
     theme = next(t for t in src["themes"] if t["name"] == "Ayu Mirage")
     theme = walk(theme)
@@ -195,192 +291,159 @@ def build_zed(src: dict) -> dict:
     }
 
 
-def build_claude(zed_theme: dict) -> dict:
-    style = zed_theme["themes"][0]["style"]
-    syntax = style["syntax"]
-
-    def s(key):
-        return strip_alpha(style[key])
-
-    def syn(key):
-        return strip_alpha(syntax[key]["color"])
-
+def build_claude(p: Palette) -> dict:
     overrides = {
-        "background":              s("editor.background"),
-        "userMessageBackground":   s("element.background"),
-        "bashMessageBackgroundColor": s("element.background"),
-        "memoryBackgroundColor":   s("element.background"),
+        "background":                 p.bg,
+        "userMessageBackground":      p.elem,
+        "bashMessageBackgroundColor": p.elem,
+        "memoryBackgroundColor":      p.elem,
 
-        "text":         s("text"),
-        "inverseText":  s("editor.background"),
-        "inactive":     s("text.muted"),
-        "subtle":       syn("comment"),
-        "suggestion":   s("warning"),
-        "remember":     syn("number"),
+        "text":         p.text,
+        "inverseText":  p.bg,
+        "inactive":     p.text_muted,
+        "subtle":       p.syn_comment,
+        "suggestion":   p.warning,
+        "remember":     p.syn_number,
 
-        "claude":         syn("keyword"),
-        "claudeShimmer":  syn("function"),
-        "claudeBlue_FOR_SYSTEM_SPINNER":        s("text.accent"),
-        "claudeBlueShimmer_FOR_SYSTEM_SPINNER": syn("type"),
+        "claude":         p.syn_keyword,
+        "claudeShimmer":  p.syn_function,
+        "claudeBlue_FOR_SYSTEM_SPINNER":        p.accent,
+        "claudeBlueShimmer_FOR_SYSTEM_SPINNER": p.syn_type,
 
-        "success":          s("success"),
-        "error":            s("error"),
-        "warning":          s("warning"),
-        "warningShimmer":   syn("function"),
+        "success":          p.success,
+        "error":            p.error,
+        "warning":          p.warning,
+        "warningShimmer":   p.syn_function,
 
-        "permission":         s("warning"),
-        "permissionShimmer":  syn("function"),
-        "planMode":           s("text.accent"),
-        "ide":                s("text.accent"),
-        "autoAccept":         s("success"),
-        "promptBorder":         s("text.accent"),
-        "promptBorderShimmer":  syn("type"),
-        "bashBorder":           syn("number"),
+        "permission":         p.warning,
+        "permissionShimmer":  p.syn_function,
+        "planMode":           p.accent,
+        "ide":                p.accent,
+        "autoAccept":         p.success,
+        "promptBorder":         p.accent,
+        "promptBorderShimmer":  p.syn_type,
+        "bashBorder":           p.syn_number,
 
-        "diffAdded":           s("created.background"),
-        "diffAddedDimmed":     s("created.background"),
-        "diffAddedWord":       s("created"),
-        "diffAddedWordDimmed": s("created"),
-        "diffRemoved":         s("deleted.background"),
-        "diffRemovedDimmed":   s("deleted.background"),
-        "diffRemovedWord":     s("deleted"),
-        "diffRemovedWordDimmed": s("deleted"),
+        "diffAdded":             p.created_bg,
+        "diffAddedDimmed":       p.created_bg,
+        "diffAddedWord":         p.created,
+        "diffAddedWordDimmed":   p.created,
+        "diffRemoved":           p.deleted_bg,
+        "diffRemovedDimmed":     p.deleted_bg,
+        "diffRemovedWord":       p.deleted,
+        "diffRemovedWordDimmed": p.deleted,
 
-        "red_FOR_SUBAGENTS_ONLY":    s("error"),
-        "blue_FOR_SUBAGENTS_ONLY":   s("text.accent"),
-        "green_FOR_SUBAGENTS_ONLY":  s("success"),
-        "yellow_FOR_SUBAGENTS_ONLY": s("warning"),
-        "purple_FOR_SUBAGENTS_ONLY": syn("number"),
-        "orange_FOR_SUBAGENTS_ONLY": syn("keyword"),
-        "pink_FOR_SUBAGENTS_ONLY":   syn("operator"),
-        "cyan_FOR_SUBAGENTS_ONLY":   syn("string.regex"),
-        "professionalBlue":          s("text.accent"),
+        "red_FOR_SUBAGENTS_ONLY":    p.error,
+        "blue_FOR_SUBAGENTS_ONLY":   p.accent,
+        "green_FOR_SUBAGENTS_ONLY":  p.success,
+        "yellow_FOR_SUBAGENTS_ONLY": p.warning,
+        "purple_FOR_SUBAGENTS_ONLY": p.syn_number,
+        "orange_FOR_SUBAGENTS_ONLY": p.syn_keyword,
+        "pink_FOR_SUBAGENTS_ONLY":   p.syn_operator,
+        "cyan_FOR_SUBAGENTS_ONLY":   p.syn_string_regex,
+        "professionalBlue":          p.accent,
     }
     return {"name": "Ayu Mirage", "base": "dark", "overrides": overrides}
 
 
-def build_telegram(zed_theme: dict) -> str:
+def build_telegram(p: Palette) -> str:
     """Emit a .tdesktop-theme palette. Telegram falls back to defaults for any
     constant we don't define, so we cover the visible ~50 keys."""
-    style = zed_theme["themes"][0]["style"]
-    syntax = style["syntax"]
-
-    def s(key):
-        return strip_alpha(style[key])
-
-    def syn(key):
-        return strip_alpha(syntax[key]["color"])
-
-    bg          = s("editor.background")
-    panel       = s("panel.background")
-    surface     = s("surface.background")
-    elem        = s("element.background")
-    elem_hover  = s("element.hover")
-    elem_sel    = s("element.selected")
-    text_fg     = s("text")
-    text_mut    = s("text.muted")
-    accent      = s("text.accent")
-    success_fg  = s("success")
-    error_fg    = s("error")
-    warn_fg     = s("warning")
-    string_fg   = syn("string")
-    func_fg     = syn("function")
-
     pairs = [
-        ("windowBg",                  bg),
-        ("windowBgOver",              elem_hover),
-        ("windowBgRipple",            elem_sel),
-        ("windowBgActive",            accent),
-        ("windowFg",                  text_fg),
-        ("windowFgOver",              text_fg),
-        ("windowSubTextFg",           text_mut),
-        ("windowSubTextFgOver",       text_mut),
-        ("windowBoldFg",              text_fg),
-        ("windowBoldFgOver",          text_fg),
-        ("windowFgActive",            bg),
-        ("windowActiveTextFg",        accent),
+        ("windowBg",                  p.bg),
+        ("windowBgOver",              p.elem_hover),
+        ("windowBgRipple",            p.elem_selected),
+        ("windowBgActive",            p.accent),
+        ("windowFg",                  p.text),
+        ("windowFgOver",              p.text),
+        ("windowSubTextFg",           p.text_muted),
+        ("windowSubTextFgOver",       p.text_muted),
+        ("windowBoldFg",              p.text),
+        ("windowBoldFgOver",          p.text),
+        ("windowFgActive",            p.bg),
+        ("windowActiveTextFg",        p.accent),
 
-        ("sideBarBg",                 panel),
-        ("sideBarBgActive",           elem_sel),
-        ("topBarBg",                  s("title_bar.background")),
+        ("sideBarBg",                 p.panel),
+        ("sideBarBgActive",           p.elem_selected),
+        ("topBarBg",                  p.title_bar),
 
-        ("titleBg",                   s("title_bar.inactive_background")),
-        ("titleBgActive",             s("title_bar.background")),
-        ("titleFg",                   text_mut),
-        ("titleFgActive",             text_fg),
-        ("titleShadow",               bg),
-        ("titleButtonBg",             s("title_bar.background")),
-        ("titleButtonFg",             text_fg),
-        ("titleButtonBgOver",         elem_hover),
-        ("titleButtonFgOver",         text_fg),
+        ("titleBg",                   p.title_bar_inactive),
+        ("titleBgActive",             p.title_bar),
+        ("titleFg",                   p.text_muted),
+        ("titleFgActive",             p.text),
+        ("titleShadow",               p.bg),
+        ("titleButtonBg",             p.title_bar),
+        ("titleButtonFg",             p.text),
+        ("titleButtonBgOver",         p.elem_hover),
+        ("titleButtonFgOver",         p.text),
 
-        ("dialogsBg",                 panel),
-        ("dialogsBgOver",             elem_hover),
-        ("dialogsBgActive",           elem_sel),
-        ("dialogsNameFg",             text_fg),
-        ("dialogsNameFgActive",       text_fg),
-        ("dialogsTextFg",             text_mut),
-        ("dialogsTextFgActive",       text_fg),
-        ("dialogsDateFg",             text_mut),
-        ("dialogsDateFgActive",       text_mut),
-        ("dialogsUnreadBg",           accent),
-        ("dialogsUnreadBgMuted",      text_mut),
-        ("dialogsUnreadFg",           bg),
-        ("dialogsUnreadFgActive",     bg),
+        ("dialogsBg",                 p.panel),
+        ("dialogsBgOver",             p.elem_hover),
+        ("dialogsBgActive",           p.elem_selected),
+        ("dialogsNameFg",             p.text),
+        ("dialogsNameFgActive",       p.text),
+        ("dialogsTextFg",             p.text_muted),
+        ("dialogsTextFgActive",       p.text),
+        ("dialogsDateFg",             p.text_muted),
+        ("dialogsDateFgActive",       p.text_muted),
+        ("dialogsUnreadBg",           p.accent),
+        ("dialogsUnreadBgMuted",      p.text_muted),
+        ("dialogsUnreadFg",           p.bg),
+        ("dialogsUnreadFgActive",     p.bg),
 
-        ("msgInBg",                   surface),
-        ("msgInBgSelected",           elem_sel),
-        ("msgOutBg",                  elem),
-        ("msgOutBgSelected",          elem_sel),
-        ("msgInDateFg",               text_mut),
-        ("msgOutDateFg",              text_mut),
-        ("msgInServiceFg",            accent),
-        ("msgOutServiceFg",           accent),
-        ("msgInMonoFg",               string_fg),
-        ("msgOutMonoFg",              string_fg),
-        ("msgInReplyBarColor",        accent),
-        ("msgOutReplyBarColor",       func_fg),
-        ("msgServiceBg",              panel),
-        ("msgServiceFg",              text_mut),
+        ("msgInBg",                   p.surface),
+        ("msgInBgSelected",           p.elem_selected),
+        ("msgOutBg",                  p.elem),
+        ("msgOutBgSelected",          p.elem_selected),
+        ("msgInDateFg",               p.text_muted),
+        ("msgOutDateFg",              p.text_muted),
+        ("msgInServiceFg",            p.accent),
+        ("msgOutServiceFg",           p.accent),
+        ("msgInMonoFg",               p.syn_string),
+        ("msgOutMonoFg",              p.syn_string),
+        ("msgInReplyBarColor",        p.accent),
+        ("msgOutReplyBarColor",       p.syn_function),
+        ("msgServiceBg",              p.panel),
+        ("msgServiceFg",              p.text_muted),
 
-        ("activeButtonBg",            accent),
-        ("activeButtonBgOver",        accent),
-        ("activeButtonFg",            bg),
-        ("activeButtonFgOver",        bg),
-        ("lightButtonBg",             elem),
-        ("lightButtonBgOver",         elem_hover),
-        ("lightButtonFg",             accent),
-        ("lightButtonFgOver",         accent),
+        ("activeButtonBg",            p.accent),
+        ("activeButtonBgOver",        p.accent),
+        ("activeButtonFg",            p.bg),
+        ("activeButtonFgOver",        p.bg),
+        ("lightButtonBg",             p.elem),
+        ("lightButtonBgOver",         p.elem_hover),
+        ("lightButtonFg",             p.accent),
+        ("lightButtonFgOver",         p.accent),
 
-        ("scrollBg",                  panel),
-        ("scrollBgOver",              elem_hover),
-        ("scrollBarBg",               text_mut),
-        ("scrollBarBgOver",           text_fg),
+        ("scrollBg",                  p.panel),
+        ("scrollBgOver",              p.elem_hover),
+        ("scrollBarBg",               p.text_muted),
+        ("scrollBarBgOver",           p.text),
 
-        ("boxTextFgGood",             success_fg),
-        ("boxTextFgError",            error_fg),
-        ("activeLineFgError",         error_fg),
-        ("attentionButtonFg",         warn_fg),
+        ("boxTextFgGood",             p.success),
+        ("boxTextFgError",            p.error),
+        ("activeLineFgError",         p.error),
+        ("attentionButtonFg",         p.warning),
 
         # Dividers / separators / shadows — Telegram defaults these bright in
         # popup menus when undefined. Keep them subtle and dark.
-        ("shadowFg",                  panel),
-        ("windowShadowFg",            panel),
-        ("windowShadowFgFallback",    panel),
-        ("boxDividerBg",              panel),
-        ("boxDividerFg",              elem),
-        ("menuBg",                    panel),
-        ("menuBgOver",                elem_hover),
-        ("menuBgRipple",              elem_sel),
-        ("menuFg",                    text_fg),
-        ("menuFgDisabled",            text_mut),
-        ("menuIconFg",                text_mut),
-        ("menuIconFgOver",            text_fg),
-        ("menuSubmenuArrowFg",        text_mut),
-        ("menuSeparatorFg",           elem),
+        ("shadowFg",                  p.panel),
+        ("windowShadowFg",            p.panel),
+        ("windowShadowFgFallback",    p.panel),
+        ("boxDividerBg",              p.panel),
+        ("boxDividerFg",              p.elem),
+        ("menuBg",                    p.panel),
+        ("menuBgOver",                p.elem_hover),
+        ("menuBgRipple",              p.elem_selected),
+        ("menuFg",                    p.text),
+        ("menuFgDisabled",            p.text_muted),
+        ("menuIconFg",                p.text_muted),
+        ("menuIconFgOver",            p.text),
+        ("menuSubmenuArrowFg",        p.text_muted),
+        ("menuSeparatorFg",           p.elem),
 
-        ("mentionBg",                 elem),
-        ("mentionFg",                 accent),
+        ("mentionBg",                 p.elem),
+        ("mentionFg",                 p.accent),
     ]
     lines = ["// Ayu Mirage High Contrast — Telegram Desktop palette", ""]
     lines += [f"{k}: {v};" for k, v in pairs]
@@ -411,6 +474,38 @@ def solid_png(hex_color: str, size: int = 8) -> bytes:
             + chunk(b"IEND", b""))
 
 
+def write_palette_toml(path: str, p: Palette) -> None:
+    """Document the shared semantic palette. Intended as a human-readable
+    artifact AND as the contract that build_claude / build_telegram code
+    against — every token shows up here with its hex value."""
+    sections = [
+        ("backgrounds", ["bg", "panel", "surface", "elem", "elem_hover",
+                         "elem_active", "elem_selected", "title_bar",
+                         "title_bar_inactive"]),
+        ("text", ["text", "text_muted", "text_disabled"]),
+        ("accent_status", ["accent", "success", "warning", "error"]),
+        ("diff", ["created", "created_bg", "deleted", "deleted_bg"]),
+        ("syntax", ["syn_keyword", "syn_function", "syn_string",
+                    "syn_string_regex", "syn_comment", "syn_number",
+                    "syn_type", "syn_operator"]),
+        ("overrides", ["info_bg", "info_border"]),
+    ]
+    d = p.as_dict()
+    lines = ["# Ayu Mirage High Contrast — semantic palette",
+             "# Generated from src/ayu-source.json by build.py.",
+             "# All theme generators (Zed / Claude / Telegram) consume this palette.",
+             ""]
+    for section, keys in sections:
+        lines.append(f"[{section}]")
+        for k in keys:
+            lines.append(f'{k} = "{d[k]}"')
+        lines.append("")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write("\n".join(lines).rstrip() + "\n")
+    print(f"wrote {path}")
+
+
 def write_telegram(path: str, palette: str, bg_hex: str) -> None:
     """Zipped .tdesktop-theme bundling palette + solid background.png."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -424,13 +519,12 @@ def main() -> None:
     here = os.path.dirname(os.path.abspath(__file__))
     src = json.load(open(os.path.join(here, "src", "ayu-source.json")))
     zed = build_zed(src)
-    claude = build_claude(zed)
-    telegram = build_telegram(zed)
+    palette = palette_from_zed(zed)
     write_json(os.path.join(here, "zed", "ayu-mirage-high-contrast.json"), zed)
-    write_json(os.path.join(here, "claude", "ayu-mirage.json"), claude)
-    bg_hex = strip_alpha(zed["themes"][0]["style"]["editor.background"])
+    write_palette_toml(os.path.join(here, "palette", "ayu-mirage.toml"), palette)
+    write_json(os.path.join(here, "claude", "ayu-mirage.json"), build_claude(palette))
     write_telegram(os.path.join(here, "telegram", "ayu-mirage.tdesktop-theme"),
-                   telegram, bg_hex)
+                   build_telegram(palette), palette.bg)
 
 
 if __name__ == "__main__":

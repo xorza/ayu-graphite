@@ -15,4 +15,4 @@ fetch-source:
 	@echo "updated src/ayu-source.json"
 
 clean:
-	rm -f zed/ayu-mirage-high-contrast.json claude/ayu-mirage.json telegram/ayu-mirage.tdesktop-theme
+	rm -f zed/ayu-mirage-high-contrast.json claude/ayu-mirage.json telegram/ayu-mirage.tdesktop-theme palette/ayu-mirage.toml

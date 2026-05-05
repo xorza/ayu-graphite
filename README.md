@@ -6,12 +6,15 @@ A higher-contrast variant of [Ayu Mirage](https://github.com/dempfi/ayu) for [Ze
 
 ```
 src/ayu-source.json                    upstream Zed Ayu theme (Mirage + Dark, both variants)
-build.py                               single pipeline: processes Zed theme + ports to Claude + Telegram
+build.py                               processes Zed theme, extracts shared palette, ports to Claude + Telegram
+palette/ayu-mirage.toml                generated semantic palette (the contract every generator codes against)
 zed/ayu-mirage-high-contrast.json      generated Zed theme
 claude/ayu-mirage.json                 generated Claude theme
 telegram/ayu-mirage.tdesktop-theme     generated Telegram Desktop palette
 Makefile                               convenience targets
 ```
+
+The flow is one-way: `build.py` runs the contrast pipeline against `src/ayu-source.json` to produce the Zed theme, extracts a `Palette` dataclass from the processed Zed style (`bg`, `panel`, `accent`, `text`, syntax tokens, etc.), writes it as `palette/ayu-mirage.toml`, and feeds the same `Palette` into `build_claude` and `build_telegram`. To add a new target (Sublime, iTerm, …), write a `build_<target>(p: Palette)` function — no need to touch the pipeline or the upstream parsing.
 
 ## Usage
 
