@@ -56,9 +56,9 @@ search_highlight = "#7ddeff"
 search_match_active = "#ff7d2d"
 
 [ansi]
-ansi_blue = "#1e6d96"
+ansi_blue = "#5985a3"
 ansi_magenta = "#d897ff"
-ansi_cyan = "#59d4ff"
+ansi_cyan = "#98e1f3"
 ansi_bright_black = "#70747a"
 ansi_dim_black = "#404040"
 ansi_bright_red = "#8a302b"
