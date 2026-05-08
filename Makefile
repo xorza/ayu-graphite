@@ -1,10 +1,14 @@
-.PHONY: all build zed claude telegram telegram_ios terminal kde konsole reseed install fetch-source clean
+.PHONY: all deps build zed claude telegram telegram_ios terminal kde konsole reseed install fetch-source clean
 
 all: build
 
+# Install python deps (tomli on python <3.11). Idempotent.
+deps:
+	python3 -m pip install --user -q -r requirements.txt
+
 # Run every target builder. ayu-mirage.toml is the single source of truth
 # (hand-edited); the three target builders are pure transformers.
-build:
+build: deps
 	python3 build.py
 
 # Per-target builders, runnable independently when iterating on one target.

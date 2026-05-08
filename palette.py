@@ -4,7 +4,10 @@ Single source of truth for the shape of ayu-mirage.toml. Every target builder
 imports from here so adding a token is a one-file edit instead of a five-file
 ritual."""
 import dataclasses
-import tomllib
+try:
+    import tomllib  # py311+
+except ModuleNotFoundError:
+    import tomli as tomllib  # pip install -r requirements.txt
 from dataclasses import dataclass
 
 
