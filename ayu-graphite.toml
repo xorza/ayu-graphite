@@ -156,6 +156,7 @@ player_bg           = "gray_500"
 
 # Chat
 chat_check          = "lime_400"
+chat_msg_bg         = "gray_850"
 
 # Syntax
 syn_keyword         = "orange_400"

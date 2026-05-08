@@ -175,19 +175,19 @@ chat:
     incoming:
       bubble:
         withWp:
-          bg: 262524
-          gradientBg: 262524
+          bg: 2e2d2c
+          gradientBg: 2e2d2c
           highlightedBg: 353433
-          stroke: 262524
+          stroke: 2e2d2c
           reactionInactiveBg: 19e2dfd3
           reactionInactiveFg: e2dfd3
           reactionActiveBg: 59d4ff
           reactionActiveFg: 1f1e1d
         withoutWp:
-          bg: 262524
-          gradientBg: 262524
+          bg: 2e2d2c
+          gradientBg: 2e2d2c
           highlightedBg: 353433
-          stroke: 262524
+          stroke: 2e2d2c
           reactionInactiveBg: 19e2dfd3
           reactionInactiveFg: e2dfd3
           reactionActiveBg: 59d4ff
@@ -202,7 +202,7 @@ chat:
       accentControl: 98e1f3
       mediaActiveControl: 98e1f3
       mediaInactiveControl: 7f98e1f3
-      mediaControlInnerBg: 262524
+      mediaControlInnerBg: 2e2d2c
       pendingActivity: 7fe2dfd3
       fileTitle: 98e1f3
       fileDescription: 99e2dfd3
@@ -231,19 +231,19 @@ chat:
     outgoing:
       bubble:
         withWp:
-          bg: 262524
-          gradientBg: 262524
+          bg: 2e2d2c
+          gradientBg: 2e2d2c
           highlightedBg: 353433
-          stroke: 262524
+          stroke: 2e2d2c
           reactionInactiveBg: 19e2dfd3
           reactionInactiveFg: e2dfd3
           reactionActiveBg: 59d4ff
           reactionActiveFg: 1f1e1d
         withoutWp:
-          bg: 262524
-          gradientBg: 262524
+          bg: 2e2d2c
+          gradientBg: 2e2d2c
           highlightedBg: 353433
-          stroke: 262524
+          stroke: 2e2d2c
           reactionInactiveBg: 19e2dfd3
           reactionInactiveFg: e2dfd3
           reactionActiveBg: 59d4ff
@@ -258,7 +258,7 @@ chat:
       accentControl: 98e1f3
       mediaActiveControl: 98e1f3
       mediaInactiveControl: 7f98e1f3
-      mediaControlInnerBg: 262524
+      mediaControlInnerBg: 2e2d2c
       pendingActivity: 7fe2dfd3
       fileTitle: 98e1f3
       fileDescription: 99e2dfd3

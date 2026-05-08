@@ -60,9 +60,9 @@ def build_telegram(p: Palette) -> str:
         ("dialogsUnreadFg",           p.bg),
         ("dialogsUnreadFgActive",     p.bg),
 
-        ("msgInBg",                   p.surface),
+        ("msgInBg",                   p.chat_msg_bg),
         ("msgInBgSelected",           p.elem_active),
-        ("msgOutBg",                  p.elem),
+        ("msgOutBg",                  p.chat_msg_bg),
         ("msgOutBgSelected",          p.elem_active),
         ("msgInDateFg",               p.text_muted),
         ("msgOutDateFg",              p.text_muted),

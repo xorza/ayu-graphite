@@ -36,8 +36,8 @@ def build_ios(p: Palette) -> dict:
     # for inline text accents — unread bg, mentions, reply bars, service text,
     # light-button fg. Mirror that split here so both targets read the same.
     inline_accent = p.ansi_cyan
-    incoming_bubble = p.surface
-    outgoing_bubble = p.elem
+    incoming_bubble = p.chat_msg_bg
+    outgoing_bubble = p.chat_msg_bg
     return {
         "name": "Ayu Graphite",
         "basedOn": "night",
