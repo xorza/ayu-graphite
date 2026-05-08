@@ -183,6 +183,10 @@ def build_telegram(p: Palette) -> str:
         ("msgFile3BgSelected",                "msgFile3Bg"),
         ("msgFile4BgSelected",                "msgFile4Bg"),
 
+        # Audio player top panel — defaults to windowBg (#1f1e1d) which
+        # blends into the chat list. Lift to panel grey for separation.
+        ("mediaPlayerBg",                  p.panel),
+
         # Voice-message waveform — upstream tints incoming/outgoing different
         # blues. Match outgoing to incoming so direction doesn't shift hue.
         ("msgWaveformInActive",            p.accent),
