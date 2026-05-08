@@ -20,7 +20,7 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
     # ANSI 0..7 (normal) + Intense (bright) mirror terminal/build.py.
     # Faint is a dimmed variant Konsole uses for SGR 2 — pick muted siblings.
     # Background uses p.bg (matches Zed's integrated terminal) instead of
-    # p.terminal_bg (which is the darker macOS Terminal.app value).
+    # p.bg (which is the darker macOS Terminal.app value).
     normal = [
         p.bg,             # 0 black
         p.error,          # 1 red
@@ -43,8 +43,8 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
     ]
     faint = [
         p.bg,
-        p.deleted,
-        p.created,
+        p.error,
+        p.success,
         p.syn_doc,
         p.syn_predictive,
         p.syn_keyword,
@@ -54,7 +54,7 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
 
     sections: dict[str, dict[str, str]] = {
         "Background":          {"Color": rgb(p.bg)},
-        "BackgroundFaint":     {"Color": rgb(p.terminal_bg)},
+        "BackgroundFaint":     {"Color": rgb(p.bg)},
         "BackgroundIntense":   {"Color": rgb(p.bg)},
         "Foreground":          {"Color": rgb(p.text)},
         "ForegroundFaint":     {"Color": rgb(p.text_muted)},

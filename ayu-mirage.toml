@@ -8,11 +8,9 @@ surface = "#282726"
 elem = "#282726"
 elem_hover = "#2e2d2c"
 elem_active = "#353433"
-elem_selected = "#353433"
 elem_disabled = "#353b4b"
 title_bar = "#2f2e2d"
 title_bar_inactive = "#282726"
-terminal_bg = "#1f1e1d"
 overlay_black = "#000000"
 
 [borders]
@@ -45,10 +43,6 @@ error_border = "#703130"
 diagnostic_muted_bg = "#4c515a"
 
 [diff]
-created = "#daff58"
-created_bg = "#486a15"
-deleted = "#ff5e44"
-deleted_bg = "#4f191a"
 diff_term_plus = "#b5ff10"
 diff_term_minus = "#ff3b48"
 
@@ -83,14 +77,7 @@ ansi_bright_white = "#ffffff"
 ansi_dim_white = "#9e9d94"
 
 [players]
-player_bg_1 = "#868686"
-player_bg_2 = "#7c7c7c"
-player_bg_3 = "#808080"
-player_bg_4 = "#a4a4a4"
-player_bg_5 = "#949494"
-player_bg_6 = "#898989"
-player_bg_7 = "#868686"
-player_bg_8 = "#8c8c8c"
+player_bg = "#868686"
 
 [syntax]
 syn_keyword = "#ffa63d"

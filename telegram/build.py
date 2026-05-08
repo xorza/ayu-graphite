@@ -21,7 +21,7 @@ def build_telegram(p: Palette) -> str:
     pairs = [
         ("windowBg",                  p.bg),
         ("windowBgOver",              p.elem_hover),
-        ("windowBgRipple",            p.elem_selected),
+        ("windowBgRipple",            p.elem_active),
         ("windowBgActive",            p.accent),
         ("windowFg",                  p.text),
         ("windowFgOver",              p.text),
@@ -33,7 +33,7 @@ def build_telegram(p: Palette) -> str:
         ("windowActiveTextFg",        p.accent),
 
         ("sideBarBg",                 p.panel),
-        ("sideBarBgActive",           p.elem_selected),
+        ("sideBarBgActive",           p.elem_active),
         ("topBarBg",                  p.title_bar),
 
         ("titleBg",                   p.title_bar_inactive),
@@ -48,7 +48,7 @@ def build_telegram(p: Palette) -> str:
 
         ("dialogsBg",                 p.panel),
         ("dialogsBgOver",             p.elem_hover),
-        ("dialogsBgActive",           p.elem_selected),
+        ("dialogsBgActive",           p.elem_active),
         ("dialogsNameFg",             p.text),
         ("dialogsNameFgActive",       p.text),
         ("dialogsTextFg",             p.text_muted),
@@ -61,9 +61,9 @@ def build_telegram(p: Palette) -> str:
         ("dialogsUnreadFgActive",     p.bg),
 
         ("msgInBg",                   p.surface),
-        ("msgInBgSelected",           p.elem_selected),
+        ("msgInBgSelected",           p.elem_active),
         ("msgOutBg",                  p.elem),
-        ("msgOutBgSelected",          p.elem_selected),
+        ("msgOutBgSelected",          p.elem_active),
         ("msgInDateFg",               p.text_muted),
         ("msgOutDateFg",              p.text_muted),
         ("msgInServiceFg",            p.accent),
@@ -120,7 +120,7 @@ def build_telegram(p: Palette) -> str:
         ("boxDividerFg",              p.elem),
         ("menuBg",                    p.panel),
         ("menuBgOver",                p.elem_hover),
-        ("menuBgRipple",              p.elem_selected),
+        ("menuBgRipple",              p.elem_active),
         ("menuFg",                    p.text),
         ("menuFgDisabled",            p.text_muted),
         ("menuIconFg",                p.text_muted),

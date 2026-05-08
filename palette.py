@@ -19,11 +19,9 @@ class Palette:
     elem: str
     elem_hover: str
     elem_active: str
-    elem_selected: str
     elem_disabled: str
     title_bar: str
     title_bar_inactive: str
-    terminal_bg: str
     overlay_black: str
 
     border: str
@@ -51,10 +49,6 @@ class Palette:
     error_border: str
     diagnostic_muted_bg: str
 
-    created: str
-    created_bg: str
-    deleted: str
-    deleted_bg: str
     diff_term_plus: str
     diff_term_minus: str
 
@@ -86,14 +80,7 @@ class Palette:
     ansi_bright_white: str
     ansi_dim_white: str
 
-    player_bg_1: str
-    player_bg_2: str
-    player_bg_3: str
-    player_bg_4: str
-    player_bg_5: str
-    player_bg_6: str
-    player_bg_7: str
-    player_bg_8: str
+    player_bg: str
 
     syn_keyword: str
     syn_function: str

@@ -147,27 +147,27 @@
           },
           {
             "cursor": "#1ee8ffff",
-            "background": "#7c7c7cff",
+            "background": "#868686ff",
             "selection": "#1ee8ff3d"
           },
           {
             "cursor": "#ffa63dff",
-            "background": "#808080ff",
+            "background": "#868686ff",
             "selection": "#ffa63d3d"
           },
           {
             "cursor": "#d897ffff",
-            "background": "#a4a4a4ff",
+            "background": "#868686ff",
             "selection": "#d897ff3d"
           },
           {
             "cursor": "#69ffd2ff",
-            "background": "#949494ff",
+            "background": "#868686ff",
             "selection": "#69ffd23d"
           },
           {
             "cursor": "#ff5e44ff",
-            "background": "#898989ff",
+            "background": "#868686ff",
             "selection": "#ff5e443d"
           },
           {
@@ -177,7 +177,7 @@
           },
           {
             "cursor": "#daff58ff",
-            "background": "#8c8c8cff",
+            "background": "#868686ff",
             "selection": "#daff583d"
           }
         ],

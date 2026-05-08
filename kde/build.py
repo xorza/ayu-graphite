@@ -63,7 +63,7 @@ def build_kde(p: Palette) -> dict[str, dict[str, str]]:
         "Colors:Complementary": color_set(p, bg=p.bg,        alt=p.surface,    fg=p.text),
         "Colors:Header":        color_set(p, bg=p.title_bar, alt=p.panel,      fg=p.text),
         "Colors:Header][Inactive": color_set(p, bg=p.title_bar_inactive, alt=p.panel, fg=p.text_muted),
-        "Colors:Selection":     {**color_set(p, bg=p.accent, alt=p.elem_selected, fg=p.bg),
+        "Colors:Selection":     {**color_set(p, bg=p.accent, alt=p.elem_active, fg=p.bg),
                                  # Inside a selection, links/negatives/etc need to read on accent.
                                  "ForegroundActive":   rgb(p.bg),
                                  "ForegroundLink":     rgb(p.bg),

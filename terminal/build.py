@@ -90,14 +90,14 @@ def build_terminal(p: Palette) -> dict[str, Any]:
 
         "Font": nsfont_archive(FONT_NAME, FONT_SIZE),
 
-        "BackgroundColor": c(p.terminal_bg),
+        "BackgroundColor": c(p.bg),
         "TextColor":       c(p.text),
         "TextBoldColor":   c(p.text),
         "CursorColor":     c(p.accent),
-        "SelectionColor":  c(p.elem_selected),
+        "SelectionColor":  c(p.elem_active),
 
         # Base ANSI 8 — semantic roles match our palette.
-        "ANSIBlackColor":   c(p.terminal_bg),
+        "ANSIBlackColor":   c(p.bg),
         "ANSIRedColor":     c(p.error),
         "ANSIGreenColor":   c(p.success),
         "ANSIYellowColor":  c(p.warning),

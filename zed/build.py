@@ -49,13 +49,13 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "element.background":          opaque(p.elem),
         "element.hover":               opaque(p.elem_hover),
         "element.active":              opaque(p.elem_active),
-        "element.selected":            opaque(p.elem_selected),
+        "element.selected":            opaque(p.elem_active),
         "element.disabled":            opaque(p.elem_disabled),
         "drop_target.background":      alpha(p.drop_target, "80"),
         "ghost_element.background":    alpha(p.bg, "00"),
         "ghost_element.hover":         opaque(p.elem_hover),
         "ghost_element.active":        opaque(p.elem_active),
-        "ghost_element.selected":      opaque(p.elem_selected),
+        "ghost_element.selected":      opaque(p.elem_active),
         "ghost_element.disabled":      opaque(p.elem_disabled),
 
         "text":             opaque(p.text),
@@ -142,11 +142,11 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "conflict":             opaque(p.warning),
         "conflict.background":  opaque(p.warning_bg),
         "conflict.border":      opaque(p.warning_border),
-        "created":              opaque(p.created),
-        "created.background":   opaque(p.created_bg),
+        "created":              opaque(p.success),
+        "created.background":   opaque(p.success_bg),
         "created.border":       opaque(p.success_border),
-        "deleted":              opaque(p.deleted),
-        "deleted.background":   opaque(p.deleted_bg),
+        "deleted":              opaque(p.error),
+        "deleted.background":   opaque(p.error_bg),
         "deleted.border":       opaque(p.error_border),
         "error":                opaque(p.error),
         "error.background":     opaque(p.error_bg),
@@ -167,7 +167,7 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "modified.background":  opaque(p.warning_bg),
         "modified.border":      opaque(p.warning_border),
         "predictive":           opaque(p.syn_predictive),
-        "predictive.background":opaque(p.created_bg),
+        "predictive.background":opaque(p.success_bg),
         "predictive.border":    opaque(p.success_border),
         "renamed":              opaque(p.ansi_blue),
         "renamed.background":   opaque(p.hint_bg),
@@ -204,15 +204,13 @@ def _build_players(p: Palette) -> list:
         p.ansi_blue, p.ansi_magenta, p.syn_keyword, p.syn_number,
         p.ansi_cyan, p.error, p.warning, p.success,
     ]
-    bg_grays = [p.player_bg_1, p.player_bg_2, p.player_bg_3, p.player_bg_4,
-                p.player_bg_5, p.player_bg_6, p.player_bg_7, p.player_bg_8]
     return [
         {
             "cursor":     opaque(c),
-            "background": opaque(bg),
+            "background": opaque(p.player_bg),
             "selection":  alpha(c, "3d"),
         }
-        for c, bg in zip(cursors, bg_grays)
+        for c in cursors
     ]
 
 
