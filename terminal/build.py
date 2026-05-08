@@ -5,6 +5,7 @@ A .terminal file is an XML plist. Each color is stored as bytes containing a
 NSKeyedArchiver binary plist of an NSColor (sRGB). We hand-build that inner
 archive — no Cocoa, just stdlib `plistlib`.
 """
+
 import os
 import plistlib
 import sys
@@ -17,9 +18,7 @@ from palette import Palette, load_palette
 
 def hex_to_rgb(hex6: str) -> tuple[float, float, float]:
     h = hex6.lstrip("#")
-    return (int(h[0:2], 16) / 255.0,
-            int(h[2:4], 16) / 255.0,
-            int(h[4:6], 16) / 255.0)
+    return (int(h[0:2], 16) / 255.0, int(h[2:4], 16) / 255.0, int(h[4:6], 16) / 255.0)
 
 
 def nsfont_archive(ps_name: str, size: float) -> bytes:
@@ -76,8 +75,10 @@ def nscolor_archive(hex6: str) -> bytes:
     return plistlib.dumps(archive, fmt=plistlib.FMT_BINARY)
 
 
-FONT_NAME = "JetBrainsMonoNFM-Regular"   # PostScript name, not filename. Read it from the
-                                          # font's `name` table (nameID 6) — full names won't work.
+FONT_NAME = (
+    "JetBrainsMonoNFM-Regular"  # PostScript name, not filename. Read it from the
+)
+# font's `name` table (nameID 6) — full names won't work.
 FONT_SIZE = 15
 
 
@@ -87,34 +88,30 @@ def build_terminal(p: Palette) -> dict[str, Any]:
         "name": "Ayu Mirage",
         "type": "Window Settings",
         "ProfileCurrentVersion": 2.09,
-
         "Font": nsfont_archive(FONT_NAME, FONT_SIZE),
-
         "BackgroundColor": c(p.bg),
-        "TextColor":       c(p.text),
-        "TextBoldColor":   c(p.text),
-        "CursorColor":     c(p.accent),
-        "SelectionColor":  c(p.elem_active),
-
+        "TextColor": c(p.text),
+        "TextBoldColor": c(p.text),
+        "CursorColor": c(p.accent),
+        "SelectionColor": c(p.elem_active),
         # Base ANSI 8 — semantic roles match our palette.
-        "ANSIBlackColor":   c(p.bg),
-        "ANSIRedColor":     c(p.error),
-        "ANSIGreenColor":   c(p.success),
-        "ANSIYellowColor":  c(p.warning),
-        "ANSIBlueColor":    c(p.ansi_blue),
-        "ANSIMagentaColor": c(p.syn_number),       # purple
-        "ANSICyanColor":    c(p.ansi_cyan),
-        "ANSIWhiteColor":   c(p.text),
-
+        "ANSIBlackColor": c(p.bg),
+        "ANSIRedColor": c(p.error),
+        "ANSIGreenColor": c(p.success),
+        "ANSIYellowColor": c(p.warning),
+        "ANSIBlueColor": c(p.ansi_blue),
+        "ANSIMagentaColor": c(p.syn_number),  # purple
+        "ANSICyanColor": c(p.ansi_cyan),
+        "ANSIWhiteColor": c(p.text),
         # Bright variants — slightly punchier or accent-tinted siblings.
-        "ANSIBrightBlackColor":   c(p.text_disabled),
-        "ANSIBrightRedColor":     c(p.error),
-        "ANSIBrightGreenColor":   c(p.success),
-        "ANSIBrightYellowColor":  c(p.syn_function),  # lighter yellow
-        "ANSIBrightBlueColor":    c(p.accent),         # pastel sky blue
+        "ANSIBrightBlackColor": c(p.text_disabled),
+        "ANSIBrightRedColor": c(p.error),
+        "ANSIBrightGreenColor": c(p.success),
+        "ANSIBrightYellowColor": c(p.syn_function),  # lighter yellow
+        "ANSIBrightBlueColor": c(p.accent),  # pastel sky blue
         "ANSIBrightMagentaColor": c(p.ansi_magenta),
-        "ANSIBrightCyanColor":    c(p.syn_string_regex),
-        "ANSIBrightWhiteColor":   c(p.ansi_bright_white),
+        "ANSIBrightCyanColor": c(p.syn_string_regex),
+        "ANSIBrightWhiteColor": c(p.ansi_bright_white),
     }
 
 
