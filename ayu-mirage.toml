@@ -36,6 +36,7 @@ orange_500 = "#ff7d2d"    # search match active
 
 # Yellows
 yellow_300 = "#ffdd8c"    # string special
+yellow_350 = "#e6db74"    # soft Monokai yellow — chat checkmarks
 yellow_400 = "#ffd44a"    # warning / function
 yellow_500 = "#ba913b"    # ansi dim yellow
 yellow_600 = "#9d7222"    # ansi bright yellow
@@ -152,6 +153,9 @@ ansi_dim_white      = "gray_400"
 
 # Players (collab cursor bg)
 player_bg           = "gray_500"
+
+# Chat
+chat_check          = "lime_400"
 
 # Syntax
 syn_keyword         = "orange_400"

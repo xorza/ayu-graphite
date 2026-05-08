@@ -82,6 +82,8 @@ class Palette:
 
     player_bg: str
 
+    chat_check: str
+
     syn_keyword: str
     syn_function: str
     syn_string: str

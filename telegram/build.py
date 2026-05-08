@@ -22,7 +22,7 @@ def build_telegram(p: Palette) -> str:
         ("windowBg",                  p.bg),
         ("windowBgOver",              p.elem_hover),
         ("windowBgRipple",            p.elem_active),
-        ("windowBgActive",            p.search_highlight),
+        ("windowBgActive",            p.ansi_cyan),
         ("windowFg",                  p.text),
         ("windowFgOver",              p.text),
         ("windowSubTextFg",           p.text_muted),
@@ -30,7 +30,7 @@ def build_telegram(p: Palette) -> str:
         ("windowBoldFg",              p.text),
         ("windowBoldFgOver",          p.text),
         ("windowFgActive",            p.bg),
-        ("windowActiveTextFg",        p.search_highlight),
+        ("windowActiveTextFg",        p.ansi_cyan),
 
         ("sideBarBg",                 p.panel),
         ("sideBarBgActive",           p.elem_active),
@@ -55,7 +55,7 @@ def build_telegram(p: Palette) -> str:
         ("dialogsTextFgActive",       p.text),
         ("dialogsDateFg",             p.text_muted),
         ("dialogsDateFgActive",       p.text_muted),
-        ("dialogsUnreadBg",           p.search_highlight),
+        ("dialogsUnreadBg",           p.ansi_cyan),
         ("dialogsUnreadBgMuted",      p.text_muted),
         ("dialogsUnreadFg",           p.bg),
         ("dialogsUnreadFgActive",     p.bg),
@@ -66,11 +66,11 @@ def build_telegram(p: Palette) -> str:
         ("msgOutBgSelected",          p.elem_active),
         ("msgInDateFg",               p.text_muted),
         ("msgOutDateFg",              p.text_muted),
-        ("msgInServiceFg",            p.search_highlight),
-        ("msgOutServiceFg",           p.search_highlight),
+        ("msgInServiceFg",            p.ansi_cyan),
+        ("msgOutServiceFg",           p.ansi_cyan),
         ("msgInMonoFg",               p.syn_string),
         ("msgOutMonoFg",              p.syn_string),
-        ("msgInReplyBarColor",        p.search_highlight),
+        ("msgInReplyBarColor",        p.ansi_cyan),
         ("msgOutReplyBarColor",       p.syn_function),
         ("msgServiceBg",              p.panel),
         ("msgServiceFg",              p.text_muted),
@@ -85,18 +85,18 @@ def build_telegram(p: Palette) -> str:
         # "Unread messages" divider in chat view — defaults render near-white.
         ("historyUnreadBarBg",        p.panel),
         ("historyUnreadBarBorder",    p.border),
-        ("historyUnreadBarFg",        p.search_highlight),
+        ("historyUnreadBarFg",        p.ansi_cyan),
 
-        ("activeButtonBg",            p.search_highlight),
-        ("activeButtonBgOver",        p.search_highlight),
+        ("activeButtonBg",            p.ansi_cyan),
+        ("activeButtonBgOver",        p.ansi_cyan),
         ("activeButtonFg",            p.bg),
         ("activeButtonFgOver",        p.bg),
         ("activeButtonSecondaryFg",       p.bg),
         ("activeButtonSecondaryFgOver",   p.bg),
         ("lightButtonBg",             p.elem),
         ("lightButtonBgOver",         p.elem_hover),
-        ("lightButtonFg",             p.search_highlight),
-        ("lightButtonFgOver",         p.search_highlight),
+        ("lightButtonFg",             p.ansi_cyan),
+        ("lightButtonFgOver",         p.ansi_cyan),
 
         ("scrollBg",                  p.panel),
         ("scrollBgOver",              p.elem_hover),
@@ -105,15 +105,15 @@ def build_telegram(p: Palette) -> str:
 
         ("boxTextFgGood",             p.success),
 
-        # Outgoing message check ticks (✓ / ✓✓) — palette green so bubble +
-        # chat-list match each other and the terminal's ANSI green.
-        ("historyOutIconFg",          p.success),
-        ("historyOutIconFgSelected",  p.success),
-        ("historySendingOutIconFg",   p.success),
-        ("historyIconFgInverted",     p.success),
-        ("dialogsSentIconFg",         p.success),
-        ("dialogsSentIconFgOver",     p.success),
-        ("dialogsSentIconFgActive",   p.success),
+        # Outgoing message check ticks (✓ / ✓✓) — warm yellow pops more than
+        # green against the bubble bg without competing with status colors.
+        ("historyOutIconFg",          p.chat_check),
+        ("historyOutIconFgSelected",  p.chat_check),
+        ("historySendingOutIconFg",   p.chat_check),
+        ("historyIconFgInverted",     p.chat_check),
+        ("dialogsSentIconFg",         p.chat_check),
+        ("dialogsSentIconFgOver",     p.chat_check),
+        ("dialogsSentIconFgActive",   p.chat_check),
         ("boxTextFgError",            p.error),
         ("activeLineFgError",         p.error),
         ("attentionButtonFg",         p.warning),
@@ -136,7 +136,7 @@ def build_telegram(p: Palette) -> str:
         ("menuSeparatorFg",           p.elem),
 
         ("mentionBg",                 p.elem),
-        ("mentionFg",                 p.search_highlight),
+        ("mentionFg",                 p.ansi_cyan),
     ]
     lines = ["// Ayu Mirage High Contrast — Telegram Desktop palette", ""]
     lines += [f"{k}: {v};" for k, v in pairs]
