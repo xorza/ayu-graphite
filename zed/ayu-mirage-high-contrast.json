@@ -36,7 +36,7 @@
         "icon.muted": "#aaaaa8ff",
         "icon.disabled": "#878a8dff",
         "icon.placeholder": "#aaaaa8ff",
-        "icon.accent": "#4ad4ffff",
+        "icon.accent": "#1e6d96ff",
         "status_bar.background": "#2f2e2dff",
         "title_bar.background": "#2f2e2dff",
         "title_bar.inactive_background": "#262524ff",
@@ -80,17 +80,17 @@
         "terminal.ansi.dim_red": "#b05043ff",
         "terminal.ansi.green": "#daff58ff",
         "terminal.ansi.bright_green": "#75a228ff",
-        "terminal.ansi.dim_green": "#97be42ff",
+        "terminal.ansi.dim_green": "#5a702cff",
         "terminal.ansi.yellow": "#ffd44aff",
         "terminal.ansi.bright_yellow": "#9d7222ff",
         "terminal.ansi.dim_yellow": "#ba913bff",
-        "terminal.ansi.blue": "#4ad4ffff",
-        "terminal.ansi.bright_blue": "#1e6d96ff",
+        "terminal.ansi.blue": "#1e6d96ff",
+        "terminal.ansi.bright_blue": "#4ad4ffff",
         "terminal.ansi.dim_blue": "#3b91baff",
         "terminal.ansi.magenta": "#d897ffff",
         "terminal.ansi.bright_magenta": "#177083ff",
-        "terminal.ansi.dim_magenta": "#d897ffff",
-        "terminal.ansi.cyan": "#1ee8ffff",
+        "terminal.ansi.dim_magenta": "#7d4a96ff",
+        "terminal.ansi.cyan": "#59d4ffff",
         "terminal.ansi.bright_cyan": "#3f846eff",
         "terminal.ansi.dim_cyan": "#69b9a0ff",
         "terminal.ansi.white": "#e2dfd3ff",
@@ -118,7 +118,7 @@
         "ignored": "#878a8dff",
         "ignored.background": "#4c515aff",
         "ignored.border": "#252423ff",
-        "info": "#4ad4ffff",
+        "info": "#1e6d96ff",
         "info.background": "#2c4a60ff",
         "info.border": "#4a8ab0ff",
         "modified": "#ffd44aff",
@@ -127,7 +127,7 @@
         "predictive": "#7091b3ff",
         "predictive.background": "#486a15ff",
         "predictive.border": "#668a2fff",
-        "renamed": "#4ad4ffff",
+        "renamed": "#1e6d96ff",
         "renamed.background": "#0f3e58ff",
         "renamed.border": "#255d79ff",
         "success": "#daff58ff",
@@ -141,9 +141,9 @@
         "warning.border": "#81632bff",
         "players": [
           {
-            "cursor": "#4ad4ffff",
+            "cursor": "#1e6d96ff",
             "background": "#868686ff",
-            "selection": "#4ad4ff3d"
+            "selection": "#1e6d963d"
           },
           {
             "cursor": "#d897ffff",
@@ -161,9 +161,9 @@
             "selection": "#d897ff3d"
           },
           {
-            "cursor": "#1ee8ffff",
+            "cursor": "#59d4ffff",
             "background": "#868686ff",
-            "selection": "#1ee8ff3d"
+            "selection": "#59d4ff3d"
           },
           {
             "cursor": "#ff5e44ff",
