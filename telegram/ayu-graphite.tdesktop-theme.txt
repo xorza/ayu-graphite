@@ -3,7 +3,8 @@
 windowBg: #1f1e1d;
 windowBgOver: #2e2d2c;
 windowBgRipple: #353433;
-windowBgActive: #262524;
+windowBgActive: #59d4ff;
+checkboxFg: #aaaaa8;
 windowFg: #e2dfd3;
 windowFgOver: #e2dfd3;
 windowSubTextFg: #aaaaa8;

@@ -22,7 +22,13 @@ def build_telegram(p: Palette) -> str:
         ("windowBg",                  p.bg),
         ("windowBgOver",              p.elem_hover),
         ("windowBgRipple",            p.elem_active),
-        ("windowBgActive",            p.panel),
+        # Drives toggled-ON switch tracks, slider active bars, and other
+        # "active" fills. Upstream night uses the accent blue here; routing
+        # through panel made on/off states indistinguishable.
+        ("windowBgActive",            p.accent),
+        # Unchecked checkbox/radio/switch frame. Default #4f6276 reads cool-
+        # blue against our warm greys; map to a neutral text-muted instead.
+        ("checkboxFg",                p.text_muted),
         ("windowFg",                  p.text),
         ("windowFgOver",              p.text),
         ("windowSubTextFg",           p.text_muted),
