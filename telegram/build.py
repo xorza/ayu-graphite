@@ -183,6 +183,17 @@ def build_telegram(p: Palette) -> str:
         ("msgFile3BgSelected",                "msgFile3Bg"),
         ("msgFile4BgSelected",                "msgFile4Bg"),
 
+        # Voice-message waveform — upstream tints incoming/outgoing different
+        # blues. Match outgoing to incoming so direction doesn't shift hue.
+        ("msgWaveformInActive",            p.accent),
+        ("msgWaveformInActiveSelected",    p.text),
+        ("msgWaveformInInactive",          p.text_muted),
+        ("msgWaveformInInactiveSelected",  p.text),
+        ("msgWaveformOutActive",           "msgWaveformInActive"),
+        ("msgWaveformOutActiveSelected",   "msgWaveformInActiveSelected"),
+        ("msgWaveformOutInactive",         "msgWaveformInInactive"),
+        ("msgWaveformOutInactiveSelected", "msgWaveformInInactiveSelected"),
+
         # Selection overlays — translucent blue layers Telegram composites on
         # top of selected media. Zeroed so colors don't shift on selection.
         ("msgSelectOverlay",                  "#00000000"),
