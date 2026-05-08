@@ -48,11 +48,12 @@ def nsfont_archive(ps_name: str, size: float) -> bytes:
 
 
 def nscolor_archive(hex6: str) -> bytes:
-    """Build NSKeyedArchiver-encoded NSColor (sRGB) as a binary plist.
+    """Build NSKeyedArchiver-encoded NSColor (Device RGB) as a binary plist.
 
-    Mirrors the structure macOS Terminal.app emits — the color object stores
-    `NSRGB` as a space-separated, null-terminated ASCII string of float
-    components and `NSColorSpace` = 1 (sRGB)."""
+    NSColorSpace=2 = NSDeviceRGBColorSpace (sRGB-equivalent on modern Macs).
+    Empirically Terminal.app renders NSColorSpace=1 (CalibratedRGB, gamma 1.8)
+    backgrounds noticeably lighter than the same hex through sRGB — matching
+    the format Apple's bundled profiles (e.g. Grass) use avoids that drift."""
     r, g, b = hex_to_rgb(hex6)
     rgb_str = f"{r} {g} {b}\x00".encode("ascii")
     archive: dict[str, Any] = {
@@ -64,7 +65,7 @@ def nscolor_archive(hex6: str) -> bytes:
             {
                 "$class": UID(2),
                 "NSRGB": rgb_str,
-                "NSColorSpace": 1,
+                "NSColorSpace": 2,
             },
             {
                 "$classname": "NSColor",
