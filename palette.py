@@ -20,9 +20,11 @@ class Palette:
     elem_hover: str
     elem_active: str
     elem_selected: str
+    elem_disabled: str
     title_bar: str
     title_bar_inactive: str
     terminal_bg: str
+    overlay_black: str
 
     border: str
     border_focused: str
@@ -35,6 +37,7 @@ class Palette:
     success: str
     warning: str
     error: str
+    hint: str
 
     info_bg: str
     info_border: str
@@ -46,15 +49,51 @@ class Palette:
     warning_border: str
     error_bg: str
     error_border: str
+    diagnostic_muted_bg: str
 
     created: str
     created_bg: str
     deleted: str
     deleted_bg: str
+    diff_term_plus: str
+    diff_term_minus: str
+
+    line_number: str
+    line_number_active: str
+    line_number_hover: str
+    scrollbar_thumb: str
+    drop_target: str
+    search_highlight: str
+    search_match_active: str
 
     ansi_blue: str
     ansi_magenta: str
     ansi_cyan: str
+    ansi_bright_black: str
+    ansi_dim_black: str
+    ansi_bright_red: str
+    ansi_dim_red: str
+    ansi_bright_green: str
+    ansi_dim_green: str
+    ansi_bright_yellow: str
+    ansi_dim_yellow: str
+    ansi_bright_blue: str
+    ansi_dim_blue: str
+    ansi_bright_magenta: str
+    ansi_dim_magenta: str
+    ansi_bright_cyan: str
+    ansi_dim_cyan: str
+    ansi_bright_white: str
+    ansi_dim_white: str
+
+    player_bg_1: str
+    player_bg_2: str
+    player_bg_3: str
+    player_bg_4: str
+    player_bg_5: str
+    player_bg_6: str
+    player_bg_7: str
+    player_bg_8: str
 
     syn_keyword: str
     syn_function: str

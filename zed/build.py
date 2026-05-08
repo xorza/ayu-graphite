@@ -33,19 +33,15 @@ def syn(color: str, italic: bool = False, bold: bool = False) -> dict[str, Any]:
 
 
 def build_zed(p: Palette) -> dict[str, Any]:
-    # Frozen literals below are intentionally out-of-palette: rarely-tuned UI
-    # minutiae (line-number gutter ink, scrollbar overlay alpha, ANSI bright/dim
-    # siblings, collaboration-cursor backgrounds, document-highlight tints,
-    # search-match tints). Promoting them to ayu-mirage.toml would double its
-    # size for tokens nobody edits. If you find yourself wanting to shift one,
-    # hoist just that token into the palette at that point — not preemptively.
+    # Every color routes through the palette. New visual roles get a token in
+    # ayu-mirage.toml first, then a reference here — no inline hex literals.
     style: dict[str, Any] = {
         "background":              opaque(p.title_bar),
         "border":                  opaque(p.border),
         "border.disabled":         opaque(p.panel),
         "border.focused":          opaque(p.border_focused),
         "border.selected":         opaque(p.border_focused),
-        "border.transparent":      "#00000000",
+        "border.transparent":      alpha(p.overlay_black, "00"),
         "border.variant":          opaque(p.bg),
 
         "elevated_surface.background": opaque(p.surface),
@@ -54,13 +50,13 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "element.hover":               opaque(p.elem_hover),
         "element.active":              opaque(p.elem_active),
         "element.selected":            opaque(p.elem_selected),
-        "element.disabled":            opaque("#353b4b"),
-        "drop_target.background":      alpha("#a7a7a5", "80"),
-        "ghost_element.background":    alpha("#121212", "00"),
+        "element.disabled":            opaque(p.elem_disabled),
+        "drop_target.background":      alpha(p.drop_target, "80"),
+        "ghost_element.background":    alpha(p.bg, "00"),
         "ghost_element.hover":         opaque(p.elem_hover),
         "ghost_element.active":        opaque(p.elem_active),
         "ghost_element.selected":      opaque(p.elem_selected),
-        "ghost_element.disabled":      opaque("#353b4b"),
+        "ghost_element.disabled":      opaque(p.elem_disabled),
 
         "text":             opaque(p.text),
         "text.muted":       opaque(p.text_muted),
@@ -82,18 +78,18 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "tab.inactive_background":       opaque(p.panel),
         "tab.active_background":         opaque(p.bg),
 
-        "search.match_background":        alpha("#7edeff", "66"),
-        "search.active_match_background": alpha("#ff7d2d", "66"),
+        "search.match_background":        alpha(p.search_highlight, "66"),
+        "search.active_match_background": alpha(p.search_match_active, "66"),
 
         "panel.background":      opaque(p.panel),
         "panel.focused_border":  None,   # upstream Ayu leaves these null —
         "pane.focused_border":   None,   # Zed falls back to its default.
 
-        "scrollbar.thumb.background":       alpha("#a4a4a4", "4c"),
+        "scrollbar.thumb.background":       alpha(p.scrollbar_thumb, "4c"),
         "scrollbar.thumb.hover_background": opaque(p.elem_hover),
         "scrollbar.thumb.border":           opaque(p.border),
-        "scrollbar.track.background":       alpha("#121212", "00"),
-        "scrollbar.track.border":           opaque("#2e2e2e"),
+        "scrollbar.track.background":       alpha(p.bg, "00"),
+        "scrollbar.track.border":           opaque(p.elem_hover),
 
         "editor.foreground":           opaque(p.text),
         "editor.background":           opaque(p.bg),
@@ -101,43 +97,43 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "editor.subheader.background": opaque(p.panel),
         "editor.active_line.background":      alpha(p.panel, "bf"),
         "editor.highlighted_line.background": opaque(p.panel),
-        "editor.line_number":          "#717177",
-        "editor.active_line_number":   "#f5f7ff",
-        "editor.hover_line_number":    "#c8c8cc",
-        "editor.invisible":            opaque("#83878a"),
+        "editor.line_number":          p.line_number,
+        "editor.active_line_number":   p.line_number_active,
+        "editor.hover_line_number":    p.line_number_hover,
+        "editor.invisible":            opaque(p.text_disabled),
         "editor.wrap_guide":           alpha(p.text, "0d"),
         "editor.active_wrap_guide":    alpha(p.text, "1a"),
-        "editor.document_highlight.read_background":  alpha("#7ddeff", "1a"),
-        "editor.document_highlight.write_background": alpha("#838587", "66"),
+        "editor.document_highlight.read_background":  alpha(p.search_highlight, "1a"),
+        "editor.document_highlight.write_background": alpha(p.text_disabled, "66"),
 
         "terminal.background":        opaque(p.bg),
         "terminal.foreground":        opaque(p.text),
         "terminal.bright_foreground": opaque(p.text),
-        "terminal.dim_foreground":    opaque("#9e9d94"),
+        "terminal.dim_foreground":    opaque(p.ansi_dim_white),
         "terminal.ansi.black":         opaque(p.bg),
-        "terminal.ansi.bright_black":  opaque("#70747a"),
-        "terminal.ansi.dim_black":     opaque("#404040"),
+        "terminal.ansi.bright_black":  opaque(p.ansi_bright_black),
+        "terminal.ansi.dim_black":     opaque(p.ansi_dim_black),
         "terminal.ansi.red":           opaque(p.error),
-        "terminal.ansi.bright_red":    opaque("#8a302b"),
-        "terminal.ansi.dim_red":       opaque("#b05043"),
+        "terminal.ansi.bright_red":    opaque(p.ansi_bright_red),
+        "terminal.ansi.dim_red":       opaque(p.ansi_dim_red),
         "terminal.ansi.green":         opaque(p.success),
-        "terminal.ansi.bright_green":  opaque("#75a228"),
-        "terminal.ansi.dim_green":     opaque("#97be42"),
+        "terminal.ansi.bright_green":  opaque(p.ansi_bright_green),
+        "terminal.ansi.dim_green":     opaque(p.ansi_dim_green),
         "terminal.ansi.yellow":        opaque(p.warning),
-        "terminal.ansi.bright_yellow": opaque("#9d7222"),
-        "terminal.ansi.dim_yellow":    opaque("#ba913b"),
+        "terminal.ansi.bright_yellow": opaque(p.ansi_bright_yellow),
+        "terminal.ansi.dim_yellow":    opaque(p.ansi_dim_yellow),
         "terminal.ansi.blue":          opaque(p.ansi_blue),
-        "terminal.ansi.bright_blue":   opaque("#1e6d96"),
-        "terminal.ansi.dim_blue":      opaque("#3b91ba"),
+        "terminal.ansi.bright_blue":   opaque(p.ansi_bright_blue),
+        "terminal.ansi.dim_blue":      opaque(p.ansi_dim_blue),
         "terminal.ansi.magenta":       opaque(p.ansi_magenta),
-        "terminal.ansi.bright_magenta":opaque("#177083"),
-        "terminal.ansi.dim_magenta":   opaque("#2b94aa"),
+        "terminal.ansi.bright_magenta":opaque(p.ansi_bright_magenta),
+        "terminal.ansi.dim_magenta":   opaque(p.ansi_dim_magenta),
         "terminal.ansi.cyan":          opaque(p.ansi_cyan),
-        "terminal.ansi.bright_cyan":   opaque("#3f846e"),
-        "terminal.ansi.dim_cyan":      opaque("#69b9a0"),
+        "terminal.ansi.bright_cyan":   opaque(p.ansi_bright_cyan),
+        "terminal.ansi.dim_cyan":      opaque(p.ansi_dim_cyan),
         "terminal.ansi.white":         opaque(p.text),
-        "terminal.ansi.bright_white":  opaque("#ffffff"),
-        "terminal.ansi.dim_white":     opaque("#9e9d94"),
+        "terminal.ansi.bright_white":  opaque(p.ansi_bright_white),
+        "terminal.ansi.dim_white":     opaque(p.ansi_dim_white),
 
         "link_text.hover": opaque(p.accent),
 
@@ -156,13 +152,13 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "error.background":     opaque(p.error_bg),
         "error.border":         opaque(p.error_border),
         "hidden":               opaque(p.text_disabled),
-        "hidden.background":    opaque("#4c515a"),
+        "hidden.background":    opaque(p.diagnostic_muted_bg),
         "hidden.border":        opaque(p.panel),
-        "hint":                 opaque("#77adbc"),
+        "hint":                 opaque(p.hint),
         "hint.background":      opaque(p.hint_bg),
         "hint.border":          opaque(p.hint_border),
         "ignored":              opaque(p.text_disabled),
-        "ignored.background":   opaque("#4c515a"),
+        "ignored.background":   opaque(p.diagnostic_muted_bg),
         "ignored.border":       opaque(p.border),
         "info":                 opaque(p.ansi_blue),
         "info.background":      opaque(p.info_bg),
@@ -180,7 +176,7 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "success.background":   opaque(p.success_bg),
         "success.border":       opaque(p.success_border),
         "unreachable":          opaque(p.text_muted),
-        "unreachable.background": opaque("#4c515a"),
+        "unreachable.background": opaque(p.diagnostic_muted_bg),
         "unreachable.border":   opaque(p.border),
         "warning":              opaque(p.warning),
         "warning.background":   opaque(p.warning_bg),
@@ -208,8 +204,8 @@ def _build_players(p: Palette) -> list:
         p.ansi_blue, p.ansi_magenta, p.syn_keyword, p.syn_number,
         p.ansi_cyan, p.error, p.warning, p.success,
     ]
-    bg_grays = ["#868686", "#7c7c7c", "#808080", "#a4a4a4",
-                "#949494", "#898989", "#868686", "#8c8c8c"]
+    bg_grays = [p.player_bg_1, p.player_bg_2, p.player_bg_3, p.player_bg_4,
+                p.player_bg_5, p.player_bg_6, p.player_bg_7, p.player_bg_8]
     return [
         {
             "cursor":     opaque(c),
@@ -233,7 +229,7 @@ def _build_syntax(p: Palette) -> dict:
         "emphasis.strong":         syn(p.syn_attribute, bold=True),
         "enum":                    syn(p.syn_keyword),
         "function":                syn(p.syn_function),
-        "hint":                    syn("#77adbc"),
+        "hint":                    syn(p.hint),
         "keyword":                 syn(p.syn_keyword),
         "label":                   syn(p.syn_attribute),
         "link_text":               syn(p.syn_keyword, italic=True),
@@ -264,8 +260,8 @@ def _build_syntax(p: Palette) -> dict:
         "type":                    syn(p.syn_type),
         "variable":                syn(p.text),
         "variant":                 syn(p.syn_attribute),
-        "diff.plus":               syn("#b5ff10"),
-        "diff.minus":              syn("#ff3b48"),
+        "diff.plus":               syn(p.diff_term_plus),
+        "diff.minus":              syn(p.diff_term_minus),
     }
 
 

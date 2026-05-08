@@ -39,7 +39,7 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
         p.accent,         # 12 bright blue
         p.ansi_magenta,   # 13 bright magenta
         p.syn_string_regex, # 14 bright cyan
-        "#ffffff",        # 15 bright white
+        p.ansi_bright_white,  # 15 bright white
     ]
     faint = [
         p.bg,

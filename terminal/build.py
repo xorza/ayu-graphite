@@ -114,7 +114,7 @@ def build_terminal(p: Palette) -> dict[str, Any]:
         "ANSIBrightBlueColor":    c(p.accent),         # pastel sky blue
         "ANSIBrightMagentaColor": c(p.ansi_magenta),
         "ANSIBrightCyanColor":    c(p.syn_string_regex),
-        "ANSIBrightWhiteColor":   c("#ffffff"),
+        "ANSIBrightWhiteColor":   c(p.ansi_bright_white),
     }
 
 

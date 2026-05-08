@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - The palette schema (field names, types) lives once in `palette.py` (`Palette` dataclass + `load_palette`). Every builder and tool imports from there. Adding/renaming a token = edit `palette.py` + `ayu-mirage.toml` together; do not redeclare the dataclass elsewhere.
 - Per-target builders (`zed/`, `claude/`, `telegram/`, `telegram_ios/`, `terminal/`, `kde/`, `konsole/`) are pure transformers: TOML in, target file out. No upstream JSON, no pipeline, no cross-builder imports.
 - The contrast pipeline (gamma, S-curve, chrome flatten, accent desat, …) lives only in `tools/import_from_zed.py` and only runs on `make reseed`. Never call it from a target builder.
-- Hardcoded hex literals inside a builder are allowed for rarely-tuned UI minutiae (line-number ink, ANSI bright/dim siblings, scrollbar overlays, player cursor backgrounds). Promote one to the palette only when you're actually tuning it — not preemptively. See the banner comment at the top of `build_zed` in `zed/build.py`.
+- No hardcoded hex literals in builders. Every color a target emits routes through a palette token; line-number ink, ANSI bright/dim siblings, scrollbar overlays, player cursor backgrounds, etc. all live in `ayu-mirage.toml` and `palette.py` like any other token. Adding a new role = add the field to both files, then reference it. Pure-black overlays use `overlay_black`; transparent layers use any palette color with `alpha(..., "00")`.
 
 ## Build
 
