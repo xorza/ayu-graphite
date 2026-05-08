@@ -3,19 +3,19 @@
 
 [backgrounds]
 bg = "#1f1e1d"
-panel = "#282726"
-surface = "#282726"
-elem = "#282726"
+panel = "#262524"
+surface = "#262524"
+elem = "#262524"
 elem_hover = "#2e2d2c"
 elem_active = "#353433"
-elem_disabled = "#353b4b"
+elem_disabled = "#2c2a28"
 title_bar = "#2f2e2d"
-title_bar_inactive = "#282726"
+title_bar_inactive = "#262524"
 overlay_black = "#000000"
 
 [borders]
 border = "#252423"
-border_focused = "#105577"
+border_focused = "#1e6d96"
 
 [text]
 text = "#e2dfd3"
@@ -24,10 +24,10 @@ text_disabled = "#878a8d"
 
 [accent_status]
 accent = "#59d4ff"
-success = "#daff58"
+success = "#9fd45a"
 warning = "#ffd44a"
 error = "#ff5e44"
-hint = "#77adbc"
+hint = "#9fc7d4"
 
 [status_bg]
 info_bg = "#2c4a60"
@@ -43,13 +43,13 @@ error_border = "#703130"
 diagnostic_muted_bg = "#4c515a"
 
 [diff]
-diff_term_plus = "#b5ff10"
+diff_term_plus = "#9fd45a"
 diff_term_minus = "#ff3b48"
 
 [chrome]
-line_number = "#717177"
-line_number_active = "#f5f7ff"
-line_number_hover = "#c8c8cc"
+line_number = "#727272"
+line_number_active = "#f6f6f6"
+line_number_hover = "#c8c8c8"
 scrollbar_thumb = "#a4a4a4"
 drop_target = "#a7a7a5"
 search_highlight = "#7ddeff"
@@ -57,38 +57,38 @@ search_match_active = "#ff7d2d"
 
 [ansi]
 ansi_blue = "#4ad4ff"
-ansi_magenta = "#1ee8ff"
+ansi_magenta = "#d897ff"
 ansi_cyan = "#69ffd2"
 ansi_bright_black = "#70747a"
 ansi_dim_black = "#404040"
-ansi_bright_red = "#8a302b"
+ansi_bright_red = "#ff7e66"
 ansi_dim_red = "#b05043"
-ansi_bright_green = "#75a228"
+ansi_bright_green = "#f8ff6c"
 ansi_dim_green = "#97be42"
-ansi_bright_yellow = "#9d7222"
+ansi_bright_yellow = "#ffe27a"
 ansi_dim_yellow = "#ba913b"
-ansi_bright_blue = "#1e6d96"
+ansi_bright_blue = "#6fdcff"
 ansi_dim_blue = "#3b91ba"
-ansi_bright_magenta = "#177083"
-ansi_dim_magenta = "#2b94aa"
-ansi_bright_cyan = "#3f846e"
+ansi_bright_magenta = "#e6b8ff"
+ansi_dim_magenta = "#a766c8"
+ansi_bright_cyan = "#8fffe0"
 ansi_dim_cyan = "#69b9a0"
 ansi_bright_white = "#ffffff"
 ansi_dim_white = "#9e9d94"
 
 [players]
-player_bg = "#868686"
+player_bg = "#8a8784"
 
 [syntax]
 syn_keyword = "#ffa63d"
 syn_function = "#ffd54c"
 syn_string = "#d9ff57"
 syn_string_regex = "#69ffd1"
-syn_comment = "#617182"
-syn_number = "#d897ff"
+syn_comment = "#7a7a7a"
+syn_number = "#c98aff"
 syn_type = "#4cd3ff"
 syn_operator = "#ff8a3f"
-syn_attribute = "#4ad4ff"
+syn_attribute = "#6fdcff"
 syn_punctuation = "#c7c6bf"
 syn_doc = "#ababa9"
 syn_string_special = "#ffdd8c"

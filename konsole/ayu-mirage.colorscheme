@@ -35,13 +35,13 @@ Color=255,94,68
 Color=255,94,68
 
 [Color2]
-Color=218,255,88
+Color=159,212,90
 
 [Color2Faint]
-Color=218,255,88
+Color=159,212,90
 
 [Color2Intense]
-Color=218,255,88
+Color=159,212,90
 
 [Color3]
 Color=255,212,74
@@ -62,13 +62,13 @@ Color=112,145,179
 Color=89,212,255
 
 [Color5]
-Color=216,151,255
+Color=201,138,255
 
 [Color5Faint]
 Color=255,166,61
 
 [Color5Intense]
-Color=30,232,255
+Color=216,151,255
 
 [Color6]
 Color=105,255,210
