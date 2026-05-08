@@ -22,14 +22,14 @@ def build_telegram(p: Palette) -> str:
         ("windowBg",                  p.bg),
         ("windowBgOver",              p.elem_hover),
         ("windowBgRipple",            p.elem_active),
-        ("windowBgActive",            p.ansi_cyan),
+        ("windowBgActive",            p.panel),
         ("windowFg",                  p.text),
         ("windowFgOver",              p.text),
         ("windowSubTextFg",           p.text_muted),
         ("windowSubTextFgOver",       p.text_muted),
         ("windowBoldFg",              p.text),
         ("windowBoldFgOver",          p.text),
-        ("windowFgActive",            p.bg),
+        ("windowFgActive",            p.text),
         ("windowActiveTextFg",        p.ansi_cyan),
 
         ("sideBarBg",                 p.panel),
@@ -87,12 +87,12 @@ def build_telegram(p: Palette) -> str:
         ("historyUnreadBarBorder",    p.border),
         ("historyUnreadBarFg",        p.ansi_cyan),
 
-        ("activeButtonBg",            p.ansi_cyan),
-        ("activeButtonBgOver",        p.ansi_cyan),
-        ("activeButtonFg",            p.bg),
-        ("activeButtonFgOver",        p.bg),
-        ("activeButtonSecondaryFg",       p.bg),
-        ("activeButtonSecondaryFgOver",   p.bg),
+        ("activeButtonBg",            p.elem_active),
+        ("activeButtonBgOver",        p.ansi_dim_black),
+        ("activeButtonFg",            p.accent),
+        ("activeButtonFgOver",        p.accent),
+        ("activeButtonSecondaryFg",       p.accent),
+        ("activeButtonSecondaryFgOver",   p.accent),
         ("lightButtonBg",             p.elem),
         ("lightButtonBgOver",         p.elem_hover),
         ("lightButtonFg",             p.ansi_cyan),
@@ -137,6 +137,25 @@ def build_telegram(p: Palette) -> str:
 
         ("mentionBg",                 p.elem),
         ("mentionFg",                 p.ansi_cyan),
+
+        # Forward / compose / reply bar backgrounds — Telegram falls back to a
+        # bluish-cyan night default for these when not set explicitly.
+        ("topBarBg",                          p.panel),
+        ("historyComposeAreaBg",              p.panel),
+        ("historyComposeAreaFg",              p.text),
+        ("historyComposeAreaFgService",       p.text_muted),
+        ("historyReplyBg",                    p.panel),
+        ("historyComposeButtonBg",            p.elem),
+        ("historyComposeButtonBgOver",        p.elem_hover),
+        ("historyComposeButtonBgRipple",      p.elem_active),
+        ("dialogsForwardBg",                  p.panel),
+        ("dialogsForwardFg",                  p.text),
+        ("historyForwardChooseBg",            p.panel),
+        ("historyForwardChooseFg",            p.text),
+        ("searchedBarBg",                     p.panel),
+        ("searchedBarFg",                     p.text_muted),
+        ("reportSpamBg",                      p.panel),
+        ("reportSpamFg",                      p.text),
     ]
     lines = ["// Ayu Mirage High Contrast — Telegram Desktop palette", ""]
     lines += [f"{k}: {v};" for k, v in pairs]

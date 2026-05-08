@@ -18,41 +18,7 @@ install_file "$here/claude/ayu-mirage.json"            "$claude_dir/ayu-mirage.j
 
 echo "copied themes into $zed_dir and $claude_dir"
 
-# macOS Terminal.app: re-importing a .terminal that already exists in defaults
-# is a no-op (or creates "Ayu Mirage 1" duplicates). We delete every prior
-# Ayu-Mirage-flavored profile first, then `open` the fresh file so changes to
-# the .terminal actually take effect on the next launch.
-if [[ "$(uname)" == "Darwin" ]]; then
-    osascript -e 'tell application "Terminal" to quit' 2>/dev/null || true
-    sleep 0.5
-    python3 - "$here/terminal/ayu-mirage.terminal" <<'PY'
-"""Inject the profile straight into Terminal's prefs.
 
-`open theme.terminal` makes Terminal merge / dedupe / number-suffix the import
-unpredictably. Writing the profile dict directly into "Window Settings" via
-defaults import sidesteps that, and `killall cfprefsd` flushes the prefs
-daemon's cache so Terminal sees the new value on next launch."""
-import re, subprocess, sys, plistlib
-profile_path = sys.argv[1]
-with open(profile_path, 'rb') as f:
-    profile = plistlib.load(f)
-out = subprocess.run(['defaults', 'export', 'com.apple.Terminal', '-'],
-                     capture_output=True, check=True).stdout
-d = plistlib.loads(out)
-ws = d.setdefault('Window Settings', {})
-stale = [k for k in list(ws) if re.match(r'(?i)ayu[\s-]?mirage', k)]
-for k in stale:
-    del ws[k]
-ws['ayu-mirage'] = profile
-d['Default Window Settings'] = 'ayu-mirage'
-d['Startup Window Settings'] = 'ayu-mirage'
-subprocess.run(['defaults', 'import', 'com.apple.Terminal', '-'],
-               input=plistlib.dumps(d), check=True)
-subprocess.run(['killall', 'cfprefsd'], check=False)
-print(f"replaced Terminal profiles {stale or '[]'} with fresh ayu-mirage")
-PY
-    echo "imported into Terminal.app — relaunch it to see changes"
-fi
 
 # KDE Plasma + Konsole (Linux only). Plasma reads color schemes from
 # ~/.local/share/color-schemes; Konsole from ~/.local/share/konsole. Neither
