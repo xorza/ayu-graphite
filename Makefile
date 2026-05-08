@@ -3,8 +3,12 @@
 all: build palette
 
 # Install python deps (tomli on python <3.11). Idempotent.
+# On Python >=3.11, tomllib is stdlib and there's nothing to install, so
+# skip pip entirely — avoids PEP 668 "externally-managed-environment" errors
+# on distros like Arch where system pip is locked down.
 deps:
-	python3 -m pip install --user -q -r requirements.txt
+	@python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' || \
+		python3 -m pip install --user -q -r requirements.txt
 
 # Run every target builder. ayu-mirage.toml is the single source of truth
 # (hand-edited); the three target builders are pure transformers.
