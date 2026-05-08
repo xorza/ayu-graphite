@@ -22,10 +22,10 @@ echo "copied themes into $zed_dir and $claude_dir"
 # so we hand it off via `open` (only on macOS). This adds the profile but does
 # not set it as the default — Terminal → Settings → Profiles → "Default" still
 # has to be done manually.
-if [[ "$(uname)" == "Darwin" ]]; then
-    open "$here/terminal/ayu-mirage.terminal"
-    echo "imported terminal/ayu-mirage.terminal into Terminal.app"
-fi
+# if [[ "$(uname)" == "Darwin" ]]; then
+#     open "$here/terminal/ayu-mirage.terminal"
+#     echo "imported terminal/ayu-mirage.terminal into Terminal.app"
+# fi
 
 # KDE Plasma + Konsole (Linux only). Plasma reads color schemes from
 # ~/.local/share/color-schemes; Konsole from ~/.local/share/konsole. Neither

@@ -87,7 +87,7 @@
         "terminal.ansi.blue": "#4ad4ffff",
         "terminal.ansi.bright_blue": "#1e6d96ff",
         "terminal.ansi.dim_blue": "#3b91baff",
-        "terminal.ansi.magenta": "#1ee8ffff",
+        "terminal.ansi.magenta": "#d897ffff",
         "terminal.ansi.bright_magenta": "#177083ff",
         "terminal.ansi.dim_magenta": "#d897ffff",
         "terminal.ansi.cyan": "#1ee8ffff",
@@ -146,9 +146,9 @@
             "selection": "#4ad4ff3d"
           },
           {
-            "cursor": "#1ee8ffff",
+            "cursor": "#d897ffff",
             "background": "#868686ff",
-            "selection": "#1ee8ff3d"
+            "selection": "#d897ff3d"
           },
           {
             "cursor": "#ffa63dff",
@@ -193,7 +193,7 @@
             "font_weight": null
           },
           "comment": {
-            "color": "#617182ff",
+            "color": "#858585ff",
             "font_style": null,
             "font_weight": null
           },
