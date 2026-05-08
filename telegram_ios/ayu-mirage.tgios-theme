@@ -16,14 +16,14 @@ passcode:
 root:
   statusBar: white
   tabBar:
-    background: 2f2e2d
-    separator: 252423
+    background: 2e2d2c
+    separator: 262524
     icon: aaaaa8
     selectedIcon: 59d4ff
     text: aaaaa8
     selectedText: 59d4ff
     badgeBackground: ff5e44
-    badgeStroke: 2f2e2d
+    badgeStroke: 2e2d2c
     badgeText: e2dfd3
   navBar:
     button: 59d4ff
@@ -32,16 +32,16 @@ root:
     secondaryText: aaaaa8
     control: aaaaa8
     accentText: 59d4ff
-    background: 2f2e2d
-    opaqueBackground: 2f2e2d
-    separator: 252423
+    background: 2e2d2c
+    opaqueBackground: 2e2d2c
+    separator: 262524
     badgeFill: ff5e44
-    badgeStroke: 2f2e2d
+    badgeStroke: 2e2d2c
     badgeText: e2dfd3
     segmentedBg: 262524
     segmentedFg: 353433
     segmentedText: e2dfd3
-    segmentedDivider: 252423
+    segmentedDivider: 262524
   searchBar:
     background: 262524
     accent: 59d4ff
@@ -50,7 +50,7 @@ root:
     inputPlaceholderText: aaaaa8
     inputIcon: aaaaa8
     inputClearButton: aaaaa8
-    separator: 252423
+    separator: 262524
   keyboard: dark
 list:
   blocksBg: 1f1e1d
@@ -64,8 +64,8 @@ list:
   placeholderText: 878a8d
   itemBlocksBg: 262524
   itemHighlightedBg: 2e2d2c
-  blocksSeparator: 252423
-  plainSeparator: 252423
+  blocksSeparator: 262524
+  plainSeparator: 262524
   disclosureArrow: 7faaaaa8
   sectionHeaderText: aaaaa8
   freeText: aaaaa8
@@ -73,7 +73,7 @@ list:
   freeTextSuccess: daff58
   freeMonoIcon: aaaaa8
   switch:
-    frame: 252423
+    frame: 262524
     handle: e2dfd3
     content: 59d4ff
     positive: daff58
@@ -107,7 +107,7 @@ list:
   controlSecondary: aaaaa8
   freeInputField:
     bg: 262524
-    stroke: 252423
+    stroke: 262524
     placeholder: 878a8d
     primary: e2dfd3
     control: aaaaa8
@@ -121,13 +121,13 @@ list:
     color3: 262524
   itemInputField:
     bg: 262524
-    stroke: 252423
+    stroke: 262524
     placeholder: 878a8d
     primary: e2dfd3
     control: aaaaa8
 chatList:
   bg: 1f1e1d
-  itemSeparator: 252423
+  itemSeparator: 262524
   itemBg: 1f1e1d
   pinnedItemBg: 262524
   itemHighlightedBg: 2e2d2c
@@ -212,7 +212,7 @@ chat:
         radioButton: aaaaa8
         radioProgress: 59d4ff
         highlight: 1e59d4ff
-        separator: 252423
+        separator: 262524
         bar: 59d4ff
         barIconForeground: 1f1e1d
         barPositive: daff58
@@ -268,7 +268,7 @@ chat:
         radioButton: aaaaa8
         radioProgress: e2dfd3
         highlight: 1ee2dfd3
-        separator: 252423
+        separator: 262524
         bar: e2dfd3
         barIconForeground: 1f1e1d
         barPositive: daff58
@@ -289,7 +289,7 @@ chat:
         bg: 262524
         gradientBg: 262524
         highlightedBg: 2e2d2c
-        stroke: 252423
+        stroke: 262524
         reactionInactiveBg: 19e2dfd3
         reactionInactiveFg: e2dfd3
         reactionActiveBg: 59d4ff
@@ -298,7 +298,7 @@ chat:
         bg: 262524
         gradientBg: 262524
         highlightedBg: 2e2d2c
-        stroke: 252423
+        stroke: 262524
         reactionInactiveBg: 19e2dfd3
         reactionInactiveFg: e2dfd3
         reactionActiveBg: 59d4ff
@@ -351,20 +351,20 @@ chat:
         dateFillStatic: 99262524
         dateFillFloat: 33262524
     unreadBarBg: 262524
-    unreadBarStroke: 252423
+    unreadBarStroke: 262524
     unreadBarText: e2dfd3
     dateText:
       withWp: aaaaa8
       withoutWp: aaaaa8
   inputPanel:
-    panelBg: 2f2e2d
-    panelSeparator: 252423
+    panelBg: 2e2d2c
+    panelSeparator: 262524
     panelControlAccent: 59d4ff
     panelControl: aaaaa8
     panelControlDisabled: 878a8d
     panelControlDestructive: ff5e44
     inputBg: 262524
-    inputStroke: 252423
+    inputStroke: 262524
     inputPlaceholder: aaaaa8
     inputText: e2dfd3
     inputControl: aaaaa8
@@ -378,7 +378,7 @@ chat:
       micLevel: 3359d4ff
       activeIcon: 1f1e1d
   inputMediaPanel:
-    panelSeparator: 252423
+    panelSeparator: 262524
     panelIcon: aaaaa8
     panelHighlightedIconBg: 2e2d2c
     stickersBg: 262524
@@ -390,15 +390,15 @@ chat:
     gifsBg: 262524
   inputButtonPanel:
     panelBg: 262524
-    panelSeparator: 252423
+    panelSeparator: 262524
     buttonBg: 262524
-    buttonStroke: 252423
+    buttonStroke: 262524
     buttonHighlightedBg: 2e2d2c
-    buttonHighlightedStroke: 252423
+    buttonHighlightedStroke: 262524
     buttonText: e2dfd3
   historyNav:
     bg: 262524
-    stroke: 252423
+    stroke: 262524
     fg: aaaaa8
     badgeBg: 59d4ff
     badgeStroke: 59d4ff
@@ -410,7 +410,7 @@ actionSheet:
   itemBg: cc262524
   opaqueItemHighlightedBg: 2e2d2c
   itemHighlightedBg: 332e2d2c
-  opaqueItemSeparator: 252423
+  opaqueItemSeparator: 262524
   standardActionText: 59d4ff
   destructiveActionText: ff5e44
   disabledActionText: 878a8d
@@ -419,7 +419,7 @@ actionSheet:
   controlAccent: 59d4ff
   inputBg: 262524
   inputHollowBg: 262524
-  inputBorder: 252423
+  inputBorder: 262524
   inputPlaceholder: aaaaa8
   inputText: e2dfd3
   inputClearButton: aaaaa8
@@ -440,10 +440,10 @@ notification:
   expanded:
     bgType: dark
     navBar:
-      background: 2f2e2d
+      background: 2e2d2c
       primaryText: e2dfd3
       control: 59d4ff
-      separator: 252423
+      separator: 262524
 chart:
   labels: aaaaa8
   helperLines: 59aaaaa8
@@ -452,5 +452,5 @@ chart:
   detailsText: e2dfd3
   detailsArrow: aaaaa8
   detailsView: 262524
-  rangeViewFrame: 252423
+  rangeViewFrame: 262524
   rangeViewMarker: e2dfd3

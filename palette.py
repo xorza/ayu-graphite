@@ -101,7 +101,25 @@ class Palette:
 
 
 def load_palette(path: str) -> Palette:
+    """Resolve [semantic] string refs against [primitives] hex values.
+
+    A semantic value is either a literal `#rrggbb` (escape hatch) or the name
+    of a key in [primitives]. Anything that doesn't resolve is a hard error —
+    we'd rather break the build than silently render a typo as a missing key
+    fallback elsewhere."""
     with open(path, "rb") as f:
         data = tomllib.load(f)
-    flat = {k: v for section in data.values() for k, v in section.items()}
-    return Palette(**flat)
+    primitives = data["primitives"]
+    semantic = data["semantic"]
+    resolved = {}
+    for key, value in semantic.items():
+        if value.startswith("#"):
+            resolved[key] = value
+        elif value in primitives:
+            resolved[key] = primitives[value]
+        else:
+            raise KeyError(
+                f"semantic.{key} = {value!r} is neither a hex literal nor a "
+                f"primitive name. Available primitives: {sorted(primitives)}"
+            )
+    return Palette(**resolved)

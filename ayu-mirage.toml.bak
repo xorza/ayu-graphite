@@ -1,0 +1,95 @@
+# Ayu Mirage High Contrast — semantic palette (single source of truth)
+# Hand-edit me; the target builders are pure transformers.
+
+[backgrounds]
+bg = "#1f1e1d"
+panel = "#262524"
+surface = "#262524"
+elem = "#262524"
+elem_hover = "#2e2d2c"
+elem_active = "#353433"
+elem_disabled = "#2c2a28"
+title_bar = "#2f2e2d"
+title_bar_inactive = "#262524"
+overlay_black = "#000000"
+
+[borders]
+border = "#252423"
+border_focused = "#105577"
+
+[text]
+text = "#e2dfd3"
+text_muted = "#aaaaa8"
+text_disabled = "#878a8d"
+
+[accent_status]
+accent = "#59d4ff"
+success = "#daff58"
+warning = "#ffd44a"
+error = "#ff5e44"
+hint = "#77adbc"
+
+[status_bg]
+info_bg = "#2c4a60"
+info_border = "#4a8ab0"
+hint_bg = "#0f3e58"
+hint_border = "#255d79"
+success_bg = "#486a15"
+success_border = "#668a2f"
+warning_bg = "#5f4617"
+warning_border = "#81632b"
+error_bg = "#4f191a"
+error_border = "#703130"
+diagnostic_muted_bg = "#4c515a"
+
+[diff]
+diff_term_plus = "#b5ff10"
+diff_term_minus = "#ff3b48"
+
+[chrome]
+line_number = "#727272"
+line_number_active = "#f6f6f6"
+line_number_hover = "#c8c8c8"
+scrollbar_thumb = "#a4a4a4"
+drop_target = "#a7a7a5"
+search_highlight = "#7ddeff"
+search_match_active = "#ff7d2d"
+
+[ansi]
+ansi_blue = "#5985a3"
+ansi_magenta = "#d897ff"
+ansi_cyan = "#98e1f3"
+ansi_bright_black = "#70747a"
+ansi_dim_black = "#404040"
+ansi_bright_red = "#8a302b"
+ansi_dim_red = "#b05043"
+ansi_bright_green = "#75a228"
+ansi_dim_green = "#5a702c"
+ansi_bright_yellow = "#9d7222"
+ansi_dim_yellow = "#ba913b"
+ansi_bright_blue = "#4ad4ff"
+ansi_dim_blue = "#3b91ba"
+ansi_bright_magenta = "#177083"
+ansi_dim_magenta = "#7d4a96"
+ansi_bright_cyan = "#3f846e"
+ansi_dim_cyan = "#69b9a0"
+ansi_bright_white = "#ffffff"
+ansi_dim_white = "#9e9d94"
+
+[players]
+player_bg = "#868686"
+
+[syntax]
+syn_keyword = "#ffa63d"
+syn_function = "#ffd54c"
+syn_string = "#d9ff57"
+syn_string_regex = "#69ffd1"
+syn_comment = "#858585"
+syn_number = "#d897ff"
+syn_type = "#7adcf3"
+syn_operator = "#ff8a3f"
+syn_attribute = "#7adcf3"
+syn_punctuation = "#c7c6bf"
+syn_doc = "#ababa9"
+syn_string_special = "#ffdd8c"
+syn_predictive = "#7091b3"

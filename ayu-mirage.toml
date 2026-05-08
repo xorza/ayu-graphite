@@ -1,95 +1,169 @@
 # Ayu Mirage High Contrast — semantic palette (single source of truth)
-# Hand-edit me; the target builders are pure transformers.
+#
+# Two-tier:
+#   [primitives] are the actual hex values, named by hue + brightness step.
+#   [semantic]   keys reference primitives by name; that's what builders read.
+#
+# palette.py resolves the refs at load time. To shift a hue everywhere it's
+# used, edit one primitive — semantic intent stays put.
 
-[backgrounds]
-bg = "#1f1e1d"
-panel = "#262524"
-surface = "#262524"
-elem = "#262524"
-elem_hover = "#2e2d2c"
-elem_active = "#353433"
-elem_disabled = "#2c2a28"
-title_bar = "#2f2e2d"
-title_bar_inactive = "#262524"
-overlay_black = "#000000"
+[primitives]
+# Neutrals (warm-tinted greys, dark → light)
+black     = "#000000"
+gray_950  = "#1f1e1d"
+gray_900  = "#262524"
+gray_850  = "#2e2d2c"
+gray_800  = "#353433"
+gray_700  = "#404040"
+gray_600  = "#70747a"
+gray_500  = "#878a8d"
+gray_400  = "#aaaaa8"
+gray_300  = "#c7c6bf"
+gray_200  = "#e2dfd3"
+gray_100  = "#f6f6f6"
+white     = "#ffffff"
 
-[borders]
-border = "#252423"
-border_focused = "#105577"
+# Reds
+red_400   = "#ff5e44"     # error / deleted
+red_500   = "#b05043"     # ansi dim red
+red_700   = "#703130"     # error border
+red_800   = "#8a302b"     # ansi bright red
+red_900   = "#4f191a"     # error bg
 
-[text]
-text = "#e2dfd3"
-text_muted = "#aaaaa8"
-text_disabled = "#878a8d"
+# Oranges
+orange_400 = "#ffa63d"    # keyword / operator
+orange_500 = "#ff7d2d"    # search match active
 
-[accent_status]
-accent = "#59d4ff"
-success = "#daff58"
-warning = "#ffd44a"
-error = "#ff5e44"
-hint = "#77adbc"
+# Yellows
+yellow_300 = "#ffdd8c"    # string special
+yellow_400 = "#ffd44a"    # warning / function
+yellow_500 = "#ba913b"    # ansi dim yellow
+yellow_600 = "#9d7222"    # ansi bright yellow
+yellow_700 = "#81632b"    # warning border
+yellow_900 = "#5f4617"    # warning bg
 
-[status_bg]
-info_bg = "#2c4a60"
-info_border = "#4a8ab0"
-hint_bg = "#0f3e58"
-hint_border = "#255d79"
-success_bg = "#486a15"
-success_border = "#668a2f"
-warning_bg = "#5f4617"
-warning_border = "#81632b"
-error_bg = "#4f191a"
-error_border = "#703130"
-diagnostic_muted_bg = "#4c515a"
+# Greens (lime → olive)
+lime_400  = "#daff58"     # success / string
+green_500 = "#75a228"     # ansi bright green
+green_600 = "#5a702c"     # ansi dim green
+green_700 = "#668a2f"     # success border
+green_900 = "#486a15"     # success bg
 
-[diff]
-diff_term_plus = "#b5ff10"
-diff_term_minus = "#ff3b48"
+# Teals (cyan-green)
+teal_400  = "#69ffd1"     # regex
+teal_700  = "#3f846e"     # ansi bright cyan (dark)
 
-[chrome]
-line_number = "#727272"
-line_number_active = "#f6f6f6"
-line_number_hover = "#c8c8c8"
-scrollbar_thumb = "#a4a4a4"
-drop_target = "#a7a7a5"
-search_highlight = "#7ddeff"
-search_match_active = "#ff7d2d"
+# Cyan / blue
+cyan_300  = "#98e1f3"     # ansi cyan
+cyan_400  = "#7adcf3"     # type / attribute / search highlight
+cyan_500  = "#59d4ff"     # accent / ansi bright blue
+blue_500  = "#5985a3"     # ansi blue (washed)
+blue_600  = "#4a8ab0"     # info border / ansi dim blue
+blue_700  = "#2c4a60"     # info bg
+blue_800  = "#105577"     # border focused / hint border
+blue_900  = "#0f3e58"     # hint bg
+blue_predict = "#7091b3"  # syn_predictive
+blue_hint = "#77adbc"     # hint fg
 
-[ansi]
-ansi_blue = "#5985a3"
-ansi_magenta = "#d897ff"
-ansi_cyan = "#98e1f3"
-ansi_bright_black = "#70747a"
-ansi_dim_black = "#404040"
-ansi_bright_red = "#8a302b"
-ansi_dim_red = "#b05043"
-ansi_bright_green = "#75a228"
-ansi_dim_green = "#5a702c"
-ansi_bright_yellow = "#9d7222"
-ansi_dim_yellow = "#ba913b"
-ansi_bright_blue = "#4ad4ff"
-ansi_dim_blue = "#3b91ba"
-ansi_bright_magenta = "#177083"
-ansi_dim_magenta = "#7d4a96"
-ansi_bright_cyan = "#3f846e"
-ansi_dim_cyan = "#69b9a0"
-ansi_bright_white = "#ffffff"
-ansi_dim_white = "#9e9d94"
+# Purples
+purple_400 = "#d897ff"    # magenta / number
+purple_700 = "#7d4a96"    # dim magenta
 
-[players]
-player_bg = "#868686"
+# One-off cool gray
+slate_700 = "#4c515a"     # diagnostic muted bg
 
-[syntax]
-syn_keyword = "#ffa63d"
-syn_function = "#ffd54c"
-syn_string = "#d9ff57"
-syn_string_regex = "#69ffd1"
-syn_comment = "#858585"
-syn_number = "#d897ff"
-syn_type = "#7adcf3"
-syn_operator = "#ff8a3f"
-syn_attribute = "#7adcf3"
-syn_punctuation = "#c7c6bf"
-syn_doc = "#ababa9"
-syn_string_special = "#ffdd8c"
-syn_predictive = "#7091b3"
+# ─────────────────────────────────────────────────────────────────────────
+
+[semantic]
+# Backgrounds / chrome
+bg                  = "gray_950"
+panel               = "gray_900"
+surface             = "gray_900"
+elem                = "gray_900"
+elem_hover          = "gray_850"
+elem_active         = "gray_800"
+elem_disabled       = "gray_900"
+title_bar           = "gray_850"
+title_bar_inactive  = "gray_900"
+overlay_black       = "black"
+
+# Borders
+border              = "gray_900"
+border_focused      = "blue_800"
+
+# Text
+text                = "gray_200"
+text_muted          = "gray_400"
+text_disabled       = "gray_500"
+
+# Accent / status
+accent              = "cyan_500"
+success             = "lime_400"
+warning             = "yellow_400"
+error               = "red_400"
+hint                = "blue_hint"
+
+# Status backgrounds
+info_bg             = "blue_700"
+info_border         = "blue_600"
+hint_bg             = "blue_900"
+hint_border         = "blue_800"
+success_bg          = "green_900"
+success_border      = "green_700"
+warning_bg          = "yellow_900"
+warning_border      = "yellow_700"
+error_bg            = "red_900"
+error_border        = "red_700"
+diagnostic_muted_bg = "slate_700"
+
+# Diff (terminal-pane variants — louder than line-bg diffs)
+diff_term_plus      = "lime_400"
+diff_term_minus     = "red_400"
+
+# Editor chrome
+line_number         = "gray_600"
+line_number_active  = "gray_100"
+line_number_hover   = "gray_300"
+scrollbar_thumb     = "gray_400"
+drop_target         = "gray_400"
+search_highlight    = "cyan_400"
+search_match_active = "orange_500"
+
+# ANSI 16
+ansi_blue           = "blue_500"
+ansi_magenta        = "purple_400"
+ansi_cyan           = "cyan_300"
+ansi_bright_black   = "gray_600"
+ansi_dim_black      = "gray_700"
+ansi_bright_red     = "red_800"
+ansi_dim_red        = "red_500"
+ansi_bright_green   = "green_500"
+ansi_dim_green      = "green_600"
+ansi_bright_yellow  = "yellow_600"
+ansi_dim_yellow     = "yellow_500"
+ansi_bright_blue    = "cyan_500"
+ansi_dim_blue       = "blue_600"
+ansi_bright_magenta = "teal_700"
+ansi_dim_magenta    = "purple_700"
+ansi_bright_cyan    = "teal_700"
+ansi_dim_cyan       = "teal_400"
+ansi_bright_white   = "white"
+ansi_dim_white      = "gray_400"
+
+# Players (collab cursor bg)
+player_bg           = "gray_500"
+
+# Syntax
+syn_keyword         = "orange_400"
+syn_function        = "yellow_400"
+syn_string          = "lime_400"
+syn_string_regex    = "teal_400"
+syn_comment         = "gray_500"
+syn_number          = "purple_400"
+syn_type            = "cyan_400"
+syn_operator        = "orange_400"
+syn_attribute       = "cyan_400"
+syn_punctuation     = "gray_300"
+syn_doc             = "gray_400"
+syn_string_special  = "yellow_300"
+syn_predictive      = "blue_predict"

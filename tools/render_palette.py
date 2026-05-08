@@ -63,7 +63,16 @@ def main():
     with open(TOML, "rb") as f:
         data = tomllib.load(f)
 
-    sections = [(name, list(items.items())) for name, items in data.items()]
+    primitives = data["primitives"]
+    semantic = data["semantic"]
+    resolved_semantic = {
+        k: (v if v.startswith("#") else primitives[v])
+        for k, v in semantic.items()
+    }
+    sections = [
+        ("primitives", list(primitives.items())),
+        ("semantic", list(resolved_semantic.items())),
+    ]
 
     rows_per_section = [(len(items) + COLS - 1) // COLS for _, items in sections]
     total_rows = sum(rows_per_section)
