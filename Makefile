@@ -1,6 +1,11 @@
-.PHONY: all deps build palette zed claude telegram telegram_ios terminal kde konsole install clean
+.PHONY: all deps audit build palette zed claude telegram telegram_ios terminal kde konsole install clean
 
-all: build palette
+all: audit build palette
+
+# Contrast rules the targets rely on: chrome layers stay separable, every
+# foreground clears 4.5:1 where it lands, ANSI stays dim<normal<bright.
+audit: deps
+	python3 tools/audit.py
 
 # Install python deps (tomli on python <3.11). Idempotent.
 # On Python >=3.11, tomllib is stdlib and there's nothing to install, so

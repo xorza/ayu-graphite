@@ -94,24 +94,25 @@ def build_terminal(p: Palette) -> dict[str, Any]:
         "TextColor": c(p.text),
         "TextBoldColor": c(p.text),
         "CursorColor": c(p.accent),
-        "SelectionColor": c(p.elem_active),
-        # Base ANSI 8 — semantic roles match our palette.
-        "ANSIBlackColor": c(p.bg),
-        "ANSIRedColor": c(p.error),
-        "ANSIGreenColor": c(p.success),
-        "ANSIYellowColor": c(p.warning),
+        "SelectionColor": c(p.selection_bg),
+        # ANSI 16 straight off the palette's ansi_* rows — same source the
+        # Konsole and Zed terminals read, so a bright color is the same
+        # bright color in all three.
+        "ANSIBlackColor": c(p.ansi_black),
+        "ANSIRedColor": c(p.ansi_red),
+        "ANSIGreenColor": c(p.ansi_green),
+        "ANSIYellowColor": c(p.ansi_yellow),
         "ANSIBlueColor": c(p.ansi_blue),
-        "ANSIMagentaColor": c(p.syn_number),  # purple
+        "ANSIMagentaColor": c(p.ansi_magenta),
         "ANSICyanColor": c(p.ansi_cyan),
-        "ANSIWhiteColor": c(p.text),
-        # Bright variants — slightly punchier or accent-tinted siblings.
-        "ANSIBrightBlackColor": c(p.text_disabled),
-        "ANSIBrightRedColor": c(p.error),
-        "ANSIBrightGreenColor": c(p.success),
-        "ANSIBrightYellowColor": c(p.syn_function),  # lighter yellow
-        "ANSIBrightBlueColor": c(p.accent),  # pastel sky blue
-        "ANSIBrightMagentaColor": c(p.ansi_magenta),
-        "ANSIBrightCyanColor": c(p.syn_string_regex),
+        "ANSIWhiteColor": c(p.ansi_white),
+        "ANSIBrightBlackColor": c(p.ansi_bright_black),
+        "ANSIBrightRedColor": c(p.ansi_bright_red),
+        "ANSIBrightGreenColor": c(p.ansi_bright_green),
+        "ANSIBrightYellowColor": c(p.ansi_bright_yellow),
+        "ANSIBrightBlueColor": c(p.ansi_bright_blue),
+        "ANSIBrightMagentaColor": c(p.ansi_bright_magenta),
+        "ANSIBrightCyanColor": c(p.ansi_bright_cyan),
         "ANSIBrightWhiteColor": c(p.ansi_bright_white),
         # Window geometry + close behavior — match the user's preferred shell.
         "columnCount": 130,

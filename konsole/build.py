@@ -17,48 +17,34 @@ def rgb(hex6: str) -> str:
 
 
 def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
-    # ANSI 0..7 (normal) + Intense (bright) mirror terminal/build.py.
-    # Faint is a dimmed variant Konsole uses for SGR 2 — pick muted siblings.
-    # Background uses p.bg (matches Zed's integrated terminal) instead of
-    # p.bg (which is the darker macOS Terminal.app value).
+    # Konsole's three rows are the palette's three ANSI rows verbatim:
+    # Color<n> = normal, Color<n>Intense = bright (SGR 1), Color<n>Faint =
+    # dim (SGR 2). Reading them straight off ansi_* is what keeps this in
+    # step with terminal/build.py and Zed — the earlier hand-picked mix
+    # reused `error`/`success` for both normal and intense (so bold red was
+    # plain red) and borrowed syntax colors for Faint, which put grey in the
+    # yellow slot and orange in the magenta slot.
     normal = [
-        p.bg,             # 0 black
-        p.error,          # 1 red
-        p.success,        # 2 green
-        p.warning,        # 3 yellow
-        p.ansi_blue,      # 4 blue
-        p.syn_number,     # 5 magenta
-        p.ansi_cyan,      # 6 cyan
-        p.text,           # 7 white
+        p.ansi_black, p.ansi_red, p.ansi_green, p.ansi_yellow,
+        p.ansi_blue, p.ansi_magenta, p.ansi_cyan, p.ansi_white,
     ]
     intense = [
-        p.text_disabled,  # 8  bright black
-        p.error,          # 9  bright red
-        p.success,        # 10 bright green
-        p.syn_function,   # 11 bright yellow
-        p.accent,         # 12 bright blue
-        p.ansi_magenta,   # 13 bright magenta
-        p.syn_string_regex, # 14 bright cyan
-        p.ansi_bright_white,  # 15 bright white
+        p.ansi_bright_black, p.ansi_bright_red, p.ansi_bright_green,
+        p.ansi_bright_yellow, p.ansi_bright_blue, p.ansi_bright_magenta,
+        p.ansi_bright_cyan, p.ansi_bright_white,
     ]
     faint = [
-        p.bg,
-        p.error,
-        p.success,
-        p.syn_doc,
-        p.syn_predictive,
-        p.syn_keyword,
-        p.syn_string_special,
-        p.text_muted,
+        p.ansi_dim_black, p.ansi_dim_red, p.ansi_dim_green, p.ansi_dim_yellow,
+        p.ansi_dim_blue, p.ansi_dim_magenta, p.ansi_dim_cyan, p.ansi_dim_white,
     ]
 
     sections: dict[str, dict[str, str]] = {
         "Background":          {"Color": rgb(p.bg)},
-        "BackgroundFaint":     {"Color": rgb(p.bg)},
+        "BackgroundFaint":     {"Color": rgb(p.ansi_dim_black)},
         "BackgroundIntense":   {"Color": rgb(p.bg)},
         "Foreground":          {"Color": rgb(p.text)},
-        "ForegroundFaint":     {"Color": rgb(p.text_muted)},
-        "ForegroundIntense":   {"Color": rgb(p.accent)},
+        "ForegroundFaint":     {"Color": rgb(p.ansi_dim_white)},
+        "ForegroundIntense":   {"Color": rgb(p.ansi_bright_white)},
     }
     for i in range(8):
         sections[f"Color{i}"]        = {"Color": rgb(normal[i])}

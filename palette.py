@@ -32,10 +32,18 @@ class Palette:
     text_disabled: str
 
     accent: str
+    accent_hover: str
+    accent_active: str
     success: str
     warning: str
     error: str
     hint: str
+
+    on_accent: str
+    on_accent_muted: str
+
+    selection_bg: str
+    selection_fg: str
 
     info_bg: str
     info_border: str
@@ -60,9 +68,14 @@ class Palette:
     search_highlight: str
     search_match_active: str
 
+    ansi_black: str
+    ansi_red: str
+    ansi_green: str
+    ansi_yellow: str
     ansi_blue: str
     ansi_magenta: str
     ansi_cyan: str
+    ansi_white: str
     ansi_bright_black: str
     ansi_dim_black: str
     ansi_bright_red: str

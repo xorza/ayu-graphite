@@ -35,11 +35,15 @@ def build_telegram(p: Palette) -> str:
         ("windowSubTextFgOver",       p.text_muted),
         ("windowBoldFg",              p.text),
         ("windowBoldFgOver",          p.text),
-        ("windowFgActive",            p.text),
-        ("windowActiveTextFg",        p.ansi_cyan),
+        # Ink for everything drawn on windowBgActive — the "Update Telegram"
+        # button in the chat list is the loudest of them. Upstream pairs a
+        # white fg with a mid-blue fill; our accent is a light cyan, so the
+        # inherited `text` sat on it at 1.28:1 and the label disappeared.
+        ("windowFgActive",            p.on_accent),
+        ("windowActiveTextFg",        p.accent),
 
         ("sideBarBg",                 p.panel),
-        ("sideBarBgActive",           p.elem_active),
+        ("sideBarBgActive",           p.selection_bg),
         ("topBarBg",                  p.title_bar),
 
         ("titleBg",                   p.title_bar_inactive),
@@ -54,55 +58,67 @@ def build_telegram(p: Palette) -> str:
 
         ("dialogsBg",                 p.panel),
         ("dialogsBgOver",             p.elem_hover),
-        ("dialogsBgActive",           p.elem_active),
+        ("dialogsBgActive",           p.selection_bg),
         ("dialogsNameFg",             p.text),
-        ("dialogsNameFgActive",       p.text),
+        ("dialogsNameFgActive",       p.selection_fg),
         ("dialogsTextFg",             p.text_muted),
-        ("dialogsTextFgActive",       p.text),
+        ("dialogsTextFgActive",       p.selection_fg),
         ("dialogsDateFg",             p.text_muted),
         ("dialogsDateFgActive",       p.text_muted),
-        ("dialogsUnreadBg",           p.ansi_cyan),
+        ("dialogsUnreadBg",           p.accent),
+        ("dialogsUnreadBgOver",       p.accent),
         ("dialogsUnreadBgMuted",      p.text_muted),
-        ("dialogsUnreadFg",           p.bg),
-        ("dialogsUnreadFgActive",     p.bg),
+        ("dialogsUnreadFg",           p.on_accent),
+        # Upstream derives the badge fill on a selected row from
+        # dialogsTextFgActive; left implicit that tracks whatever the row's
+        # text colour happens to be, which is a light fill under light ink.
+        ("dialogsUnreadBgActive",     p.accent),
+        ("dialogsUnreadBgMutedActive", p.text_muted),
+        ("dialogsUnreadFgActive",     p.on_accent),
 
         ("msgInBg",                   p.chat_msg_bg),
-        ("msgInBgSelected",           p.elem_active),
+        ("msgInBgSelected",           p.selection_bg),
         ("msgOutBg",                  p.chat_msg_bg),
-        ("msgOutBgSelected",          p.elem_active),
+        ("msgOutBgSelected",          p.selection_bg),
         ("msgInDateFg",               p.text_muted),
         ("msgOutDateFg",              p.text_muted),
-        ("msgInServiceFg",            p.ansi_cyan),
-        ("msgOutServiceFg",           p.ansi_cyan),
+        ("msgInServiceFg",            p.accent),
+        ("msgOutServiceFg",           p.accent),
         ("msgInMonoFg",               p.syn_string),
         ("msgOutMonoFg",              p.syn_string),
-        ("msgInReplyBarColor",        p.ansi_cyan),
+        ("msgInReplyBarColor",        p.accent),
         ("msgOutReplyBarColor",       p.syn_function),
         ("msgServiceBg",              p.panel),
         ("msgServiceFg",              p.text_muted),
 
         # Bubble drop-shadows — upstream night palette tints these greenish/blue.
         # Map all four to bg so any shadow that does render reads as neutral dark.
-        ("msgInShadow",               p.elem_active),
-        ("msgInShadowSelected",       p.elem_active),
-        ("msgOutShadow",              p.elem_active),
-        ("msgOutShadowSelected",      p.elem_active),
+        ("msgInShadow",               p.bg),
+        ("msgInShadowSelected",       p.bg),
+        ("msgOutShadow",              p.bg),
+        ("msgOutShadowSelected",      p.bg),
 
         # "Unread messages" divider in chat view — defaults render near-white.
         ("historyUnreadBarBg",        p.panel),
         ("historyUnreadBarBorder",    p.border),
-        ("historyUnreadBarFg",        p.ansi_cyan),
+        ("historyUnreadBarFg",        p.accent),
 
-        ("activeButtonBg",            p.elem_active),
-        ("activeButtonBgOver",        p.ansi_dim_black),
-        ("activeButtonFg",            p.accent),
-        ("activeButtonFgOver",        p.accent),
-        ("activeButtonSecondaryFg",       p.accent),
-        ("activeButtonSecondaryFgOver",   p.accent),
+        # The filled primary button. It was inverted — a grey fill with cyan
+        # text — which read as a plain surface on its own and went cyan-on-
+        # cyan wherever tdesktop pairs activeButtonFg with a windowBgActive
+        # fill. Accent fill, dark ink, matching the constant's intent.
+        ("activeButtonBg",            p.accent),
+        ("activeButtonBgOver",        p.accent_hover),
+        ("activeButtonBgRipple",      p.accent_active),
+        ("activeButtonFg",            p.on_accent),
+        ("activeButtonFgOver",        p.on_accent),
+        ("activeButtonSecondaryFg",       p.on_accent_muted),
+        ("activeButtonSecondaryFgOver",   p.on_accent_muted),
         ("lightButtonBg",             p.elem),
         ("lightButtonBgOver",         p.elem_hover),
-        ("lightButtonFg",             p.ansi_cyan),
-        ("lightButtonFgOver",         p.ansi_cyan),
+        ("lightButtonBgRipple",       p.elem_active),
+        ("lightButtonFg",             p.accent),
+        ("lightButtonFgOver",         p.accent),
 
         ("scrollBg",                  p.panel),
         ("scrollBgOver",              p.elem_hover),
@@ -122,7 +138,10 @@ def build_telegram(p: Palette) -> str:
         ("dialogsSentIconFgActive",   p.chat_check),
         ("boxTextFgError",            p.error),
         ("activeLineFgError",         p.error),
-        ("attentionButtonFg",         p.warning),
+        # Destructive actions (log out, delete chat, leave group) — red like
+        # every other target's `error`, not the yellow it had.
+        ("attentionButtonFg",         p.error),
+        ("attentionButtonFgOver",     p.error),
 
         # Dividers / separators / shadows — Telegram defaults these bright in
         # popup menus when undefined. Keep them subtle and dark.
@@ -130,7 +149,7 @@ def build_telegram(p: Palette) -> str:
         ("windowShadowFg",            p.panel),
         ("windowShadowFgFallback",    p.panel),
         ("boxDividerBg",              p.panel),
-        ("boxDividerFg",              p.elem),
+        ("boxDividerFg",              p.border),
         ("menuBg",                    p.panel),
         ("menuBgOver",                p.elem_hover),
         ("menuBgRipple",              p.elem_active),
@@ -139,10 +158,10 @@ def build_telegram(p: Palette) -> str:
         ("menuIconFg",                p.text_muted),
         ("menuIconFgOver",            p.text),
         ("menuSubmenuArrowFg",        p.text_muted),
-        ("menuSeparatorFg",           p.elem),
+        ("menuSeparatorFg",           p.border),
 
         ("mentionBg",                 p.elem),
-        ("mentionFg",                 p.ansi_cyan),
+        ("mentionFg",                 p.accent),
 
         # Forward / compose / reply bar backgrounds — Telegram falls back to a
         # bluish-cyan night default for these when not set explicitly.
@@ -175,6 +194,17 @@ def build_telegram(p: Palette) -> str:
         ("msgFileOutBg",                      p.accent),
         ("msgFileOutBgOver",                  p.accent),
         ("msgFileOutBgSelected",              "msgFileOutBg"),
+
+        # The arrow and the radial progress line drawn *inside* those accent
+        # circles. Both default to #ffffff, which is 1.2:1 on our accent.
+        ("historyFileInIconFg",               p.on_accent),
+        ("historyFileInIconFgSelected",       p.on_accent),
+        ("historyFileInRadialFg",             p.on_accent),
+        ("historyFileInRadialFgSelected",     p.on_accent),
+        ("historyFileOutIconFg",              p.on_accent),
+        ("historyFileOutIconFgSelected",      p.on_accent),
+        ("historyFileOutRadialFg",            p.on_accent),
+        ("historyFileOutRadialFgSelected",    p.on_accent),
 
         # Shared-files-tab thumbnail parity (msgFile1..4 slots), in case the
         # user lands there. Upstream darkens the selected variant.

@@ -17,6 +17,7 @@ kde/build.py                           palette → ayu-graphite.colors (Plasma c
 konsole/build.py                       palette → ayu-graphite.colorscheme
 tools/ayu-source.json                  reference snapshot of upstream Zed Ayu (not read at build time)
 tools/render_palette.py                renders palette.png — every token as a labeled swatch
+tools/audit.py                         contrast rules — runs before every build, fails on a violation
 Makefile                               convenience targets
 ```
 
@@ -27,10 +28,17 @@ To add a new target (Sublime, iTerm, …), drop a `<target>/build.py` next to it
 ## Usage
 
 ```sh
-make            # build every target
+make            # audit the palette, then build every target
+make audit      # contrast rules only
 make install    # copy generated themes into their app dirs (Telegram is manual)
 ./install.sh    # same as `make install`, without make
 ```
+
+`make audit` is the guard on the parts of the palette that targets silently
+depend on: chrome layers that stack in one view stay separable, every
+foreground clears 4.5:1 on the surfaces it lands on, and the 24 ANSI slots
+stay distinct with dim &lt; normal &lt; bright per hue. It runs first in `make`,
+so a palette edit that breaks one of those fails before any theme is written.
 
 In Zed: settings → theme → "Ayu Graphite".
 In Claude Code: `/config` → theme → "Ayu Graphite".

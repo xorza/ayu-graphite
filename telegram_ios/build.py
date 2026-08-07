@@ -31,11 +31,11 @@ def a(aa: str, color: str) -> str:
 
 def build_ios(p: Palette) -> dict:
     accent = p.accent
-    # Desktop reserves `accent` (bright cyan_500) for filled UI fg
-    # (activeButton, msgFile circles) and uses `ansi_cyan` (softer cyan_300)
-    # for inline text accents — unread bg, mentions, reply bars, service text,
-    # light-button fg. Mirror that split here so both targets read the same.
-    inline_accent = p.ansi_cyan
+    # One accent, used for both fills and inline text — the desktop target
+    # does the same. The old split (cyan_500 for fills, cyan_300 for inline
+    # text) meant a link and a filled button were different cyans in the same
+    # window, and neither matched Zed or KDE.
+    inline_accent = p.accent
     incoming_bubble = p.chat_msg_bg
     outgoing_bubble = p.chat_msg_bg
     return {
@@ -65,7 +65,7 @@ def build_ios(p: Palette) -> dict:
                 "selectedText": h(accent),
                 "badgeBackground": h(p.error),
                 "badgeStroke": h(p.title_bar),
-                "badgeText": h(p.text),
+                "badgeText": h(p.on_accent),
             },
             "navBar": {
                 "button": h(accent),
@@ -79,7 +79,7 @@ def build_ios(p: Palette) -> dict:
                 "separator": h(p.border),
                 "badgeFill": h(p.error),
                 "badgeStroke": h(p.title_bar),
-                "badgeText": h(p.text),
+                "badgeText": h(p.on_accent),
                 "segmentedBg": h(p.elem),
                 "segmentedFg": h(p.elem_active),
                 "segmentedText": h(p.text),
@@ -126,17 +126,17 @@ def build_ios(p: Palette) -> dict:
             },
             "disclosureActions": {
                 "neutral1":     {"bg": h(p.elem),    "fg": h(p.text)},
-                "neutral2":     {"bg": h(p.warning), "fg": h(p.bg)},
-                "destructive":  {"bg": h(p.error),   "fg": h(p.text)},
-                "constructive": {"bg": h(p.success), "fg": h(p.bg)},
-                "accent":       {"bg": h(accent),    "fg": h(p.bg)},
-                "warning":      {"bg": h(p.warning), "fg": h(p.bg)},
+                "neutral2":     {"bg": h(p.warning), "fg": h(p.on_accent)},
+                "destructive":  {"bg": h(p.error),   "fg": h(p.on_accent)},
+                "constructive": {"bg": h(p.success), "fg": h(p.on_accent)},
+                "accent":       {"bg": h(accent),    "fg": h(p.on_accent)},
+                "warning":      {"bg": h(p.warning), "fg": h(p.on_accent)},
                 "inactive":     {"bg": h(p.elem),    "fg": h(p.text_muted)},
             },
             "check": {
                 "bg": h(accent),
                 "stroke": h(p.text_muted),
-                "fg": h(p.bg),
+                "fg": h(p.on_accent),
             },
             "controlSecondary": h(p.text_muted),
             "freeInputField": {
@@ -169,7 +169,7 @@ def build_ios(p: Palette) -> dict:
             "itemBg": h(p.bg),
             "pinnedItemBg": h(p.panel),
             "itemHighlightedBg": h(p.elem_hover),
-            "itemSelectedBg": h(p.elem_active),
+            "itemSelectedBg": h(p.selection_bg),
             "title": h(p.text),
             "secretTitle": h(p.success),
             "dateText": h(p.text_muted),
@@ -180,24 +180,24 @@ def build_ios(p: Palette) -> dict:
             "checkmark": h(p.chat_check),
             "pendingIndicator": h(p.text_muted),
             "failedFill": h(p.error),
-            "failedFg": h(p.text),
+            "failedFg": h(p.on_accent),
             "muteIcon": h(p.text_muted),
-            "unreadBadgeActiveBg": h(p.ansi_cyan),
-            "unreadBadgeActiveText": h(p.bg),
+            "unreadBadgeActiveBg": h(accent),
+            "unreadBadgeActiveText": h(p.on_accent),
             "unreadBadgeInactiveBg": h(p.text_muted),
-            "unreadBadgeInactiveText": h(p.bg),
-            "reactionBadgeActiveBg": h(p.ansi_cyan),
+            "unreadBadgeInactiveText": h(p.on_accent),
+            "reactionBadgeActiveBg": h(accent),
             "pinnedBadge": h(p.text_muted),
             "pinnedSearchBar": h(p.elem),
             "regularSearchBar": h(p.elem),
             "sectionHeaderBg": h(p.panel),
             "sectionHeaderText": h(p.text_muted),
             "verifiedIconBg": h(accent),
-            "verifiedIconFg": h(p.bg),
+            "verifiedIconFg": h(p.on_accent),
             "secretIcon": h(p.success),
             "pinnedArchiveAvatar": {
                 "background": {"top": h(accent), "bottom": h(accent)},
-                "foreground": h(p.bg),
+                "foreground": h(p.on_accent),
             },
             "unpinnedArchiveAvatar": {
                 "background": {"top": h(p.elem), "bottom": h(p.elem)},
@@ -224,8 +224,8 @@ def build_ios(p: Palette) -> dict:
                 "shareButtonStroke": {"withWp": a("26", p.text_muted), "withoutWp": a("26", p.text_muted)},
                 "shareButtonFg":     {"withWp": h(p.text_muted), "withoutWp": h(p.text_muted)},
                 "mediaOverlayControl": {"bg": a("99", p.overlay_black), "fg": h(p.text)},
-                "selectionControl":   {"bg": h(accent), "stroke": h(p.text), "fg": h(p.bg)},
-                "deliveryFailed":     {"bg": h(p.error), "fg": h(p.text)},
+                "selectionControl":   {"bg": h(accent), "stroke": h(p.text), "fg": h(p.on_accent)},
+                "deliveryFailed":     {"bg": h(p.error), "fg": h(p.on_accent)},
                 "mediaHighlightOverlay": a("99", p.text),
                 "stickerPlaceholder":        {"withWp": a("7f", p.elem), "withoutWp": a("7f", p.elem)},
                 "stickerPlaceholderShimmer": {"withWp": a("0c", p.text), "withoutWp": a("0c", p.text)},
@@ -253,14 +253,14 @@ def build_ios(p: Palette) -> dict:
                 "inputText": h(p.text),
                 "inputControl": h(p.text_muted),
                 "actionControlBg": h(accent),
-                "actionControlFg": h(p.bg),
+                "actionControlFg": h(p.on_accent),
                 "primaryText": h(p.text),
                 "secondaryText": h(p.text_muted),
                 "mediaRecordDot": h(p.error),
                 "mediaRecordControl": {
                     "button": h(accent),
                     "micLevel": a("33", accent),
-                    "activeIcon": h(p.bg),
+                    "activeIcon": h(p.on_accent),
                 },
             },
             "inputMediaPanel": {
@@ -290,7 +290,7 @@ def build_ios(p: Palette) -> dict:
                 "fg": h(p.text_muted),
                 "badgeBg": h(accent),
                 "badgeStroke": h(accent),
-                "badgeText": h(p.bg),
+                "badgeText": h(p.on_accent),
             },
         },
         "actionSheet": {
@@ -313,7 +313,7 @@ def build_ios(p: Palette) -> dict:
             "inputPlaceholder": h(p.text_muted),
             "inputText": h(p.text),
             "inputClearButton": h(p.text_muted),
-            "checkContent": h(p.bg),
+            "checkContent": h(p.on_accent),
         },
         "contextMenu": {
             "dim": a("99", p.overlay_black),
@@ -382,7 +382,7 @@ def _bubble_side(p: Palette, bg: str, accent: str, *, outgoing: bool) -> dict:
             "highlight": a("1e", accent),
             "separator": h(p.border),
             "bar": h(accent),
-            "barIconForeground": h(p.bg),
+            "barIconForeground": h(p.on_accent),
             "barPositive": h(p.success),
             "barNegative": h(p.error),
         },
@@ -403,7 +403,7 @@ def _bubble(p: Palette, bg: str) -> dict:
         "reactionInactiveBg": a("19", p.text),
         "reactionInactiveFg": h(p.text),
         "reactionActiveBg": h(p.accent),
-        "reactionActiveFg": h(p.bg),
+        "reactionActiveFg": h(p.on_accent),
     }
 
 
@@ -416,7 +416,7 @@ def _freeform(p: Palette) -> dict:
         "reactionInactiveBg": a("19", p.text),
         "reactionInactiveFg": h(p.text),
         "reactionActiveBg": h(p.accent),
-        "reactionActiveFg": h(p.bg),
+        "reactionActiveFg": h(p.on_accent),
     }
 
 
