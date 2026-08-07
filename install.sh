@@ -35,3 +35,7 @@ fi
 # Telegram Desktop has no scriptable theme-import path — load
 # telegram/ayu-graphite.tdesktop-theme via Settings → Chat Settings → Custom theme.
 echo "telegram/ayu-graphite.tdesktop-theme: load it manually via Telegram → Settings → Chat Settings"
+
+# Brave only sideloads unpacked extensions through its own UI; dropping the
+# directory into the profile's Extensions dir does nothing without a signature.
+echo "brave/ayu-graphite: load it manually via brave://extensions → Developer mode → Load unpacked"

@@ -1,0 +1,106 @@
+{
+  "manifest_version": 3,
+  "name": "Ayu Graphite",
+  "version": "1.0",
+  "description": "Higher-contrast Ayu Graphite for Brave.",
+  "theme": {
+    "colors": {
+      "frame": [
+        50,
+        49,
+        48
+      ],
+      "frame_inactive": [
+        40,
+        39,
+        38
+      ],
+      "frame_incognito": [
+        40,
+        39,
+        38
+      ],
+      "frame_incognito_inactive": [
+        31,
+        30,
+        29
+      ],
+      "toolbar": [
+        40,
+        39,
+        38
+      ],
+      "omnibox_background": [
+        31,
+        30,
+        29
+      ],
+      "omnibox_text": [
+        226,
+        223,
+        211
+      ],
+      "tab_text": [
+        226,
+        223,
+        211
+      ],
+      "tab_background_text": [
+        170,
+        170,
+        168
+      ],
+      "tab_background_text_inactive": [
+        170,
+        170,
+        168
+      ],
+      "tab_background_text_incognito": [
+        170,
+        170,
+        168
+      ],
+      "tab_background_text_incognito_inactive": [
+        170,
+        170,
+        168
+      ],
+      "bookmark_text": [
+        226,
+        223,
+        211
+      ],
+      "toolbar_button_icon": [
+        226,
+        223,
+        211
+      ],
+      "ntp_background": [
+        31,
+        30,
+        29
+      ],
+      "ntp_text": [
+        226,
+        223,
+        211
+      ],
+      "ntp_link": [
+        89,
+        212,
+        255
+      ],
+      "ntp_header": [
+        61,
+        60,
+        59
+      ],
+      "button_background": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  }
+}

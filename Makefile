@@ -1,4 +1,4 @@
-.PHONY: all deps audit build palette zed claude telegram telegram_ios terminal kde konsole install clean
+.PHONY: all deps audit build palette zed claude telegram telegram_ios terminal kde konsole brave install clean
 
 all: audit build palette
 
@@ -46,6 +46,9 @@ kde:
 konsole:
 	python3 konsole/build.py
 
+brave:
+	python3 brave/build.py
+
 # Copy generated themes into Zed and Claude theme dirs.
 install: all
 	./install.sh
@@ -54,3 +57,4 @@ install: all
 # never delete it here.
 clean:
 	rm -f zed/ayu-graphite.json claude/ayu-graphite.json telegram/ayu-graphite.tdesktop-theme telegram/ayu-graphite.tdesktop-theme.txt telegram_ios/ayu-graphite.tgios-theme terminal/ayu-graphite.terminal kde/ayu-graphite.colors konsole/ayu-graphite.colorscheme palette.png
+	rm -rf brave/ayu-graphite
