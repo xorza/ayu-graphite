@@ -18,7 +18,24 @@ install_file "$here/claude/ayu-graphite.json"            "$claude_dir/ayu-graphi
 
 echo "copied themes into $zed_dir and $claude_dir"
 
-
+# macOS Terminal.app: never `open` the .terminal file — Terminal imports it as
+# a *new* profile every time ("Ayu Graphite 1", "Ayu Graphite 2", ...). There is
+# no on-disk profile to overwrite either; Terminal only reads profiles out of
+# its own prefs, so -dict-add writes over the same-named one in place, and
+# `killall cfprefsd` flushes the prefs daemon so Terminal sees it on next
+# launch. A running Terminal rewrites all of its prefs on quit, clobbering this.
+if [[ "$(uname)" == "Darwin" ]]; then
+    if pgrep -xq Terminal; then
+        echo "Terminal.app is running — quit it and re-run 'make install' to update its profile"
+    else
+        defaults write com.apple.Terminal "Window Settings" \
+            -dict-add "Ayu Graphite" "$(cat "$here/terminal/ayu-graphite.terminal")"
+        defaults write com.apple.Terminal "Default Window Settings" -string "Ayu Graphite"
+        defaults write com.apple.Terminal "Startup Window Settings" -string "Ayu Graphite"
+        killall cfprefsd || true
+        echo "updated the 'Ayu Graphite' profile in Terminal.app — relaunch to see it"
+    fi
+fi
 
 # KDE Plasma + Konsole (Linux only). Plasma reads color schemes from
 # ~/.local/share/color-schemes; Konsole from ~/.local/share/konsole. Neither
