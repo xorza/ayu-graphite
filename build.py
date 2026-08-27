@@ -14,6 +14,7 @@ order dependency between them — this script just runs them all for convenience
   konsole/build.py      palette -> konsole/ayu-graphite.colorscheme
   brave/build.py        palette -> brave/ayu-graphite/manifest.json
   catcad/build.py       palette -> catcad/ayu-graphite.ron
+  darkroom/build.py     palette -> darkroom/ayu-graphite.ron
 
 The TOML is hand-edited; nothing in this repo writes back to it."""
 import os
@@ -22,7 +23,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TARGETS = ("zed", "claude", "telegram", "telegram_ios", "terminal", "kde",
-           "konsole", "brave", "catcad")
+           "konsole", "brave", "catcad", "darkroom")
 
 
 def main() -> None:

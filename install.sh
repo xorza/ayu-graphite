@@ -60,6 +60,17 @@ else
     echo "catcad/ayu-graphite.ron: no CatCad checkout at $catcad_dir, skipped"
 fi
 
+# darkroom reads its palette out of its own source tree, the same way CatCad
+# does — the table is embedded in the binary, so there is nothing to install
+# into a config directory. Skipped when the checkout is absent.
+darkroom_dir="$HOME/Projects/Darkroom/darkroom/assets"
+if [[ -d "$darkroom_dir" ]]; then
+    install_file "$here/darkroom/ayu-graphite.ron" "$darkroom_dir/ayu-graphite.ron"
+    echo "copied the palette into $darkroom_dir"
+else
+    echo "darkroom/ayu-graphite.ron: no Darkroom checkout at $darkroom_dir, skipped"
+fi
+
 # Telegram Desktop has no scriptable theme-import path — load
 # telegram/ayu-graphite.tdesktop-theme via Settings → Chat Settings → Custom theme.
 echo "telegram/ayu-graphite.tdesktop-theme: load it manually via Telegram → Settings → Chat Settings"

@@ -1,4 +1,4 @@
-.PHONY: all deps audit build palette zed claude telegram telegram_ios terminal kde konsole brave catcad install clean
+.PHONY: all deps audit build palette zed claude telegram telegram_ios terminal kde konsole brave catcad darkroom install clean
 
 all: audit build palette
 
@@ -55,6 +55,9 @@ brave:
 catcad:
 	python3 catcad/build.py
 
+darkroom:
+	python3 darkroom/build.py
+
 # Copy generated themes into Zed and Claude theme dirs.
 install: all
 	./install.sh
@@ -62,5 +65,5 @@ install: all
 # ayu-graphite.toml is a source file (hand-edited single source of truth);
 # never delete it here.
 clean:
-	rm -f zed/ayu-graphite.json claude/ayu-graphite.json telegram/ayu-graphite.tdesktop-theme telegram/ayu-graphite.tdesktop-theme.txt telegram_ios/ayu-graphite.tgios-theme terminal/ayu-graphite.terminal kde/ayu-graphite.colors konsole/ayu-graphite.colorscheme catcad/ayu-graphite.ron palette.png
+	rm -f zed/ayu-graphite.json claude/ayu-graphite.json telegram/ayu-graphite.tdesktop-theme telegram/ayu-graphite.tdesktop-theme.txt telegram_ios/ayu-graphite.tgios-theme terminal/ayu-graphite.terminal kde/ayu-graphite.colors konsole/ayu-graphite.colorscheme catcad/ayu-graphite.ron darkroom/ayu-graphite.ron palette.png
 	rm -rf brave/ayu-graphite
