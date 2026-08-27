@@ -139,18 +139,26 @@ def between(dark: str, light: str, part: float) -> str:
 
 
 def build_catcad(p: Palette, primitives: dict[str, str]) -> str:
+    resolved = p.as_dict()
     values, sources = {}, {}
     for role, key in NEUTRAL.items():
-        values[role] = neutralise(p.as_dict()[key])
+        values[role] = neutralise(resolved[key])
         sources[role] = (key, primitives[key])
     for role, key in HUE.items():
-        values[role] = p.as_dict()[key]
+        values[role] = resolved[key]
         sources[role] = (key, primitives[key])
     # A third of the way up the ramp's one gap, which is where the step would
     # sit if the palette had one.
     values["ink_dim"] = between(
         neutralise(p.elem_active), neutralise(p.line_number), 1 / 3)
     sources["ink_dim"] = ("(the ramp's gap)", "between gray_750 and gray_600")
+
+    # A role left out of SECTIONS would be dropped from the file, and CatCad
+    # would report it as a field its table is missing — true, and a long way
+    # from the line that caused it.
+    written = {role for _, roles in SECTIONS for role in roles}
+    assert written == set(values), (
+        f"SECTIONS and the mapping disagree: {written ^ set(values)}")
 
     lines = [
         "// Ayu Graphite, for CatCad — generated. Do not edit by hand.",
