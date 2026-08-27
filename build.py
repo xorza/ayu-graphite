@@ -13,6 +13,7 @@ order dependency between them — this script just runs them all for convenience
   kde/build.py          palette -> kde/ayu-graphite.colors
   konsole/build.py      palette -> konsole/ayu-graphite.colorscheme
   brave/build.py        palette -> brave/ayu-graphite/manifest.json
+  catcad/build.py       palette -> catcad/ayu-graphite.ron
 
 The TOML is hand-edited; nothing in this repo writes back to it."""
 import os
@@ -21,7 +22,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TARGETS = ("zed", "claude", "telegram", "telegram_ios", "terminal", "kde",
-           "konsole", "brave")
+           "konsole", "brave", "catcad")
 
 
 def main() -> None:

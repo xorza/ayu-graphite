@@ -49,6 +49,17 @@ if [[ "$(uname)" == "Linux" ]]; then
     echo "copied themes into $plasma_dir and $konsole_dir"
 fi
 
+# CatCad reads its palette out of its own source tree — the table is embedded in
+# the binary, so there is nothing to install into a config directory and nothing
+# for the application to find at run time. Skipped when the checkout is absent.
+catcad_dir="$HOME/Projects/CatCad/catcad/src/look/palette"
+if [[ -d "$catcad_dir" ]]; then
+    install_file "$here/catcad/ayu-graphite.ron" "$catcad_dir/ayu-graphite.ron"
+    echo "copied the palette into $catcad_dir"
+else
+    echo "catcad/ayu-graphite.ron: no CatCad checkout at $catcad_dir, skipped"
+fi
+
 # Telegram Desktop has no scriptable theme-import path — load
 # telegram/ayu-graphite.tdesktop-theme via Settings → Chat Settings → Custom theme.
 echo "telegram/ayu-graphite.tdesktop-theme: load it manually via Telegram → Settings → Chat Settings"

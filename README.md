@@ -1,6 +1,6 @@
 # ayu-graphite
 
-A higher-contrast variant of [Ayu](https://github.com/dempfi/ayu) for [Zed](https://zed.dev), [Claude Code](https://claude.com/claude-code), Telegram, KDE Plasma / Konsole, Brave, and macOS Terminal.
+A higher-contrast variant of [Ayu](https://github.com/dempfi/ayu) for [Zed](https://zed.dev), [Claude Code](https://claude.com/claude-code), Telegram, KDE Plasma / Konsole, Brave, macOS Terminal, and CatCad.
 
 `ayu-graphite.toml` is the only thing you edit. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a hex value and run `make`.
 
@@ -16,6 +16,7 @@ terminal/build.py       → ayu-graphite.terminal (macOS Terminal.app)
 kde/build.py            → ayu-graphite.colors (Plasma color scheme)
 konsole/build.py        → ayu-graphite.colorscheme
 brave/build.py          → ayu-graphite/manifest.json (Chromium theme extension)
+catcad/build.py         → ayu-graphite.ron (CatCad, neutralised greys)
 tools/audit.py          contrast rules — runs before every build, fails on a violation
 tools/render_palette.py renders palette.png — every token as a labeled swatch
 ```
@@ -41,3 +42,4 @@ make install    # copy generated themes into their app dirs (Telegram and Brave 
 - **Telegram iOS** — send `telegram_ios/ayu-graphite.tgios-theme` to Saved Messages from another client (or AirDrop it), tap the file, "Apply Theme".
 - **Brave** — `brave://extensions` → Developer mode → "Load unpacked" → `brave/ayu-graphite`. Brave's new-tab background images paint over `ntp_background`; turn them off in `brave://settings/newTab` for the flat panel.
 - **macOS Terminal** — `open terminal/ayu-graphite.terminal` imports it as a profile; Terminal → Settings → Profiles → "Ayu Graphite" → "Default".
+- **CatCad** — `make install` writes the table into the checkout at `~/Projects/CatCad`; it is embedded at build time, so rebuild to see it. This is the one target whose greys are neutralised: the ramp here leans cool through `gray_600` and warm through `gray_200`, and a CAD viewport is mostly one large flat surface.
