@@ -78,43 +78,60 @@ FONT_NAME = "JetBrainsMonoNFM-Regular"
 FONT_SIZE = 15
 
 
+def check(profile: dict[str, Any], colors: dict[str, str]) -> None:
+    """Every colour read back out of the archive it was written into.
+
+    These are hand-built NSKeyedArchiver blobs, and nothing reads one until
+    Terminal.app does. A wrong one is a window that comes up the wrong colour,
+    with no error anywhere, so each one is decoded again here."""
+    for key, hex6 in colors.items():
+        stored = plistlib.loads(profile[key])["$objects"][1]["NSRGB"]
+        back = "#{:02x}{:02x}{:02x}".format(
+            *(round(float(c) * 255) for c in stored.rstrip(b"\x00").split()))
+        assert back == hex6, f"{key} carries {back}, not {hex6}"
+
+
 def build_terminal(p: Palette) -> dict[str, Any]:
-    c = nscolor_archive
-    return {
+    colors = {
+        "BackgroundColor": p.bg,
+        "TextColor": p.text,
+        "TextBoldColor": p.text,
+        "CursorColor": p.accent,
+        "SelectionColor": p.selection_bg,
+        # ANSI 16 straight off the palette's ansi_* rows — same source the
+        # Konsole and Zed terminals read, so a bright color is the same
+        # bright color in all three.
+        "ANSIBlackColor": p.ansi_black,
+        "ANSIRedColor": p.ansi_red,
+        "ANSIGreenColor": p.ansi_green,
+        "ANSIYellowColor": p.ansi_yellow,
+        "ANSIBlueColor": p.ansi_blue,
+        "ANSIMagentaColor": p.ansi_magenta,
+        "ANSICyanColor": p.ansi_cyan,
+        "ANSIWhiteColor": p.ansi_white,
+        "ANSIBrightBlackColor": p.ansi_bright_black,
+        "ANSIBrightRedColor": p.ansi_bright_red,
+        "ANSIBrightGreenColor": p.ansi_bright_green,
+        "ANSIBrightYellowColor": p.ansi_bright_yellow,
+        "ANSIBrightBlueColor": p.ansi_bright_blue,
+        "ANSIBrightMagentaColor": p.ansi_bright_magenta,
+        "ANSIBrightCyanColor": p.ansi_bright_cyan,
+        "ANSIBrightWhiteColor": p.ansi_bright_white,
+    }
+    profile: dict[str, Any] = {
         "name": "Ayu Graphite",
         "type": "Window Settings",
         "ProfileCurrentVersion": 2.09,
         "Font": nsfont_archive(FONT_NAME, FONT_SIZE),
-        "BackgroundColor": c(p.bg),
-        "TextColor": c(p.text),
-        "TextBoldColor": c(p.text),
-        "CursorColor": c(p.accent),
-        "SelectionColor": c(p.selection_bg),
-        # ANSI 16 straight off the palette's ansi_* rows — same source the
-        # Konsole and Zed terminals read, so a bright color is the same
-        # bright color in all three.
-        "ANSIBlackColor": c(p.ansi_black),
-        "ANSIRedColor": c(p.ansi_red),
-        "ANSIGreenColor": c(p.ansi_green),
-        "ANSIYellowColor": c(p.ansi_yellow),
-        "ANSIBlueColor": c(p.ansi_blue),
-        "ANSIMagentaColor": c(p.ansi_magenta),
-        "ANSICyanColor": c(p.ansi_cyan),
-        "ANSIWhiteColor": c(p.ansi_white),
-        "ANSIBrightBlackColor": c(p.ansi_bright_black),
-        "ANSIBrightRedColor": c(p.ansi_bright_red),
-        "ANSIBrightGreenColor": c(p.ansi_bright_green),
-        "ANSIBrightYellowColor": c(p.ansi_bright_yellow),
-        "ANSIBrightBlueColor": c(p.ansi_bright_blue),
-        "ANSIBrightMagentaColor": c(p.ansi_bright_magenta),
-        "ANSIBrightCyanColor": c(p.ansi_bright_cyan),
-        "ANSIBrightWhiteColor": c(p.ansi_bright_white),
         # Window geometry + close behavior — match the user's preferred shell.
         "columnCount": 130,
         "rowCount": 30,
         "shellExitAction": 1,
         "warnOnShellCloseAction": 0,
+        **{key: nscolor_archive(value) for key, value in colors.items()},
     }
+    check(profile, colors)
+    return profile
 
 
 def main() -> None:

@@ -11,6 +11,7 @@ import struct
 import sys
 import zipfile
 import zlib
+from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
@@ -46,7 +47,7 @@ def build_telegram(p: Palette) -> str:
 
         ("sideBarBg",                 p.panel),
         ("sideBarBgActive",           p.selection_bg),
-        ("topBarBg",                  p.title_bar),
+        ("topBarBg",                  p.panel),
 
         ("titleBg",                   p.title_bar_inactive),
         ("titleBgActive",             p.title_bar),
@@ -167,7 +168,6 @@ def build_telegram(p: Palette) -> str:
 
         # Forward / compose / reply bar backgrounds — Telegram falls back to a
         # bluish-cyan night default for these when not set explicitly.
-        ("topBarBg",                          p.panel),
         ("historyComposeAreaBg",              p.panel),
         ("historyComposeAreaFg",              p.text),
         ("historyComposeAreaFgService",       p.text_muted),
@@ -236,6 +236,13 @@ def build_telegram(p: Palette) -> str:
         ("msgStickerOverlay",                 "#00000000"),
         ("overviewPhotoSelectOverlay",        "#00000000"),
     ]
+    # Telegram reads one of the two values a repeated key carries, and does
+    # not say which. A palette that states a colour twice is the bug.
+    repeated = sorted(name for name, count in
+                      Counter(name for name, _ in pairs).items() if count > 1)
+    assert not repeated, (
+        f"the palette assigns {', '.join(repeated)} more than once")
+
     lines = ["// Ayu Graphite — Telegram Desktop palette", ""]
     lines += [f"{k}: {v};" for k, v in pairs]
     return "\n".join(lines) + "\n"

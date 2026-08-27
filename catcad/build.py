@@ -9,18 +9,19 @@ side of a chip are facts about that interface, not about a palette.
 
 Two transforms happen on the way out.
 
-Neutrals lose their tint. This palette's ramp is not consistently anything —
-gray_600 and gray_500 run cool, gray_300 and gray_200 run warm, and the four
-darkest steps are flat — so a large surface picks up whichever way its own step
-leans. Each neutral role is re-emitted at the grey of the same relative
-luminance, which drops the chroma and leaves the ramp's spacing exactly where
-tools/audit.py checks it.
+Neutrals lose their tint. A CAD viewport is mostly one large flat surface, and
+a cast that hides on a toolbar reads across a whole window, so this target
+states neutrality rather than inheriting it. Each neutral role is re-emitted at
+the grey of the same relative luminance, which drops any chroma and leaves the
+ramp's spacing exactly where tools/audit.py checks it. The ramp is neutral as
+it stands, so the transform moves nothing today — it is what holds this target
+neutral when those greys next move.
 
-One role has no step of its own. CatCad's dimmest ink wants the gap between the
-step `elem_active` sits on and the step `line_number` sits on, so it is placed
-evenly between those two rather than added to the palette, because nothing else
-needs it. Both ends are read out of the palette, and each line of the table says
-which two it landed between.
+One role has no step of its own. The ramp climbs in steps of about 1.2:1 and
+opens one wide gap, and CatCad's dimmest ink wants to sit in that gap. The gap
+is measured off the ramp rather than named here, and the ink lands a third of
+the way up it, so the ink follows the ramp when the ramp is respaced. Each line
+of the table says which two steps a colour came from, this one included.
 """
 import os
 import sys
@@ -116,7 +117,21 @@ def between(dark: str, light: str, part: float) -> str:
     return color.grey((lo + 0.05) * ratio - 0.05)
 
 
-def entries(p: Palette, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
+def ramp_gap(primitives: dict[str, str]) -> tuple[str, str]:
+    """The two neutral steps with the most room between them.
+
+    Which pair brackets the ramp's one gap is measured rather than written
+    down, so the rung this file adds stays inside the gap when the ramp is
+    respaced."""
+    ramp = sorted((name for name in primitives if name.startswith("gray_")),
+                  key=lambda name: color.luminance(primitives[name]))
+    return max(zip(ramp, ramp[1:]),
+               key=lambda ends: color.contrast(primitives[ends[0]],
+                                               primitives[ends[1]]))
+
+
+def entries(p: Palette, semantic: dict[str, str],
+            primitives: dict[str, str]) -> dict[str, emit.RonEntry]:
     """Every CatCad role, with the two columns of provenance behind it."""
     roles = p.as_dict()
     out = {role: emit.RonEntry(role, neutralise(roles[key]), key, semantic[key])
@@ -125,11 +140,14 @@ def entries(p: Palette, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
                 for role, key in HUE.items()})
     # A third of the way up the ramp's one gap, which is where the step would
     # sit if the palette had one.
-    out["ink_dim"] = emit.RonEntry(
-        "ink_dim",
-        between(neutralise(p.elem_active), neutralise(p.line_number), 1 / 3),
-        "(the ramp's gap)",
-        f"between {semantic['elem_active']} and {semantic['line_number']}")
+    dark, light = ramp_gap(primitives)
+    dim = between(primitives[dark], primitives[light], 1 / 3)
+    assert (color.luminance(primitives[dark]) < color.luminance(dim)
+            < color.luminance(primitives[light])), (
+        f"ink_dim landed on {dim}, outside the {dark} to {light} step — the "
+        f"ramp has no gap left to hold it")
+    out["ink_dim"] = emit.RonEntry("ink_dim", dim, "(the ramp's gap)",
+                                   f"between {dark} and {light}")
 
     # A role left out of SECTIONS would be dropped from the file, and CatCad
     # would report it as a field its table is missing — true, and a long way
@@ -140,8 +158,9 @@ def entries(p: Palette, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
     return out
 
 
-def build_catcad(p: Palette, semantic: dict[str, str]) -> str:
-    table = entries(p, semantic)
+def build_catcad(p: Palette, semantic: dict[str, str],
+                 primitives: dict[str, str]) -> str:
+    table = entries(p, semantic, primitives)
     columns = emit.RonColumns.of(table.values())
     lines = [
         "// Ayu Graphite, for CatCad — generated. Do not edit by hand.",
@@ -167,7 +186,7 @@ def build_catcad(p: Palette, semantic: dict[str, str]) -> str:
 def main() -> None:
     src = load_source()
     emit.write_text(emit.beside(__file__, "ayu-graphite.ron"),
-                    build_catcad(src.palette, src.semantic))
+                    build_catcad(src.palette, src.semantic, src.primitives))
 
 
 if __name__ == "__main__":
