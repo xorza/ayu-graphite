@@ -59,6 +59,8 @@ class Palette:
 
     diff_term_plus: str
     diff_term_minus: str
+    diff_word_plus: str
+    diff_word_minus: str
 
     line_number: str
     line_number_active: str

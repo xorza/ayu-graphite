@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check ayu-graphite.toml against the contrast rules the targets depend on.
 
-Exits non-zero on a violation so `make audit` fails the build. Three rules:
+Exits non-zero on a violation so `make audit` fails the build. Four rules:
 
   layers    chrome that stacks in one view must be visually separable — a
             button whose fill equals its panel disappears (that was the KDE
@@ -11,6 +11,14 @@ Exits non-zero on a violation so `make audit` fails the build. Three rules:
   ansi      per hue, dim < normal < bright in luminance, and no two of the
             16 share a value — a terminal that renders bright red as normal
             red has thrown away half its palette.
+  roles     a program picks any slot as a foreground (SGR 30-37, 90-97) or as
+            a background (SGR 40-47, 100-107) and the theme cannot tell which.
+            On this bg nothing clears 4.5:1 in both roles — ink needs
+            luminance >= 0.234, a fill needs <= 0.125 — so the rows divide the
+            work. Normal 1-6 hold 3:1 each way, which is what keeps `text`
+            legible on an SGR 4x fill. Bright 1-6 are foreground-first and
+            carry the full 4.5:1 instead. Slots 0 and 7 sit out: black is the
+            background itself and white is the text.
 """
 import os
 import sys
@@ -22,8 +30,12 @@ from palette import Palette, load_palette
 # neutral ramp — below that the eye merges them under any gamma.
 MIN_LAYER = 1.10
 MIN_INK = 4.5
+# The widest floor a color can hold in both roles at once. 4.5 both ways is an
+# empty band on this background; 3.0 leaves luminance 0.139 to 0.212 to aim at.
+MIN_ANSI_DUAL = 3.0
 
 HUES = ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
+CHROMATIC = HUES[1:7]
 
 
 def luminance(hex6: str) -> float:
@@ -44,6 +56,7 @@ def check_layers(p: Palette) -> list[str]:
         ("elem_hover", "elem_active"), ("panel", "surface"),
         ("elem", "elem_disabled"), ("panel", "border"), ("elem", "border"),
         ("bg", "chat_msg_bg"), ("bg", "selection_bg"),
+        ("success_bg", "diff_word_plus"), ("error_bg", "diff_word_minus"),
     ]
     d = p.as_dict()
     return [
@@ -71,6 +84,9 @@ INK = {
     # Inside a selection the plain red loses too much against the blue fill;
     # KDE's Colors:Selection reaches for the bright step instead.
     "ansi_bright_red": ["selection_bg"],
+    # The word-level diff fills are backgrounds, and the ink Claude Code draws
+    # on them is its own near-white syntax foreground, not `text`.
+    "ansi_bright_white": ["diff_word_plus", "diff_word_minus"],
 }
 # Bright fills are only ever written on with on_accent.
 FILLS = ["accent", "accent_hover", "accent_active", "success", "warning",
@@ -112,16 +128,37 @@ def check_ansi(p: Palette) -> list[str]:
     return out
 
 
+def check_ansi_roles(p: Palette) -> list[str]:
+    d = p.as_dict()
+    out = []
+    for hue in CHROMATIC:
+        normal = d[f"ansi_{hue}"]
+        as_ink = contrast(normal, p.bg)
+        as_fill = contrast(p.text, normal)
+        if as_ink < MIN_ANSI_DUAL:
+            out.append(f"roles: ansi_{hue} as ink on bg = {as_ink:.2f} "
+                       f"(< {MIN_ANSI_DUAL})")
+        if as_fill < MIN_ANSI_DUAL:
+            out.append(f"roles: text on ansi_{hue} as fill = {as_fill:.2f} "
+                       f"(< {MIN_ANSI_DUAL})")
+        bright = contrast(d[f"ansi_bright_{hue}"], p.bg)
+        if bright < MIN_INK:
+            out.append(f"roles: ansi_bright_{hue} as ink on bg = {bright:.2f} "
+                       f"(< {MIN_INK})")
+    return out
+
+
 def main() -> None:
     repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    problems = check_layers(p) + check_ink(p) + check_ansi(p)
+    problems = (check_layers(p) + check_ink(p) + check_ansi(p)
+                + check_ansi_roles(p))
     for line in problems:
         print(line)
     if problems:
         print(f"\n{len(problems)} problem(s)")
         sys.exit(1)
-    print("palette ok: layers, ink, ansi")
+    print("palette ok: layers, ink, ansi, roles")
 
 
 if __name__ == "__main__":

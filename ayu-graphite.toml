@@ -12,6 +12,8 @@
 #     elem_hover < elem_active, and border must be visible on panel and elem.
 #   - every bright fill (accent, success, warning, error) is written on with
 #     on_accent, never with text — text on accent is 1.28:1.
+#   - the ANSI rows split the two duties a slot cannot hold at once. See the
+#     [semantic] ANSI block for the arithmetic.
 
 [primitives]
 # Neutrals (warm-tinted greys, dark → light). Steps are spaced ~1.15:1 so
@@ -32,9 +34,11 @@ gray_100  = "#f6f6f6"
 white     = "#ffffff"
 
 # Reds
-red_300   = "#ff8f7a"     # ansi bright red / negative text inside a selection
-red_400   = "#ff6b52"     # error / deleted / ansi red
-red_500   = "#b05043"     # ansi dim red
+red_250   = "#ffa493"     # ansi bright red
+red_400   = "#ff6b52"     # error / deleted
+red_450   = "#dc4b34"     # ansi red
+red_550   = "#c83620"     # diff word minus
+red_600   = "#a81a01"     # ansi dim red
 red_700   = "#703130"     # error border
 red_900   = "#4f191a"     # error bg
 
@@ -43,36 +47,40 @@ orange_400 = "#ffa63d"    # keyword / operator
 orange_500 = "#ff7d2d"    # search match active
 
 # Yellows
-yellow_250 = "#ffe79b"    # ansi bright yellow
 yellow_300 = "#ffdd8c"    # string special
 yellow_350 = "#e6db74"    # soft Monokai yellow — chat checkmarks
-yellow_400 = "#ffd44a"    # warning / function / ansi yellow
-yellow_500 = "#ba913b"    # ansi dim yellow
+yellow_400 = "#ffd44a"    # warning / function
+yellow_450 = "#e1b71e"    # ansi bright yellow
+yellow_600 = "#987a01"    # ansi yellow
 yellow_700 = "#81632b"    # warning border
+yellow_800 = "#685202"    # ansi dim yellow
 yellow_900 = "#5f4617"    # warning bg
 
 # Greens (lime → olive)
-lime_300  = "#eaff9a"     # ansi bright green
-lime_400  = "#daff58"     # success / string / ansi green
-green_500 = "#75a228"     # ansi dim green
+lime_400  = "#daff58"     # success / string
+green_400 = "#a8c90a"     # ansi bright green
 green_700 = "#668a2f"     # success border
+green_750 = "#6f8605"     # ansi green
+green_800 = "#537624"     # diff word plus
 green_900 = "#486a15"     # success bg
+green_950 = "#4b5b01"     # ansi dim green
 
 # Teals (cyan-green)
 teal_400  = "#69ffd1"     # regex
 
 # Cyan / blue
-cyan_200  = "#c6f0fa"     # ansi bright cyan
-cyan_300  = "#98e1f3"     # ansi cyan
 cyan_400  = "#7adcf3"     # type / attribute / search highlight
 cyan_450  = "#7fdfff"     # accent hover
-cyan_500  = "#59d4ff"     # accent / ansi bright blue
+cyan_500  = "#59d4ff"     # accent
+cyan_525  = "#7ec6d8"     # ansi bright cyan
 cyan_550  = "#3fbde8"     # accent pressed / ripple
-cyan_600  = "#4f8fa3"     # ansi dim cyan
+cyan_650  = "#3e8797"     # ansi cyan
+cyan_800  = "#055d6d"     # ansi dim cyan
 cyan_900  = "#14556b"     # secondary ink on an accent fill
-blue_500  = "#5985a3"     # ansi blue (washed)
+blue_300  = "#93c1e1"     # ansi bright blue
+blue_550  = "#5682a0"     # ansi blue
 blue_600  = "#4a8ab0"     # info border
-blue_650  = "#3d5f75"     # ansi dim blue
+blue_675  = "#2e5975"     # ansi dim blue
 blue_700  = "#2c4a60"     # info bg
 blue_750  = "#123a5c"     # selection bg
 blue_800  = "#105577"     # border focused / hint border
@@ -81,9 +89,10 @@ blue_predict = "#7091b3"  # syn_predictive
 blue_hint = "#77adbc"     # hint fg
 
 # Purples
-purple_300 = "#e8c2ff"    # ansi bright magenta
-purple_400 = "#d897ff"    # magenta / number
-purple_700 = "#7d4a96"    # ansi dim magenta
+purple_350 = "#dda6ff"    # ansi bright magenta
+purple_400 = "#d897ff"    # number
+purple_550 = "#a262c6"    # ansi magenta
+purple_750 = "#773898"    # ansi dim magenta
 
 # One-off cool gray
 slate_700 = "#4c515a"     # diagnostic muted bg
@@ -150,6 +159,12 @@ diagnostic_muted_bg = "slate_700"
 diff_term_plus      = "lime_400"
 diff_term_minus     = "red_400"
 
+# Word-level diff fills. These are BACKGROUNDS — Claude Code paints the
+# changed word of a line with them and draws its own near-white syntax ink on
+# top. `success`/`error` sat here before and gave 1.07:1.
+diff_word_plus      = "green_800"
+diff_word_minus     = "red_550"
+
 # Editor chrome
 line_number         = "gray_600"
 line_number_active  = "gray_100"
@@ -162,31 +177,47 @@ search_match_active = "orange_500"
 # ANSI 16 + the dim (SGR 2) siblings. Every terminal target reads exactly
 # these — bright is lighter than normal, dim is darker, per hue. Black is the
 # one family where "normal" is already the floor, so dim goes to pure black.
+#
+# A program picks any slot as a foreground (SGR 30-37, 90-97) or as a
+# background (SGR 40-47, 100-107) and the theme cannot tell which. On this bg
+# no color clears 4.5:1 in both roles: a foreground needs luminance >= 0.234,
+# a background needs <= 0.125. So the rows divide the work.
+#
+#   normal 1-6   luminance 0.205 — 4.04:1 as ink on bg, 3.08:1 under `text`
+#                when a program fills with it. This is the row that stops the
+#                bright-on-bright case, and it costs the vivid ayu hues: at
+#                this level yellow is dark gold and green is olive.
+#   bright 1-6   luminance 0.500 — 8.73:1 as ink, foreground-first. As a fill
+#                it needs dark ink, which no palette can fix.
+#   dim 1-6      luminance 0.090 — 2.22:1, which is what SGR 2 asks for.
+#
+# The three steps keep their source hue: each was re-targeted in Oklab at the
+# most chroma sRGB holds at that luminance. tools/audit.py checks the ratios.
 ansi_black          = "gray_950"
-ansi_red            = "red_400"
-ansi_green          = "lime_400"
-ansi_yellow         = "yellow_400"
-ansi_blue           = "blue_500"
-ansi_magenta        = "purple_400"
-ansi_cyan           = "cyan_300"
+ansi_red            = "red_450"
+ansi_green          = "green_750"
+ansi_yellow         = "yellow_600"
+ansi_blue           = "blue_550"
+ansi_magenta        = "purple_550"
+ansi_cyan           = "cyan_650"
 ansi_white          = "gray_200"
 
 ansi_bright_black   = "gray_600"
-ansi_bright_red     = "red_300"
-ansi_bright_green   = "lime_300"
-ansi_bright_yellow  = "yellow_250"
-ansi_bright_blue    = "cyan_500"
-ansi_bright_magenta = "purple_300"
-ansi_bright_cyan    = "cyan_200"
+ansi_bright_red     = "red_250"
+ansi_bright_green   = "green_400"
+ansi_bright_yellow  = "yellow_450"
+ansi_bright_blue    = "blue_300"
+ansi_bright_magenta = "purple_350"
+ansi_bright_cyan    = "cyan_525"
 ansi_bright_white   = "white"
 
 ansi_dim_black      = "black"
-ansi_dim_red        = "red_500"
-ansi_dim_green      = "green_500"
-ansi_dim_yellow     = "yellow_500"
-ansi_dim_blue       = "blue_650"
-ansi_dim_magenta    = "purple_700"
-ansi_dim_cyan       = "cyan_600"
+ansi_dim_red        = "red_600"
+ansi_dim_green      = "green_950"
+ansi_dim_yellow     = "yellow_800"
+ansi_dim_blue       = "blue_675"
+ansi_dim_magenta    = "purple_750"
+ansi_dim_cyan       = "cyan_800"
 ansi_dim_white      = "gray_400"
 
 # Players (collab cursor bg)

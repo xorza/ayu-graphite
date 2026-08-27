@@ -55,10 +55,10 @@ def build_claude(p: Palette) -> dict:
 
         "diffAdded":          p.success_bg,
         "diffAddedDimmed":    p.success_bg,
-        "diffAddedWord":      p.success,
+        "diffAddedWord":      p.diff_word_plus,
         "diffRemoved":        p.error_bg,
         "diffRemovedDimmed":  p.error_bg,
-        "diffRemovedWord":    p.error,
+        "diffRemovedWord":    p.diff_word_minus,
 
         "red_FOR_SUBAGENTS_ONLY":    p.error,
         "blue_FOR_SUBAGENTS_ONLY":   p.accent,
@@ -76,7 +76,10 @@ def build_claude(p: Palette) -> dict:
     # `dark` paints the muted dark green/red from the binary's hardcoded
     # palette — closest hue to our success_bg/error_bg, so we use it. The
     # `dark-ansi` route doesn't help: the renderer drops `ansi:green` for
-    # backgrounds entirely. The `*Word` overrides DO apply.
+    # backgrounds entirely. The `*Word` overrides DO apply — and they are
+    # backgrounds for the changed word, drawn on with the base theme's
+    # near-white syntax ink, which is why they read diff_word_* and not
+    # success/error.
     return {"name": "Ayu Graphite", "base": "dark", "overrides": overrides}
 
 

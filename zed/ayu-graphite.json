@@ -75,24 +75,24 @@
         "terminal.ansi.black": "#1f1e1dff",
         "terminal.ansi.bright_black": "#70747aff",
         "terminal.ansi.dim_black": "#000000ff",
-        "terminal.ansi.red": "#ff6b52ff",
-        "terminal.ansi.bright_red": "#ff8f7aff",
-        "terminal.ansi.dim_red": "#b05043ff",
-        "terminal.ansi.green": "#daff58ff",
-        "terminal.ansi.bright_green": "#eaff9aff",
-        "terminal.ansi.dim_green": "#75a228ff",
-        "terminal.ansi.yellow": "#ffd44aff",
-        "terminal.ansi.bright_yellow": "#ffe79bff",
-        "terminal.ansi.dim_yellow": "#ba913bff",
-        "terminal.ansi.blue": "#5985a3ff",
-        "terminal.ansi.bright_blue": "#59d4ffff",
-        "terminal.ansi.dim_blue": "#3d5f75ff",
-        "terminal.ansi.magenta": "#d897ffff",
-        "terminal.ansi.bright_magenta": "#e8c2ffff",
-        "terminal.ansi.dim_magenta": "#7d4a96ff",
-        "terminal.ansi.cyan": "#98e1f3ff",
-        "terminal.ansi.bright_cyan": "#c6f0faff",
-        "terminal.ansi.dim_cyan": "#4f8fa3ff",
+        "terminal.ansi.red": "#dc4b34ff",
+        "terminal.ansi.bright_red": "#ffa493ff",
+        "terminal.ansi.dim_red": "#a81a01ff",
+        "terminal.ansi.green": "#6f8605ff",
+        "terminal.ansi.bright_green": "#a8c90aff",
+        "terminal.ansi.dim_green": "#4b5b01ff",
+        "terminal.ansi.yellow": "#987a01ff",
+        "terminal.ansi.bright_yellow": "#e1b71eff",
+        "terminal.ansi.dim_yellow": "#685202ff",
+        "terminal.ansi.blue": "#5682a0ff",
+        "terminal.ansi.bright_blue": "#93c1e1ff",
+        "terminal.ansi.dim_blue": "#2e5975ff",
+        "terminal.ansi.magenta": "#a262c6ff",
+        "terminal.ansi.bright_magenta": "#dda6ffff",
+        "terminal.ansi.dim_magenta": "#773898ff",
+        "terminal.ansi.cyan": "#3e8797ff",
+        "terminal.ansi.bright_cyan": "#7ec6d8ff",
+        "terminal.ansi.dim_cyan": "#055d6dff",
         "terminal.ansi.white": "#e2dfd3ff",
         "terminal.ansi.bright_white": "#ffffffff",
         "terminal.ansi.dim_white": "#aaaaa8ff",
@@ -118,7 +118,7 @@
         "ignored": "#878a8dff",
         "ignored.background": "#4c515aff",
         "ignored.border": "#3d3c3bff",
-        "info": "#5985a3ff",
+        "info": "#5682a0ff",
         "info.background": "#2c4a60ff",
         "info.border": "#4a8ab0ff",
         "modified": "#ffd44aff",
@@ -127,7 +127,7 @@
         "predictive": "#7091b3ff",
         "predictive.background": "#486a15ff",
         "predictive.border": "#668a2fff",
-        "renamed": "#5985a3ff",
+        "renamed": "#5682a0ff",
         "renamed.background": "#0f3e58ff",
         "renamed.border": "#105577ff",
         "success": "#daff58ff",
@@ -141,14 +141,14 @@
         "warning.border": "#81632bff",
         "players": [
           {
-            "cursor": "#5985a3ff",
+            "cursor": "#5682a0ff",
             "background": "#878a8dff",
-            "selection": "#5985a33d"
+            "selection": "#5682a03d"
           },
           {
-            "cursor": "#d897ffff",
+            "cursor": "#a262c6ff",
             "background": "#878a8dff",
-            "selection": "#d897ff3d"
+            "selection": "#a262c63d"
           },
           {
             "cursor": "#ffa63dff",
@@ -161,9 +161,9 @@
             "selection": "#d897ff3d"
           },
           {
-            "cursor": "#98e1f3ff",
+            "cursor": "#3e8797ff",
             "background": "#878a8dff",
-            "selection": "#98e1f33d"
+            "selection": "#3e87973d"
           },
           {
             "cursor": "#ff6b52ff",
