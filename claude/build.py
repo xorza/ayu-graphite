@@ -71,7 +71,7 @@ def build_claude(p: Palette) -> dict:
         "professionalBlue":          p.accent,
     }
     overrides = {k: rgb(v) for k, v in raw.items()}
-    # NOTE: Claude Code 2.1.x ignores `overrides` for diff line backgrounds
+    # Claude Code 2.1.x ignores `overrides` for diff line backgrounds
     # (`diffAdded`/`diffRemoved`/`*Dimmed`); they come from the chosen `base`.
     # `dark` paints the muted dark green/red from the binary's hardcoded
     # palette — closest hue to our success_bg/error_bg, so we use it. The

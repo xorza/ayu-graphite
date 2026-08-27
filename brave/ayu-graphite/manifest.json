@@ -6,94 +6,94 @@
   "theme": {
     "colors": {
       "frame": [
-        50,
-        49,
-        48
+        55,
+        55,
+        55
       ],
       "frame_inactive": [
-        40,
-        39,
-        38
+        42,
+        42,
+        42
       ],
       "frame_incognito": [
-        40,
-        39,
-        38
+        42,
+        42,
+        42
       ],
       "frame_incognito_inactive": [
-        31,
         30,
-        29
+        30,
+        30
       ],
       "toolbar": [
-        40,
-        39,
-        38
+        42,
+        42,
+        42
       ],
       "omnibox_background": [
-        31,
         30,
-        29
+        30,
+        30
       ],
       "omnibox_text": [
-        226,
-        223,
-        211
+        234,
+        234,
+        234
       ],
       "tab_text": [
-        226,
-        223,
-        211
+        234,
+        234,
+        234
       ],
       "tab_background_text": [
-        170,
-        170,
-        168
+        164,
+        164,
+        164
       ],
       "tab_background_text_inactive": [
-        170,
-        170,
-        168
+        164,
+        164,
+        164
       ],
       "tab_background_text_incognito": [
-        170,
-        170,
-        168
+        164,
+        164,
+        164
       ],
       "tab_background_text_incognito_inactive": [
-        170,
-        170,
-        168
+        164,
+        164,
+        164
       ],
       "bookmark_text": [
-        226,
-        223,
-        211
+        234,
+        234,
+        234
       ],
       "toolbar_button_icon": [
-        226,
-        223,
-        211
+        234,
+        234,
+        234
       ],
       "ntp_background": [
-        31,
         30,
-        29
+        30,
+        30
       ],
       "ntp_text": [
-        226,
-        223,
-        211
+        234,
+        234,
+        234
       ],
       "ntp_link": [
-        89,
-        212,
-        255
+        18,
+        185,
+        223
       ],
       "ntp_header": [
-        61,
-        60,
-        59
+        68,
+        68,
+        68
       ],
       "button_background": [
         0,

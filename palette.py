@@ -118,6 +118,13 @@ class Palette:
         return dataclasses.asdict(self)
 
 
+def load_primitives(path: str) -> dict[str, str]:
+    """The raw [primitives] table, for tools that check the palette's shape
+    rather than read a role out of it."""
+    with open(path, "rb") as f:
+        return tomllib.load(f)["primitives"]
+
+
 def load_palette(path: str) -> Palette:
     """Resolve [semantic] string refs against [primitives] hex values.
 

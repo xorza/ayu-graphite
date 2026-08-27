@@ -1,178 +1,205 @@
 # Ayu Graphite — semantic palette (single source of truth)
 #
 # Two-tier:
-#   [primitives] are the actual hex values, named by hue + brightness step.
+#   [primitives] are the actual hex values, named by hue and tint.
 #   [semantic]   keys reference primitives by name; that's what builders read.
 #
 # palette.py resolves the refs at load time. To shift a hue everywhere it's
 # used, edit one primitive — semantic intent stays put.
 #
-# Two invariants worth keeping (tools/audit.py checks both):
+# THE GRID. Eight hues by four tints, complete. A hue is one fixed Oklab
+# angle. A tint is one fixed PERCEIVED brightness that every hue shares, so
+# `red_normal` and `cyan_normal` look equally bright and any two names ending
+# in the same tint sit level with each other.
+#
+# Perceived, not measured. At one luminance a saturated color looks brighter
+# than a dull one — the Helmholtz-Kohlrausch effect — so an equal-luminance
+# row reads uneven: it put red at 65 and yellow at 55 on a scale where the
+# whole row measured CIE L* 49.5. Each cell here is placed by Fairchild-
+# Pirrotta corrected lightness L** instead, which folds chroma into the
+# prediction. Luminance and chroma both vary along a row to hold L** level.
+#
+#   tint      L**    what lands there
+#   vivid     87.4    success, warning, string, type, accent hover
+#   bright    75.4    ANSI 9-14, accent, error, hint, keyword, number
+#   normal    57.3    ANSI 1-6, status borders, diff word fills, pressed
+#   dim       32.1    ANSI dim (SGR 2), status fills, selection
+#
+# Each cell is the most chroma sRGB holds at that hue while still landing on
+# the row's L**, and each row's L** is the one that buys the most chroma
+# across all eight hues at once. The luminance a cell ends up at is bounded by
+# the audit rules:
+#
+#   vivid, bright   >= 0.40, so an INK role clears 4.5:1 on `surface` and
+#                   4.5:1 over a selection on `dim`. The two rows are held 12
+#                   points of L** apart so they read as two rows.
+#   normal          the ANSI band, 0.139 to 0.212, tightened to <= 0.183 for
+#                   red and green so near-white clears 4.5:1 on a diff word
+#                   fill, and to >= 0.175 for cyan so `on_accent` clears the
+#                   same on the pressed accent.
+#   dim             <= 0.050 so `text_muted` clears 4.5:1 on a selection,
+#                   >= 0.030 so the fill separates from the editor ground.
+#
+# Chroma still differs across a row, and now that is the point: cyan needs
+# less of it than red to look equally bright.
+#
+# Twenty-four of the thirty-two cells carry a semantic role. The other eight
+# stay defined: the grid is the artifact, and a hue keeps its four tints.
+#
+# Invariants (tools/audit.py checks all five):
 #   - chrome layers that stack in one view must differ: bg < panel < elem <
 #     elem_hover < elem_active, and border must be visible on panel and elem.
 #   - every bright fill (accent, success, warning, error) is written on with
 #     on_accent, never with text — text on accent is 1.28:1.
-#   - the ANSI rows split the two duties a slot cannot hold at once. See the
-#     [semantic] ANSI block for the arithmetic.
+#   - per hue, ANSI dim < normal < bright, and no two of the 16 share a value.
+#   - the ANSI rows split the two duties one slot cannot hold at once. See the
+#     [semantic] ANSI block.
+#   - every cell of a tint row looks equally bright, within 1.5 points of L**.
+#     Nothing else defends that, so a hand-edit would break it silently.
 
 [primitives]
-# Neutrals (warm-tinted greys, dark → light). Steps are spaced ~1.15:1 so
-# three chrome layers plus a border stack with room to tell them apart; the
-# old ramp packed bg/panel/elem into 1.09 total and they collapsed.
+# Neutrals, dark to light. Saturation zero — every channel equal, no hue at
+# all — and named for their Oklab L. Seven is the floor, not a preference.
+# Five go to chrome: bg, panel, surface, hover and press are checked against
+# each other pairwise, so none may repeat, and they run evenly at 0.05, the
+# widest step that still leaves `text` clearing 4.5:1 on the press fill. The
+# other two are the whole text hierarchy, one dim and one bright, and the dim
+# one sits at 0.72 because below that `text_muted` stops clearing 4.5:1 on a
+# surface. A sixth grey has to come out of that pair, which leaves muted text
+# and body text the same color.
 black     = "#000000"
-gray_950  = "#1f1e1d"
-gray_900  = "#282726"
-gray_850  = "#323130"
-gray_800  = "#3d3c3b"
-gray_750  = "#484745"
-gray_600  = "#70747a"
-gray_500  = "#878a8d"
-gray_400  = "#aaaaa8"
-gray_300  = "#c7c6bf"
-gray_200  = "#e2dfd3"
-gray_100  = "#f6f6f6"
+gray_24   = "#1e1e1e"
+gray_29   = "#2a2a2a"
+gray_34   = "#373737"
+gray_39   = "#444444"
+gray_44   = "#515151"
+gray_72   = "#a4a4a4"
+gray_94   = "#eaeaea"
 white     = "#ffffff"
 
-# Reds
-red_250   = "#ffa493"     # ansi bright red
-red_400   = "#ff6b52"     # error / deleted
-red_450   = "#dc4b34"     # ansi red
-red_550   = "#c83620"     # diff word minus
-red_600   = "#a81a01"     # ansi dim red
-red_700   = "#703130"     # error border
-red_900   = "#4f191a"     # error bg
+# Red — hue 31.6
+red_vivid       = "#ffccc1"
+red_bright      = "#fd8974"
+red_normal      = "#c33b26"
+red_dim         = "#621106"
 
-# Oranges
-orange_400 = "#ffa63d"    # keyword / operator
-orange_500 = "#ff7d2d"    # search match active
+# Orange — hue 66.0
+orange_vivid    = "#fecfa1"
+orange_bright   = "#f29407"
+orange_normal   = "#ab6700"
+orange_dim      = "#573306"
 
-# Yellows
-yellow_300 = "#ffdd8c"    # string special
-yellow_350 = "#e6db74"    # soft Monokai yellow — chat checkmarks
-yellow_400 = "#ffd44a"    # warning / function
-yellow_450 = "#e1b71e"    # ansi bright yellow
-yellow_600 = "#987a01"    # ansi yellow
-yellow_700 = "#81632b"    # warning border
-yellow_800 = "#685202"    # ansi dim yellow
-yellow_900 = "#5f4617"    # warning bg
+# Yellow — hue 91.0
+yellow_vivid    = "#fecd12"
+yellow_bright   = "#d0a70e"
+yellow_normal   = "#94770b"
+yellow_dim      = "#4e3d01"
 
-# Greens (lime → olive)
-lime_400  = "#daff58"     # success / string
-green_400 = "#a8c90a"     # ansi bright green
-green_700 = "#668a2f"     # success border
-green_750 = "#6f8605"     # ansi green
-green_800 = "#537624"     # diff word plus
-green_900 = "#486a15"     # success bg
-green_950 = "#4b5b01"     # ansi dim green
+# Green — hue 121.0
+green_vivid     = "#b9dd0d"
+green_bright    = "#98b614"
+green_normal    = "#687e04"
+green_dim       = "#344004"
 
-# Teals (cyan-green)
-teal_400  = "#69ffd1"     # regex
+# Teal — hue 169.7
+teal_vivid      = "#03eab7"
+teal_bright     = "#14c096"
+teal_normal     = "#048567"
+teal_dim        = "#074434"
 
-# Cyan / blue
-cyan_400  = "#7adcf3"     # type / attribute / search highlight
-cyan_450  = "#7fdfff"     # accent hover
-cyan_500  = "#59d4ff"     # accent
-cyan_525  = "#7ec6d8"     # ansi bright cyan
-cyan_550  = "#3fbde8"     # accent pressed / ripple
-cyan_650  = "#3e8797"     # ansi cyan
-cyan_800  = "#055d6d"     # ansi dim cyan
-cyan_900  = "#14556b"     # secondary ink on an accent fill
-blue_300  = "#93c1e1"     # ansi bright blue
-blue_550  = "#5682a0"     # ansi blue
-blue_600  = "#4a8ab0"     # info border
-blue_675  = "#2e5975"     # ansi dim blue
-blue_700  = "#2c4a60"     # info bg
-blue_750  = "#123a5c"     # selection bg
-blue_800  = "#105577"     # border focused / hint border
-blue_900  = "#0f3e58"     # hint bg
-blue_predict = "#7091b3"  # syn_predictive
-blue_hint = "#77adbc"     # hint fg
+# Cyan — hue 220.0
+cyan_vivid      = "#87e2fe"
+cyan_bright     = "#12b9df"
+cyan_normal     = "#0b829d"
+cyan_dim        = "#084250"
 
-# Purples
-purple_350 = "#dda6ff"    # ansi bright magenta
-purple_400 = "#d897ff"    # number
-purple_550 = "#a262c6"    # ansi magenta
-purple_750 = "#773898"    # ansi dim magenta
+# Blue — hue 239.2
+blue_vivid      = "#aadbfe"
+blue_bright     = "#4db3f1"
+blue_normal     = "#0179b1"
+blue_dim        = "#013b58"
 
-# One-off cool gray
-slate_700 = "#4c515a"     # diagnostic muted bg
-
-# ─────────────────────────────────────────────────────────────────────────
+# Magenta — hue 312.0
+magenta_vivid   = "#e9c6ff"
+magenta_bright  = "#c698e2"
+magenta_normal  = "#8758a3"
+magenta_dim     = "#412452"
 
 [semantic]
+
 # Backgrounds / chrome. Each step must be distinguishable from the one under
 # it — a control that shares its fill with the panel it sits on disappears.
-bg                  = "gray_950"   # deepest: editor, list/view interiors
-panel               = "gray_900"   # window, sidebar, menu, tab bar
-surface             = "gray_850"   # elevated: popup, tooltip, dialog
-elem                = "gray_850"   # control resting fill
-elem_hover          = "gray_800"
-elem_active         = "gray_750"
-elem_disabled       = "gray_900"   # recessed below resting, not equal to it
-title_bar           = "gray_850"
-title_bar_inactive  = "gray_900"
+bg                  = "gray_24"             # deepest: editor, list/view interiors
+panel               = "gray_29"             # window, sidebar, menu, tab bar
+surface             = "gray_34"             # elevated: popup, tooltip, dialog
+elem                = "gray_34"             # control resting fill
+elem_hover          = "gray_39"
+elem_active         = "gray_44"
+elem_disabled       = "gray_29"             # recessed below resting, not equal to it
+title_bar           = "gray_34"
+title_bar_inactive  = "gray_29"
 overlay_black       = "black"
 
 # Borders
-border              = "gray_800"
-border_focused      = "blue_800"
+border              = "gray_39"
+border_focused      = "blue_normal"
 
 # Text
-text                = "gray_200"
-text_muted          = "gray_400"
-text_disabled       = "gray_500"
+text                = "gray_94"
+text_muted          = "gray_72"
+text_disabled       = "gray_72"
 
-# Accent / status
-accent              = "cyan_500"
-accent_hover        = "cyan_450"
-accent_active       = "cyan_550"
-success             = "lime_400"
-warning             = "yellow_400"
-error               = "red_400"
-hint                = "blue_hint"
+# Accent / status. Every one of these is an INK role, so all of them sit on
+# `vivid` or `bright` — the two tints that clear 4.5:1 on `surface`.
+accent              = "cyan_bright"
+accent_hover        = "cyan_vivid"
+accent_active       = "cyan_normal"
+success             = "green_vivid"
+warning             = "yellow_vivid"
+error               = "red_bright"
+hint                = "blue_bright"
 
 # Ink for anything drawn on a bright fill — accent buttons, unread badges,
-# success/warning/error chips. `text` on `accent` is 1.28:1; this is 9.7:1.
-on_accent           = "gray_950"
-on_accent_muted     = "cyan_900"
+# success/warning/error chips. `text` on `accent` is 1.28:1.
+on_accent           = "black"
+on_accent_muted     = "cyan_dim"
 
-# Selection (list row, selected message, selected text). Dark-tinted so the
-# semantic foregrounds stay legible inside a selection, and so Zed / KDE /
-# Telegram all highlight the same way.
-selection_bg        = "blue_750"
-selection_fg        = "gray_200"
+# Selection (list row, selected message, selected text). On `dim`, the one
+# tint dark enough for `accent` to stay legible on top of it.
+selection_bg        = "blue_dim"
+selection_fg        = "gray_94"
 
-# Status backgrounds
-info_bg             = "blue_700"
-info_border         = "blue_600"
-hint_bg             = "blue_900"
-hint_border         = "blue_800"
-success_bg          = "green_900"
-success_border      = "green_700"
-warning_bg          = "yellow_900"
-warning_border      = "yellow_700"
-error_bg            = "red_900"
-error_border        = "red_700"
-diagnostic_muted_bg = "slate_700"
+# Status fills take `dim`, their borders `normal`.
+info_bg             = "blue_dim"
+info_border         = "blue_normal"
+hint_bg             = "blue_dim"
+hint_border         = "blue_normal"
+success_bg          = "green_dim"
+success_border      = "green_normal"
+warning_bg          = "yellow_dim"
+warning_border      = "yellow_normal"
+error_bg            = "red_dim"
+error_border        = "red_normal"
+diagnostic_muted_bg = "gray_44"
 
 # Diff (terminal-pane variants — louder than line-bg diffs)
-diff_term_plus      = "lime_400"
-diff_term_minus     = "red_400"
+diff_term_plus      = "green_vivid"
+diff_term_minus     = "red_bright"
 
 # Word-level diff fills. These are BACKGROUNDS — Claude Code paints the
 # changed word of a line with them and draws its own near-white syntax ink on
-# top. `success`/`error` sat here before and gave 1.07:1.
-diff_word_plus      = "green_800"
-diff_word_minus     = "red_550"
+# top. `normal` is the darkest tint that ink still clears 4.5:1 on.
+diff_word_plus      = "green_normal"
+diff_word_minus     = "red_normal"
 
 # Editor chrome
-line_number         = "gray_600"
-line_number_active  = "gray_100"
-line_number_hover   = "gray_300"
-scrollbar_thumb     = "gray_400"
-drop_target         = "gray_400"
-search_highlight    = "cyan_400"
-search_match_active = "orange_500"
+line_number         = "gray_44"
+line_number_active  = "gray_94"
+line_number_hover   = "gray_94"
+scrollbar_thumb     = "gray_72"
+drop_target         = "gray_72"
+search_highlight    = "cyan_vivid"
+search_match_active = "orange_bright"
 
 # ANSI 16 + the dim (SGR 2) siblings. Every terminal target reads exactly
 # these — bright is lighter than normal, dim is darker, per hue. Black is the
@@ -183,61 +210,60 @@ search_match_active = "orange_500"
 # no color clears 4.5:1 in both roles: a foreground needs luminance >= 0.234,
 # a background needs <= 0.125. So the rows divide the work.
 #
-#   normal 1-6   luminance 0.205 — 4.04:1 as ink on bg, 3.08:1 under `text`
-#                when a program fills with it. This is the row that stops the
+#   normal 1-6   3.62:1 as ink on bg, 3.45:1 under `text` when a program
+#                fills with it. This is the row that stops the
 #                bright-on-bright case, and it costs the vivid ayu hues: at
-#                this level yellow is dark gold and green is olive.
-#   bright 1-6   luminance 0.500 — 8.73:1 as ink, foreground-first. As a fill
-#                it needs dark ink, which no palette can fix.
-#   dim 1-6      luminance 0.090 — 2.22:1, which is what SGR 2 asks for.
-#
-# The three steps keep their source hue: each was re-targeted in Oklab at the
-# most chroma sRGB holds at that luminance. tools/audit.py checks the ratios.
-ansi_black          = "gray_950"
-ansi_red            = "red_450"
-ansi_green          = "green_750"
-ansi_yellow         = "yellow_600"
-ansi_blue           = "blue_550"
-ansi_magenta        = "purple_550"
-ansi_cyan           = "cyan_650"
-ansi_white          = "gray_200"
+#                this luminance yellow is dark gold and green is olive.
+#   bright 1-6   7.46:1 as ink, foreground-first. As a fill it needs dark
+#                ink, which no palette can fix.
+#   dim 1-6      1.58:1, which is what SGR 2 asks for. `dim` is pinned by the
+#                selection rule, so faint here is the price of a selection
+#                the accent stays legible on.
+ansi_black          = "gray_24"
+ansi_red            = "red_normal"
+ansi_green          = "green_normal"
+ansi_yellow         = "yellow_normal"
+ansi_blue           = "blue_normal"
+ansi_magenta        = "magenta_normal"
+ansi_cyan           = "cyan_normal"
+ansi_white          = "gray_94"
 
-ansi_bright_black   = "gray_600"
-ansi_bright_red     = "red_250"
-ansi_bright_green   = "green_400"
-ansi_bright_yellow  = "yellow_450"
-ansi_bright_blue    = "blue_300"
-ansi_bright_magenta = "purple_350"
-ansi_bright_cyan    = "cyan_525"
+ansi_bright_black   = "gray_44"
+ansi_bright_red     = "red_bright"
+ansi_bright_green   = "green_bright"
+ansi_bright_yellow  = "yellow_bright"
+ansi_bright_blue    = "blue_bright"
+ansi_bright_magenta = "magenta_bright"
+ansi_bright_cyan    = "cyan_bright"
 ansi_bright_white   = "white"
 
 ansi_dim_black      = "black"
-ansi_dim_red        = "red_600"
-ansi_dim_green      = "green_950"
-ansi_dim_yellow     = "yellow_800"
-ansi_dim_blue       = "blue_675"
-ansi_dim_magenta    = "purple_750"
-ansi_dim_cyan       = "cyan_800"
-ansi_dim_white      = "gray_400"
+ansi_dim_red        = "red_dim"
+ansi_dim_green      = "green_dim"
+ansi_dim_yellow     = "yellow_dim"
+ansi_dim_blue       = "blue_dim"
+ansi_dim_magenta    = "magenta_dim"
+ansi_dim_cyan       = "cyan_dim"
+ansi_dim_white      = "gray_72"
 
 # Players (collab cursor bg)
-player_bg           = "gray_500"
+player_bg           = "gray_72"
 
 # Chat
-chat_check          = "lime_400"
-chat_msg_bg         = "gray_850"
+chat_check          = "green_vivid"
+chat_msg_bg         = "gray_34"
 
 # Syntax
-syn_keyword         = "orange_400"
-syn_function        = "yellow_400"
-syn_string          = "lime_400"
-syn_string_regex    = "teal_400"
-syn_comment         = "gray_500"
-syn_number          = "purple_400"
-syn_type            = "cyan_400"
-syn_operator        = "orange_400"
-syn_attribute       = "cyan_400"
-syn_punctuation     = "gray_300"
-syn_doc             = "gray_400"
-syn_string_special  = "yellow_300"
-syn_predictive      = "blue_predict"
+syn_keyword         = "orange_bright"
+syn_function        = "yellow_vivid"
+syn_string          = "green_vivid"
+syn_string_regex    = "teal_vivid"
+syn_comment         = "gray_72"
+syn_number          = "magenta_bright"
+syn_type            = "cyan_vivid"
+syn_operator        = "orange_bright"
+syn_attribute       = "cyan_vivid"
+syn_punctuation     = "gray_94"
+syn_doc             = "gray_72"
+syn_string_special  = "orange_vivid"
+syn_predictive      = "blue_normal"

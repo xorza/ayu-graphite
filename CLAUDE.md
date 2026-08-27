@@ -2,7 +2,7 @@
 
 A higher-contrast variant of the Ayu dark theme, generated for Zed, Claude Code, Telegram (Desktop and iOS), macOS Terminal, KDE Plasma, Konsole, and Brave.
 
-One palette, many targets. `ayu-graphite.toml` names every color twice — `[primitives]` are hex values named by hue and brightness step, `[semantic]` maps roles (`bg`, `accent`, `on_accent`, `ansi_*`, `syn_*`) onto them — and `palette.py` resolves the refs into a `Palette` dataclass that holds the schema for the whole repo. Each `<target>/build.py` is a pure transformer: load the TOML, write one theme file, import nothing from a sibling. `tools/audit.py` checks the contrast invariants the targets silently depend on (chrome layers stay separable, foregrounds clear 4.5:1 where they land, ANSI stays dim < normal < bright) and runs first in `make`, so a bad palette edit fails before any theme is written.
+One palette, many targets. `ayu-graphite.toml` names every color twice — `[primitives]` are hex values named by hue and tint, where a tint is one fixed perceived brightness shared by every hue, `[semantic]` maps roles (`bg`, `accent`, `on_accent`, `ansi_*`, `syn_*`) onto them — and `palette.py` resolves the refs into a `Palette` dataclass that holds the schema for the whole repo. Each `<target>/build.py` is a pure transformer: load the TOML, write one theme file, import nothing from a sibling. `tools/audit.py` checks the contrast invariants the targets silently depend on (chrome layers stay separable, foregrounds clear 4.5:1 where they land, ANSI stays dim < normal < bright, the ANSI normal row holds 3:1 both as ink and as a fill, and every cell of a tint row looks equally bright) and runs first in `make`, so a bad palette edit fails before any theme is written.
 
 ## Single source of truth
 

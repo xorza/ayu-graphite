@@ -1,45 +1,46 @@
-"""Render ayu-graphite.toml as a PNG swatch sheet grouped by section."""
+"""Render ayu-graphite.toml as a PNG swatch sheet.
+
+The primitives are drawn as the grid they are: one column per hue, one row per
+tint. A row is one perceived brightness, so the number under each row label is
+L**, not a luminance."""
 import os
+import re
 import sys
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
+
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))
+sys.path.insert(0, HERE)
+from color import contrast, hk_lightness
+from palette import load_palette, load_primitives
+
+ROOT = os.path.dirname(HERE)
 TOML = os.path.join(ROOT, "ayu-graphite.toml")
 OUT = os.path.join(ROOT, "palette.png")
 
-SWATCH_W = 220
-SWATCH_H = 64
-COLS = 4
-PAD = 16
-HEADER_H = 32
-SHEET_BG = "#1f1e1d"
-SHEET_FG = "#e2dfd3"
-SHEET_DIM = "#878a8d"
-
-
-def hex_to_rgb(h):
-    h = h.lstrip("#")
-    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
-
-
-def luminance(rgb):
-    def chan(c):
-        c /= 255
-        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
-    r, g, b = (chan(c) for c in rgb)
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+CELL_W = 148
+CELL_H = 66
+GUTTER = 96
+PAD = 18
+GAP = 6
+HEADER_H = 40
+LABEL_H = 22
 
 
 def ink_for(bg_hex):
-    return "#000000" if luminance(hex_to_rgb(bg_hex)) > 0.45 else "#ffffff"
+    """Whichever of black or white actually reads on this swatch. A fixed
+    luminance threshold picks wrong on saturated colors, which look brighter
+    than they measure."""
+    return ("#000000" if contrast("#000000", bg_hex) > contrast("#ffffff", bg_hex)
+            else "#ffffff")
 
 
 def load_font(size, bold=False):
     candidates = [
+        "/usr/share/fonts/TTF/JetBrainsMonoNerdFontMono-Regular.ttf",
+        "/usr/share/fonts/TTF/DejaVuSansMono.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
         "/System/Library/Fonts/SFNSMono.ttf",
         "/System/Library/Fonts/Menlo.ttc",
         "/System/Library/Fonts/Supplemental/Menlo.ttc",
@@ -47,6 +48,8 @@ def load_font(size, bold=False):
     ]
     if bold:
         candidates = [
+            "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             "/System/Library/Fonts/SFNS.ttf",
             "/System/Library/Fonts/Helvetica.ttc",
         ] + candidates
@@ -59,54 +62,122 @@ def load_font(size, bold=False):
     return ImageFont.load_default()
 
 
+class Ladder:
+    """The chromatic primitives arranged as hue x tint, plus the neutral ramp.
+
+    Hue order follows the file. Tint order is derived from the colors, so a new
+    tint slots itself in by brightness without touching this module."""
+
+    def __init__(self, primitives):
+        self.neutrals = [(k, v) for k, v in primitives.items()
+                         if k in ("black", "white") or k.startswith("gray")]
+        self.neutrals.sort(key=lambda kv: hk_lightness(kv[1]))
+        self.cells = {}
+        self.hues = []
+        by_tint = {}
+        for key, value in primitives.items():
+            m = re.fullmatch(r"([a-z]+)_([a-z]+)", key)
+            if not m:
+                continue
+            hue, tint = m.groups()
+            if hue not in self.hues:
+                self.hues.append(hue)
+            self.cells[(hue, tint)] = value
+            by_tint.setdefault(tint, []).append(hk_lightness(value))
+        self.tints = sorted(by_tint, key=lambda t: -sum(by_tint[t]) / len(by_tint[t]))
+        self.brightness = {t: sum(v) / len(v) for t, v in by_tint.items()}
+
+    @property
+    def width(self):
+        return GUTTER + len(self.hues) * (CELL_W + GAP) - GAP + 2 * PAD
+
+    @property
+    def height(self):
+        return (HEADER_H + LABEL_H + len(self.tints) * (CELL_H + GAP) - GAP
+                + PAD + CELL_H + LABEL_H)
+
+
+class Sheet:
+    """The chrome the sheet itself is painted in, taken from the palette so
+    there is no second definition of these colors."""
+
+    def __init__(self, p):
+        self.bg, self.fg, self.dim = p.bg, p.text, p.text_muted
+
+
+def draw_cell(draw, box, color, token, fonts):
+    x0, y0 = box
+    draw.rectangle([x0, y0, x0 + CELL_W, y0 + CELL_H], fill=color,
+                   outline="#000000")
+    ink = ink_for(color)
+    draw.text((x0 + 7, y0 + 6), token, fill=ink, font=fonts["name"])
+    draw.text((x0 + 7, y0 + CELL_H - 20), color, fill=ink, font=fonts["hex"])
+
+
+def draw_ladder(draw, ladder, sheet, top, fonts):
+    draw.text((PAD, top + 8), "primitives — hue x tint", fill=sheet.fg,
+              font=fonts["header"])
+    y = top + HEADER_H
+    for col, hue in enumerate(ladder.hues):
+        x = PAD + GUTTER + col * (CELL_W + GAP)
+        draw.text((x + 7, y + 4), hue, fill=sheet.dim, font=fonts["label"])
+    y += LABEL_H
+    for row, tint in enumerate(ladder.tints):
+        cy = y + row * (CELL_H + GAP)
+        draw.text((PAD, cy + 18), tint, fill=sheet.fg, font=fonts["label"])
+        draw.text((PAD, cy + 36), f"L** {ladder.brightness[tint]:.1f}",
+                  fill=sheet.dim, font=fonts["hex"])
+        for col, hue in enumerate(ladder.hues):
+            x = PAD + GUTTER + col * (CELL_W + GAP)
+            draw_cell(draw, (x, cy), ladder.cells[(hue, tint)],
+                      f"{hue}_{tint}", fonts)
+    y += len(ladder.tints) * (CELL_H + GAP) - GAP + PAD
+    draw.text((PAD, y + 4), "neutrals", fill=sheet.dim, font=fonts["label"])
+    y += LABEL_H
+    span = len(ladder.hues) * (CELL_W + GAP) - GAP
+    step = span / len(ladder.neutrals)
+    for i, (token, color) in enumerate(ladder.neutrals):
+        x = PAD + GUTTER + i * step
+        draw.rectangle([x, y, x + step - 2, y + CELL_H], fill=color,
+                       outline="#000000")
+        ink = ink_for(color)
+        draw.text((x + 6, y + 6), token.replace("gray_", ""), fill=ink,
+                  font=fonts["hex"])
+        draw.text((x + 6, y + CELL_H - 18), color, fill=ink, font=fonts["hex"])
+    return y + CELL_H
+
+
+def draw_semantic(draw, items, sheet, top, cols, fonts):
+    draw.text((PAD, top + 8), "semantic", fill=sheet.fg, font=fonts["header"])
+    y = top + HEADER_H
+    for idx, (token, color) in enumerate(items):
+        x = PAD + (idx % cols) * (CELL_W + GAP)
+        cy = y + (idx // cols) * (CELL_H + GAP)
+        draw_cell(draw, (x, cy), color, token, fonts)
+    rows = (len(items) + cols - 1) // cols
+    return y + rows * (CELL_H + GAP) - GAP
+
+
 def main():
-    with open(TOML, "rb") as f:
-        data = tomllib.load(f)
+    primitives = load_primitives(TOML)
+    p = load_palette(TOML)
+    semantic = list(p.as_dict().items())
 
-    primitives = data["primitives"]
-    semantic = data["semantic"]
-    resolved_semantic = {
-        k: (v if v.startswith("#") else primitives[v])
-        for k, v in semantic.items()
-    }
-    sections = [
-        ("primitives", list(primitives.items())),
-        ("semantic", list(resolved_semantic.items())),
-    ]
+    ladder = Ladder(primitives)
+    sheet = Sheet(p)
+    width = ladder.width
+    cols = max(1, (width - 2 * PAD + GAP) // (CELL_W + GAP))
+    sem_rows = (len(semantic) + cols - 1) // cols
+    height = (PAD + ladder.height + PAD * 2
+              + HEADER_H + sem_rows * (CELL_H + GAP) - GAP + PAD)
 
-    rows_per_section = [(len(items) + COLS - 1) // COLS for _, items in sections]
-    total_rows = sum(rows_per_section)
-    width = COLS * SWATCH_W + (COLS + 1) * PAD
-    height = (
-        PAD
-        + sum(HEADER_H + rows * SWATCH_H + rows * PAD for rows in rows_per_section)
-        + PAD
-    )
-
-    img = Image.new("RGB", (width, height), SHEET_BG)
+    img = Image.new("RGB", (width, height), sheet.bg)
     draw = ImageDraw.Draw(img)
-    name_font = load_font(13)
-    hex_font = load_font(12)
-    header_font = load_font(16, bold=True)
+    fonts = {"name": load_font(12), "hex": load_font(11),
+             "label": load_font(13), "header": load_font(17, bold=True)}
 
-    y = PAD
-    for (section_name, items), n_rows in zip(sections, rows_per_section):
-        draw.text((PAD, y + 6), section_name, fill=SHEET_FG, font=header_font)
-        y += HEADER_H
-        for idx, (token, color) in enumerate(items):
-            col = idx % COLS
-            row = idx // COLS
-            x0 = PAD + col * (SWATCH_W + PAD)
-            y0 = y + row * (SWATCH_H + PAD)
-            draw.rectangle(
-                [x0, y0, x0 + SWATCH_W, y0 + SWATCH_H],
-                fill=color,
-                outline="#000000",
-            )
-            ink = ink_for(color)
-            draw.text((x0 + 8, y0 + 6), token, fill=ink, font=name_font)
-            draw.text((x0 + 8, y0 + SWATCH_H - 22), color, fill=ink, font=hex_font)
-        y += n_rows * SWATCH_H + n_rows * PAD
+    y = draw_ladder(draw, ladder, sheet, PAD, fonts)
+    draw_semantic(draw, semantic, sheet, y + PAD * 2, cols, fonts)
 
     img.save(OUT)
     print(f"wrote {OUT} ({width}x{height})")

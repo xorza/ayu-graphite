@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Check ayu-graphite.toml against the contrast rules the targets depend on.
 
-Exits non-zero on a violation so `make audit` fails the build. Four rules:
+Exits non-zero on a violation so `make audit` fails the build. Every ratio it
+prints carries an APCA Lc beside it — WCAG 2 overstates contrast at the dark
+end, and a dark theme is all dark end. The gate stays WCAG, because that is
+what the rules are written against.
+
+Five rules:
 
   layers    chrome that stacks in one view must be visually separable — a
             button whose fill equals its panel disappears (that was the KDE
@@ -19,12 +24,20 @@ Exits non-zero on a violation so `make audit` fails the build. Four rules:
             legible on an SGR 4x fill. Bright 1-6 are foreground-first and
             carry the full 4.5:1 instead. Slots 0 and 7 sit out: black is the
             background itself and white is the text.
+  perceived every cell of a tint row must look equally bright. Luminance does
+            not say that on its own: a saturated color reads brighter than a
+            dull one at the same luminance, and the equal-luminance rows this
+            palette replaced spread 22.6 points. Nothing else defends that
+            property, so a hand-edit would break it silently.
 """
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from palette import Palette, load_palette
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))
+sys.path.insert(0, HERE)
+from color import apca, contrast, hk_lightness, luminance
+from palette import Palette, load_palette, load_primitives
 
 # Separate enough to read as two layers. 1.10 is roughly one step of the
 # neutral ramp — below that the eye merges them under any gamma.
@@ -33,21 +46,18 @@ MIN_INK = 4.5
 # The widest floor a color can hold in both roles at once. 4.5 both ways is an
 # empty band on this background; 3.0 leaves luminance 0.139 to 0.212 to aim at.
 MIN_ANSI_DUAL = 3.0
+# Room for the gamut search to round into. The rebuilt rows land inside 1.0,
+# and the equal-luminance rows they replaced were out by 22.6.
+MAX_PERCEIVED_SPREAD = 1.5
 
 HUES = ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
 CHROMATIC = HUES[1:7]
+TINTS = ("vivid", "bright", "normal", "dim")
 
 
-def luminance(hex6: str) -> float:
-    h = hex6.lstrip("#")
-    ch = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
-    ch = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in ch]
-    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2]
-
-
-def contrast(a: str, b: str) -> float:
-    la, lb = luminance(a), luminance(b)
-    return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+def both(fg: str, bg: str) -> str:
+    """The pair as a violation line states it: WCAG ratio, then Lc."""
+    return f"{contrast(fg, bg):.2f}:1 / Lc {abs(apca(fg, bg)):.0f}"
 
 
 def check_layers(p: Palette) -> list[str]:
@@ -60,7 +70,7 @@ def check_layers(p: Palette) -> list[str]:
     ]
     d = p.as_dict()
     return [
-        f"layers: {a} vs {b} = {contrast(d[a], d[b]):.2f} (< {MIN_LAYER})"
+        f"layers: {a} vs {b} = {both(d[a], d[b])} (< {MIN_LAYER}:1)"
         for a, b in pairs
         if contrast(d[a], d[b]) < MIN_LAYER
     ]
@@ -98,13 +108,13 @@ def check_ink(p: Palette) -> list[str]:
     out = []
     for fg, surfaces in INK.items():
         for s in surfaces:
-            r = contrast(d[fg], d[s])
-            if r < MIN_INK:
-                out.append(f"ink: {fg} on {s} = {r:.2f} (< {MIN_INK})")
+            if contrast(d[fg], d[s]) < MIN_INK:
+                out.append(f"ink: {fg} on {s} = {both(d[fg], d[s])} "
+                           f"(< {MIN_INK}:1)")
     for fill in FILLS:
-        r = contrast(p.on_accent, d[fill])
-        if r < MIN_INK:
-            out.append(f"ink: on_accent on {fill} = {r:.2f} (< {MIN_INK})")
+        if contrast(p.on_accent, d[fill]) < MIN_INK:
+            out.append(f"ink: on_accent on {fill} = "
+                       f"{both(p.on_accent, d[fill])} (< {MIN_INK}:1)")
     return out
 
 
@@ -133,32 +143,77 @@ def check_ansi_roles(p: Palette) -> list[str]:
     out = []
     for hue in CHROMATIC:
         normal = d[f"ansi_{hue}"]
-        as_ink = contrast(normal, p.bg)
-        as_fill = contrast(p.text, normal)
-        if as_ink < MIN_ANSI_DUAL:
-            out.append(f"roles: ansi_{hue} as ink on bg = {as_ink:.2f} "
-                       f"(< {MIN_ANSI_DUAL})")
-        if as_fill < MIN_ANSI_DUAL:
-            out.append(f"roles: text on ansi_{hue} as fill = {as_fill:.2f} "
-                       f"(< {MIN_ANSI_DUAL})")
-        bright = contrast(d[f"ansi_bright_{hue}"], p.bg)
-        if bright < MIN_INK:
-            out.append(f"roles: ansi_bright_{hue} as ink on bg = {bright:.2f} "
-                       f"(< {MIN_INK})")
+        bright = d[f"ansi_bright_{hue}"]
+        if contrast(normal, p.bg) < MIN_ANSI_DUAL:
+            out.append(f"roles: ansi_{hue} as ink on bg = "
+                       f"{both(normal, p.bg)} (< {MIN_ANSI_DUAL}:1)")
+        if contrast(p.text, normal) < MIN_ANSI_DUAL:
+            out.append(f"roles: text on ansi_{hue} as fill = "
+                       f"{both(p.text, normal)} (< {MIN_ANSI_DUAL}:1)")
+        if contrast(bright, p.bg) < MIN_INK:
+            out.append(f"roles: ansi_bright_{hue} as ink on bg = "
+                       f"{both(bright, p.bg)} (< {MIN_INK}:1)")
     return out
 
 
+def tint_rows(primitives: dict[str, str]) -> dict[str, dict[str, str]]:
+    """The chromatic primitives regrouped as tint -> hue -> hex."""
+    rows: dict[str, dict[str, str]] = {t: {} for t in TINTS}
+    for key, value in primitives.items():
+        hue, _, tint = key.rpartition("_")
+        if hue and tint in rows:
+            rows[tint][hue] = value
+    return rows
+
+
+def check_perceived(primitives: dict[str, str]) -> list[str]:
+    out = []
+    for tint, cells in tint_rows(primitives).items():
+        if len(cells) < 2:
+            continue
+        lit = {h: hk_lightness(v) for h, v in cells.items()}
+        low, high = min(lit, key=lit.get), max(lit, key=lit.get)
+        spread = lit[high] - lit[low]
+        if spread > MAX_PERCEIVED_SPREAD:
+            out.append(f"perceived: {tint} row spreads {spread:.2f} points — "
+                       f"{high} {lit[high]:.1f} vs {low} {lit[low]:.1f} "
+                       f"(> {MAX_PERCEIVED_SPREAD})")
+    return out
+
+
+def report(p: Palette, primitives: dict[str, str]) -> None:
+    """The pairs and rows worth seeing even when nothing is broken."""
+    d = p.as_dict()
+    print(f"  {'pair':34}{'WCAG':>9}{'APCA':>8}")
+    rows = [("text on bg", p.text, p.bg),
+            ("text_muted on bg", p.text_muted, p.bg),
+            ("accent on bg", p.accent, p.bg),
+            ("on_accent on accent", p.on_accent, p.accent)]
+    for hue in CHROMATIC:
+        rows.append((f"ansi_{hue} as ink on bg", d[f"ansi_{hue}"], p.bg))
+        rows.append((f"text on ansi_{hue} as fill", p.text, d[f"ansi_{hue}"]))
+    for label, fg, bg in rows:
+        print(f"  {label:34}{contrast(fg, bg):8.2f}{abs(apca(fg, bg)):8.0f}")
+    print(f"\n  {'tint row':34}{'L**':>9}{'spread':>8}")
+    for tint, cells in tint_rows(primitives).items():
+        lit = [hk_lightness(v) for v in cells.values()]
+        print(f"  {tint:34}{sum(lit) / len(lit):9.1f}"
+              f"{max(lit) - min(lit):8.2f}")
+
+
 def main() -> None:
-    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
+    path = os.path.join(os.path.dirname(HERE), "ayu-graphite.toml")
+    p = load_palette(path)
+    primitives = load_primitives(path)
     problems = (check_layers(p) + check_ink(p) + check_ansi(p)
-                + check_ansi_roles(p))
+                + check_ansi_roles(p) + check_perceived(primitives))
     for line in problems:
         print(line)
     if problems:
         print(f"\n{len(problems)} problem(s)")
         sys.exit(1)
-    print("palette ok: layers, ink, ansi, roles")
+    print("palette ok: layers, ink, ansi, roles, perceived")
+    report(p, primitives)
 
 
 if __name__ == "__main__":
