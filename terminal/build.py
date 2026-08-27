@@ -13,12 +13,8 @@ from plistlib import UID
 from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
-
-
-def hex_to_rgb(hex6: str) -> tuple[float, float, float]:
-    h = hex6.lstrip("#")
-    return (int(h[0:2], 16) / 255.0, int(h[2:4], 16) / 255.0, int(h[4:6], 16) / 255.0)
 
 
 def nsfont_archive(ps_name: str, size: float) -> bytes:
@@ -54,7 +50,7 @@ def nscolor_archive(hex6: str) -> bytes:
     Empirically Terminal.app renders NSColorSpace=1 (CalibratedRGB, gamma 1.8)
     backgrounds noticeably lighter than the same hex through sRGB — matching
     the format Apple's bundled profiles (e.g. Grass) use avoids that drift."""
-    r, g, b = hex_to_rgb(hex6)
+    r, g, b = (c / 255 for c in emit.rgb_bytes(hex6))
     rgb_str = f"{r} {g} {b}\x00".encode("ascii")
     archive: dict[str, Any] = {
         "$version": 100000,
@@ -76,10 +72,9 @@ def nscolor_archive(hex6: str) -> bytes:
     return plistlib.dumps(archive, fmt=plistlib.FMT_BINARY)
 
 
-FONT_NAME = (
-    "JetBrainsMonoNFM-Regular"  # PostScript name, not filename. Read it from the
-)
-# font's `name` table (nameID 6) — full names won't work.
+# The PostScript name, not the filename. Read it out of the font's `name`
+# table (nameID 6) — a full name will not work.
+FONT_NAME = "JetBrainsMonoNFM-Regular"
 FONT_SIZE = 15
 
 
@@ -123,13 +118,8 @@ def build_terminal(p: Palette) -> dict[str, Any]:
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out = os.path.join(here, "ayu-graphite.terminal")
-    with open(out, "wb") as f:
-        plistlib.dump(build_terminal(p), f)
-    print(f"wrote {out}")
+    emit.write_bytes(emit.beside(__file__, "ayu-graphite.terminal"),
+                     plistlib.dumps(build_terminal(load_palette())))
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ The output is a zip archive (the .tdesktop-theme extension is what Telegram
 expects) containing colors.tdesktop-theme + a small solid-color background.png
 to override Telegram's default Star Wars chat wallpaper.
 """
+import io
 import os
 import struct
 import sys
@@ -12,6 +13,7 @@ import zipfile
 import zlib
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
 
 
@@ -241,8 +243,7 @@ def build_telegram(p: Palette) -> str:
 
 def solid_png(hex_color: str, size: int = 8) -> bytes:
     """Tiny solid-color PNG (no Pillow). Telegram tiles/scales it as wallpaper."""
-    h = hex_color.lstrip("#")
-    rgb = bytes((int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)))
+    rgb = bytes(emit.rgb_bytes(hex_color))
 
     def chunk(typ: bytes, data: bytes) -> bytes:
         return (struct.pack(">I", len(data)) + typ + data
@@ -256,31 +257,30 @@ def solid_png(hex_color: str, size: int = 8) -> bytes:
             + chunk(b"IEND", b""))
 
 
-def write_telegram_zip(path: str, palette_text: str, bg_hex: str) -> None:
+def telegram_zip(palette_text: str, bg_hex: str) -> bytes:
+    """The archive Telegram reads: the palette, plus a solid background."""
     # Fixed timestamp so identical inputs produce byte-identical archives —
     # otherwise zipfile stamps each entry with `now` and git sees a diff on
     # every build.
     epoch = (1980, 1, 1, 0, 0, 0)
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as z:
         for name, data in (("colors.tdesktop-theme", palette_text.encode()),
                            ("background.png",        solid_png(bg_hex))):
             info = zipfile.ZipInfo(name, date_time=epoch)
             info.compress_type = zipfile.ZIP_DEFLATED
             z.writestr(info, data)
-    print(f"wrote {path}")
+    return buffer.getvalue()
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
+    p = load_palette()
     palette_text = build_telegram(p)
-    write_telegram_zip(os.path.join(here, "ayu-graphite.tdesktop-theme"),
-                       palette_text, p.bg)
+    emit.write_bytes(emit.beside(__file__, "ayu-graphite.tdesktop-theme"),
+                     telegram_zip(palette_text, p.bg))
     # Mirror the same palette text uncompressed for easy inspection / grep.
-    plain = os.path.join(here, "ayu-graphite.tdesktop-theme.txt")
-    with open(plain, "w") as f:
-        f.write(palette_text)
+    emit.write_text(emit.beside(__file__, "ayu-graphite.tdesktop-theme.txt"),
+                    palette_text)
 
 
 if __name__ == "__main__":

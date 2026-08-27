@@ -14,21 +14,12 @@ brave://extensions → Developer mode → "Load unpacked". A zip won't install
 (Chromium only accepts signed .crx outside of dev mode), so there's nothing
 to gain from packaging it here.
 """
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
-
-
-def rgb(hex6: str) -> list[int]:
-    h = hex6.lstrip("#")
-    return [int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)]
-
-
-def rgba(hex6: str, a: float) -> list:
-    return rgb(hex6) + [a]
 
 
 def build_brave(p: Palette) -> dict:
@@ -38,36 +29,36 @@ def build_brave(p: Palette) -> dict:
     # other target. Reversing it (frame darkest) would put the active tab,
     # which always takes the toolbar color, *above* its own strip.
     colors = {
-        "frame":                     rgb(p.title_bar),
-        "frame_inactive":            rgb(p.title_bar_inactive),
+        "frame":                     emit.rgb_bytes(p.title_bar),
+        "frame_inactive":            emit.rgb_bytes(p.title_bar_inactive),
         # Private windows step one rung darker than normal ones so the two
         # are distinguishable at a glance without a second hue.
-        "frame_incognito":           rgb(p.panel),
-        "frame_incognito_inactive":  rgb(p.bg),
+        "frame_incognito":           emit.rgb_bytes(p.panel),
+        "frame_incognito_inactive":  emit.rgb_bytes(p.bg),
 
-        "toolbar":                   rgb(p.panel),
+        "toolbar":                   emit.rgb_bytes(p.panel),
         # Recessed input field, same trick as the KDE View-vs-Window split.
-        "omnibox_background":        rgb(p.bg),
-        "omnibox_text":              rgb(p.text),
+        "omnibox_background":        emit.rgb_bytes(p.bg),
+        "omnibox_text":              emit.rgb_bytes(p.text),
 
-        "tab_text":                                    rgb(p.text),
-        "tab_background_text":                         rgb(p.text_muted),
-        "tab_background_text_inactive":                rgb(p.text_muted),
-        "tab_background_text_incognito":               rgb(p.text_muted),
-        "tab_background_text_incognito_inactive":      rgb(p.text_muted),
+        "tab_text":                                    emit.rgb_bytes(p.text),
+        "tab_background_text":                         emit.rgb_bytes(p.text_muted),
+        "tab_background_text_inactive":                emit.rgb_bytes(p.text_muted),
+        "tab_background_text_incognito":               emit.rgb_bytes(p.text_muted),
+        "tab_background_text_incognito_inactive":      emit.rgb_bytes(p.text_muted),
 
-        "bookmark_text":             rgb(p.text),
-        "toolbar_button_icon":       rgb(p.text),
+        "bookmark_text":             emit.rgb_bytes(p.text),
+        "toolbar_button_icon":       emit.rgb_bytes(p.text),
 
-        "ntp_background":            rgb(p.bg),
-        "ntp_text":                  rgb(p.text),
-        "ntp_link":                  rgb(p.accent),
-        "ntp_header":                rgb(p.border),
+        "ntp_background":            emit.rgb_bytes(p.bg),
+        "ntp_text":                  emit.rgb_bytes(p.text),
+        "ntp_link":                  emit.rgb_bytes(p.accent),
+        "ntp_header":                emit.rgb_bytes(p.border),
 
         # Caption-button plate behind minimize/maximize/close. Chromium draws
         # its own hover fill on top, so the resting state stays transparent
         # and the frame color shows through.
-        "button_background":         rgba(p.overlay_black, 0),
+        "button_background":         emit.rgb_bytes(p.overlay_black) + (0,),
     }
     return {
         "manifest_version": 3,
@@ -79,15 +70,8 @@ def build_brave(p: Palette) -> dict:
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out_dir = os.path.join(here, "ayu-graphite")
-    os.makedirs(out_dir, exist_ok=True)
-    out = os.path.join(out_dir, "manifest.json")
-    with open(out, "w") as f:
-        json.dump(build_brave(p), f, indent=2)
-    print(f"wrote {out}")
+    emit.write_json(emit.beside(__file__, "ayu-graphite/manifest.json"),
+                    build_brave(load_palette()))
 
 
 if __name__ == "__main__":

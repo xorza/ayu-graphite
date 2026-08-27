@@ -1,4 +1,6 @@
-.PHONY: all deps audit build palette zed claude telegram telegram_ios terminal kde konsole brave catcad darkroom install clean
+TARGETS := zed claude telegram telegram_ios terminal kde konsole brave catcad darkroom
+
+.PHONY: all deps audit build palette install clean $(TARGETS)
 
 all: audit build palette
 
@@ -19,7 +21,7 @@ deps:
 		python3 -m pip install --user -q -r requirements.txt
 
 # Run every target builder. ayu-graphite.toml is the single source of truth
-# (hand-edited); the three target builders are pure transformers.
+# (hand-edited); every target builder is a pure transformer.
 build: deps
 	python3 build.py
 
@@ -28,42 +30,16 @@ palette: deps
 	python3 tools/render_palette.py
 
 # Per-target builders, runnable independently when iterating on one target.
-zed:
-	python3 zed/build.py
+$(TARGETS): deps
+	python3 $@/build.py
 
-claude:
-	python3 claude/build.py
-
-telegram:
-	python3 telegram/build.py
-
-telegram_ios:
-	python3 telegram_ios/build.py
-
-terminal:
-	python3 terminal/build.py
-
-kde:
-	python3 kde/build.py
-
-konsole:
-	python3 konsole/build.py
-
-brave:
-	python3 brave/build.py
-
-catcad:
-	python3 catcad/build.py
-
-darkroom:
-	python3 darkroom/build.py
-
-# Copy generated themes into Zed and Claude theme dirs.
+# Copy generated themes into the directories their applications read.
 install: all
 	./install.sh
 
-# ayu-graphite.toml is a source file (hand-edited single source of truth);
-# never delete it here.
+# Every target writes into its own directory, so the generated files are the
+# whole of `<target>/ayu-graphite.*`. ayu-graphite.toml is a source file (the
+# hand-edited single source of truth) and sits at the root, out of that reach.
 clean:
-	rm -f zed/ayu-graphite.json claude/ayu-graphite.json telegram/ayu-graphite.tdesktop-theme telegram/ayu-graphite.tdesktop-theme.txt telegram_ios/ayu-graphite.tgios-theme terminal/ayu-graphite.terminal kde/ayu-graphite.colors konsole/ayu-graphite.colorscheme catcad/ayu-graphite.ron darkroom/ayu-graphite.ron palette.png
+	rm -f $(addsuffix /ayu-graphite.*,$(TARGETS)) palette.png
 	rm -rf brave/ayu-graphite

@@ -6,18 +6,16 @@ rgb(R,G,B) string form for color values. Hex overrides (#rrggbb) parse but
 some renderers ignore them and fall through to the base theme — so we emit
 rgb() to match the convention.
 """
-import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
 
 
 def rgb(hex6: str) -> str:
-    h = hex6.lstrip("#")
-    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
-    return f"rgb({r},{g},{b})"
+    return "rgb({},{},{})".format(*emit.rgb_bytes(hex6))
 
 
 def build_claude(p: Palette) -> dict:
@@ -84,13 +82,8 @@ def build_claude(p: Palette) -> dict:
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out = os.path.join(here, "ayu-graphite.json")
-    with open(out, "w") as f:
-        json.dump(build_claude(p), f, indent=2)
-    print(f"wrote {out}")
+    emit.write_json(emit.beside(__file__, "ayu-graphite.json"),
+                    build_claude(load_palette()))
 
 
 if __name__ == "__main__":

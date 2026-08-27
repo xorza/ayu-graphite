@@ -13,8 +13,22 @@ install_file() {
     cp "$src" "$dst"
 }
 
-install_file "$here/zed/ayu-graphite.json" "$zed_dir/ayu-graphite.json"
-install_file "$here/claude/ayu-graphite.json"            "$claude_dir/ayu-graphite.json"
+# An application that reads its palette out of its own source tree — the table
+# is embedded in the binary, so there is nothing to install into a config
+# directory and nothing for the application to find at run time. Skipped when
+# the checkout is absent.
+install_into_checkout() {
+    local src=$1 dir=$2
+    if [[ -d "$dir" ]]; then
+        install_file "$here/$src" "$dir/$(basename "$src")"
+        echo "copied $src into $dir"
+    else
+        echo "$src: no checkout at $dir, skipped"
+    fi
+}
+
+install_file "$here/zed/ayu-graphite.json"    "$zed_dir/ayu-graphite.json"
+install_file "$here/claude/ayu-graphite.json" "$claude_dir/ayu-graphite.json"
 
 echo "copied themes into $zed_dir and $claude_dir"
 
@@ -49,32 +63,12 @@ if [[ "$(uname)" == "Linux" ]]; then
     echo "copied themes into $plasma_dir and $konsole_dir"
 fi
 
-# CatCad reads its palette out of its own source tree — the table is embedded in
-# the binary, so there is nothing to install into a config directory and nothing
-# for the application to find at run time. Skipped when the checkout is absent.
-catcad_dir="$HOME/Projects/CatCad/catcad/src/look/palette"
-if [[ -d "$catcad_dir" ]]; then
-    install_file "$here/catcad/ayu-graphite.ron" "$catcad_dir/ayu-graphite.ron"
-    echo "copied the palette into $catcad_dir"
-else
-    echo "catcad/ayu-graphite.ron: no CatCad checkout at $catcad_dir, skipped"
-fi
+install_into_checkout catcad/ayu-graphite.ron   "$HOME/Projects/CatCad/catcad/src/look/palette"
+install_into_checkout darkroom/ayu-graphite.ron "$HOME/Projects/Darkroom/darkroom/assets"
 
-# darkroom reads its palette out of its own source tree, the same way CatCad
-# does — the table is embedded in the binary, so there is nothing to install
-# into a config directory. Skipped when the checkout is absent.
-darkroom_dir="$HOME/Projects/Darkroom/darkroom/assets"
-if [[ -d "$darkroom_dir" ]]; then
-    install_file "$here/darkroom/ayu-graphite.ron" "$darkroom_dir/ayu-graphite.ron"
-    echo "copied the palette into $darkroom_dir"
-else
-    echo "darkroom/ayu-graphite.ron: no Darkroom checkout at $darkroom_dir, skipped"
-fi
-
-# Telegram Desktop has no scriptable theme-import path — load
-# telegram/ayu-graphite.tdesktop-theme via Settings → Chat Settings → Custom theme.
+# The two targets with no scriptable import path at all. Telegram Desktop takes
+# a theme only through its own settings dialog, and Brave only sideloads an
+# unpacked extension through its own UI — dropping the directory into the
+# profile's Extensions dir does nothing without a signature.
 echo "telegram/ayu-graphite.tdesktop-theme: load it manually via Telegram → Settings → Chat Settings"
-
-# Brave only sideloads unpacked extensions through its own UI; dropping the
-# directory into the profile's Extensions dir does nothing without a signature.
 echo "brave/ayu-graphite: load it manually via brave://extensions → Developer mode → Load unpacked"

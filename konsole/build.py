@@ -8,12 +8,8 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
-
-
-def rgb(hex6: str) -> str:
-    h = hex6.lstrip("#")
-    return f"{int(h[0:2], 16)},{int(h[2:4], 16)},{int(h[4:6], 16)}"
 
 
 def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
@@ -39,17 +35,17 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
     ]
 
     sections: dict[str, dict[str, str]] = {
-        "Background":          {"Color": rgb(p.bg)},
-        "BackgroundFaint":     {"Color": rgb(p.ansi_dim_black)},
-        "BackgroundIntense":   {"Color": rgb(p.bg)},
-        "Foreground":          {"Color": rgb(p.text)},
-        "ForegroundFaint":     {"Color": rgb(p.ansi_dim_white)},
-        "ForegroundIntense":   {"Color": rgb(p.ansi_bright_white)},
+        "Background":          {"Color": emit.rgb_csv(p.bg)},
+        "BackgroundFaint":     {"Color": emit.rgb_csv(p.ansi_dim_black)},
+        "BackgroundIntense":   {"Color": emit.rgb_csv(p.bg)},
+        "Foreground":          {"Color": emit.rgb_csv(p.text)},
+        "ForegroundFaint":     {"Color": emit.rgb_csv(p.ansi_dim_white)},
+        "ForegroundIntense":   {"Color": emit.rgb_csv(p.ansi_bright_white)},
     }
     for i in range(8):
-        sections[f"Color{i}"]        = {"Color": rgb(normal[i])}
-        sections[f"Color{i}Faint"]   = {"Color": rgb(faint[i])}
-        sections[f"Color{i}Intense"] = {"Color": rgb(intense[i])}
+        sections[f"Color{i}"]        = {"Color": emit.rgb_csv(normal[i])}
+        sections[f"Color{i}Faint"]   = {"Color": emit.rgb_csv(faint[i])}
+        sections[f"Color{i}Intense"] = {"Color": emit.rgb_csv(intense[i])}
 
     sections["General"] = {
         "Description": "Ayu Graphite",
@@ -59,24 +55,9 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
     return sections
 
 
-def render(scheme: dict[str, dict[str, str]]) -> str:
-    out = []
-    for section, kvs in scheme.items():
-        out.append(f"[{section}]")
-        for k, v in kvs.items():
-            out.append(f"{k}={v}")
-        out.append("")
-    return "\n".join(out)
-
-
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out = os.path.join(here, "ayu-graphite.colorscheme")
-    with open(out, "w") as f:
-        f.write(render(build_konsole(p)))
-    print(f"wrote {out}")
+    emit.write_text(emit.beside(__file__, "ayu-graphite.colorscheme"),
+                    emit.render_ini(build_konsole(load_palette())))
 
 
 if __name__ == "__main__":

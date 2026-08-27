@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
-"""Build all theme outputs.
+"""Run every target builder.
 
-Each per-target builder is independent: it reads ../ayu-graphite.toml (the
-hand-edited single source of truth) and emits its own theme file. There is no
-order dependency between them — this script just runs them all for convenience.
-
-  zed/build.py          palette -> zed/ayu-graphite.json
-  claude/build.py       palette -> claude/ayu-graphite.json
-  telegram/build.py     palette -> telegram/ayu-graphite.tdesktop-theme
-  telegram_ios/build.py palette -> telegram_ios/ayu-graphite.tgios-theme
-  terminal/build.py     palette -> terminal/ayu-graphite.terminal
-  kde/build.py          palette -> kde/ayu-graphite.colors
-  konsole/build.py      palette -> konsole/ayu-graphite.colorscheme
-  brave/build.py        palette -> brave/ayu-graphite/manifest.json
-  catcad/build.py       palette -> catcad/ayu-graphite.ron
-  darkroom/build.py     palette -> darkroom/ayu-graphite.ron
-
-The TOML is hand-edited; nothing in this repo writes back to it."""
+Each one reads ayu-graphite.toml — the hand-edited single source of truth —
+and writes its own theme file. There is no order dependency between them, so
+this script just runs them all for convenience. Nothing here writes back to
+the TOML."""
 import os
 import subprocess
 import sys

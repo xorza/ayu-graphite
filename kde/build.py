@@ -10,37 +10,33 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
-
-
-def rgb(hex6: str) -> str:
-    h = hex6.lstrip("#")
-    return f"{int(h[0:2], 16)},{int(h[2:4], 16)},{int(h[4:6], 16)}"
 
 
 def color_set(p: Palette, *, bg: str, alt: str, fg: str) -> dict[str, str]:
     """The 12-key block every Colors:* section uses. bg/alt/fg differ per
     section; the accent and semantic foregrounds are uniform."""
     return {
-        "BackgroundAlternate": rgb(alt),
-        "BackgroundNormal":    rgb(bg),
-        "DecorationFocus":     rgb(p.accent),
-        "DecorationHover":     rgb(p.accent),
-        "ForegroundActive":    rgb(p.accent),
-        "ForegroundInactive":  rgb(p.text_muted),
-        "ForegroundLink":      rgb(p.accent),
-        "ForegroundNegative":  rgb(p.error),
-        "ForegroundNeutral":   rgb(p.warning),
-        "ForegroundNormal":    rgb(fg),
-        "ForegroundPositive":  rgb(p.success),
-        "ForegroundVisited":   rgb(p.syn_number),
+        "BackgroundAlternate": emit.rgb_csv(alt),
+        "BackgroundNormal":    emit.rgb_csv(bg),
+        "DecorationFocus":     emit.rgb_csv(p.accent),
+        "DecorationHover":     emit.rgb_csv(p.accent),
+        "ForegroundActive":    emit.rgb_csv(p.accent),
+        "ForegroundInactive":  emit.rgb_csv(p.text_muted),
+        "ForegroundLink":      emit.rgb_csv(p.accent),
+        "ForegroundNegative":  emit.rgb_csv(p.error),
+        "ForegroundNeutral":   emit.rgb_csv(p.warning),
+        "ForegroundNormal":    emit.rgb_csv(fg),
+        "ForegroundPositive":  emit.rgb_csv(p.success),
+        "ForegroundVisited":   emit.rgb_csv(p.syn_number),
     }
 
 
 def build_kde(p: Palette) -> dict[str, dict[str, str]]:
     return {
         "ColorEffects:Disabled": {
-            "Color":           rgb(p.elem_disabled),
+            "Color":           emit.rgb_csv(p.elem_disabled),
             "ColorAmount":     "0",
             "ColorEffect":     "0",
             "ContrastAmount":  "0.65",
@@ -50,7 +46,7 @@ def build_kde(p: Palette) -> dict[str, dict[str, str]]:
         },
         "ColorEffects:Inactive": {
             "ChangeSelectionColor": "true",
-            "Color":           rgb(p.text_disabled),
+            "Color":           emit.rgb_csv(p.text_disabled),
             "ColorAmount":     "0.025",
             "ColorEffect":     "2",
             "ContrastAmount":  "0.1",
@@ -75,7 +71,7 @@ def build_kde(p: Palette) -> dict[str, dict[str, str]]:
         # red step to clear 4.5:1.
         "Colors:Selection":     {**color_set(p, bg=p.selection_bg, alt=p.elem_active,
                                              fg=p.selection_fg),
-                                 "ForegroundNegative": rgb(p.ansi_bright_red)},
+                                 "ForegroundNegative": emit.rgb_csv(p.ansi_bright_red)},
         "Colors:Tooltip":       color_set(p, bg=p.surface,   alt=p.elem_hover, fg=p.text),
         "Colors:View":          color_set(p, bg=p.bg,        alt=p.panel,      fg=p.text),
         "Colors:Window":        color_set(p, bg=p.panel,     alt=p.elem,       fg=p.text),
@@ -91,34 +87,19 @@ def build_kde(p: Palette) -> dict[str, dict[str, str]]:
             "contrast": "4",
         },
         "WM": {
-            "activeBackground":   rgb(p.title_bar),
-            "activeBlend":        rgb(p.text),
-            "activeForeground":   rgb(p.text),
-            "inactiveBackground": rgb(p.title_bar_inactive),
-            "inactiveBlend":      rgb(p.text_muted),
-            "inactiveForeground": rgb(p.text_muted),
+            "activeBackground":   emit.rgb_csv(p.title_bar),
+            "activeBlend":        emit.rgb_csv(p.text),
+            "activeForeground":   emit.rgb_csv(p.text),
+            "inactiveBackground": emit.rgb_csv(p.title_bar_inactive),
+            "inactiveBlend":      emit.rgb_csv(p.text_muted),
+            "inactiveForeground": emit.rgb_csv(p.text_muted),
         },
     }
 
 
-def render(scheme: dict[str, dict[str, str]]) -> str:
-    out = []
-    for section, kvs in scheme.items():
-        out.append(f"[{section}]")
-        for k, v in kvs.items():
-            out.append(f"{k}={v}")
-        out.append("")
-    return "\n".join(out)
-
-
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out = os.path.join(here, "ayu-graphite.colors")
-    with open(out, "w") as f:
-        f.write(render(build_kde(p)))
-    print(f"wrote {out}")
+    emit.write_text(emit.beside(__file__, "ayu-graphite.colors"),
+                    emit.render_ini(build_kde(load_palette())))
 
 
 if __name__ == "__main__":

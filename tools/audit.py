@@ -33,11 +33,9 @@ Five rules:
 import os
 import sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
-sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from color import apca, contrast, hk_lightness, luminance
-from palette import Palette, load_palette, load_primitives
+from palette import Palette, load_source
 
 # Separate enough to read as two layers. 1.10 is roughly one step of the
 # neutral ramp — below that the eye merges them under any gamma.
@@ -202,9 +200,8 @@ def report(p: Palette, primitives: dict[str, str]) -> None:
 
 
 def main() -> None:
-    path = os.path.join(os.path.dirname(HERE), "ayu-graphite.toml")
-    p = load_palette(path)
-    primitives = load_primitives(path)
+    src = load_source()
+    p, primitives = src.palette, src.primitives
     problems = (check_layers(p) + check_ink(p) + check_ansi(p)
                 + check_ansi_roles(p) + check_perceived(primitives))
     for line in problems:

@@ -21,12 +21,12 @@
     node_border:         "#00000000",  // (no outline)       the shadow carries the edge
     header_fill:         "#515151",    // elem_active        gray_44
     node_ambient_shadow: "#00000080",  // overlay_black      black
-    pal_text:            "#eaeaea",    // text               gray_94
+    text:                "#eaeaea",    // text               gray_94
     text_muted:          "#a4a4a4",    // text_muted         gray_72
-    pal_text_disabled:   "#a4a4a4",    // text_disabled      gray_72
-    pal_elem_hover:      "#444444",    // elem_hover         gray_39
-    pal_elem_active:     "#515151",    // elem_active        gray_44
-    pal_border_focused:  "#0179b1",    // border_focused     blue_normal
+    text_disabled:       "#a4a4a4",    // text_disabled      gray_72
+    elem_hover:          "#444444",    // elem_hover         gray_39
+    elem_active:         "#515151",    // elem_active        gray_44
+    border_focused:      "#0179b1",    // border_focused     blue_normal
 
     // Graph — the wires, and the marks drawn over them.
     selection_rect:      "#12b9df",    // accent             cyan_bright
@@ -62,11 +62,11 @@
         string:  "#fecfa1",    // syn_string_special orange_vivid
         path:    "#4db3f1",    // hint               blue_bright
         image:   "#c698e2",    // syn_number         magenta_bright
-        ramp: [
+        ramp: (
             "#f29407",    // syn_keyword        orange_bright
             "#b9dd0d",    // success            green_vivid
             "#d0a70e",    // ansi_bright_yellow yellow_bright
             "#eaeaea",    // syn_punctuation    gray_94
-        ],
+        ),
     ),
 )

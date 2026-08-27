@@ -33,20 +33,15 @@ after the obvious nine are spent. Both are resolved below, on the entries they
 affect, against what the two roles are for rather than by moving one of them a
 shade.
 """
+import dataclasses
 import os
 import sys
+from math import dist
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from palette import Palette, load_palette
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(os.path.dirname(HERE), "ayu-graphite.toml")
-OUT = os.path.join(HERE, "ayu-graphite.ron")
+import color
+import emit
+from palette import Palette, load_source
 
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
@@ -56,18 +51,18 @@ ROLE = {
     "chrome_fill": "bg",
     "tab_inactive": "panel",
     "node_fill": "elem",
-    "pal_elem_hover": "elem_hover",
+    "elem_hover": "elem_hover",
     "header_fill": "elem_active",
-    "pal_elem_active": "elem_active",
+    "elem_active": "elem_active",
     "canvas_dot": "border",
-    "pal_border_focused": "border_focused",
+    "border_focused": "border_focused",
     # Ink. `port_label` keeps its own slot rather than reading `text_muted`
     # at the call site: a port row wants one strong element, and which ink
     # de-emphasizes the other two is the interface's decision to change.
-    "pal_text": "text",
+    "text": "text",
     "text_muted": "text_muted",
     "port_label": "text_muted",
-    "pal_text_disabled": "text_disabled",
+    "text_disabled": "text_disabled",
     # Accent. One hue for the whole selection: the rubber band that sweeps
     # nodes up and the halo left on the ones it caught.
     "selection_rect": "accent",
@@ -145,7 +140,7 @@ WIRE_FLOOR = 0.06
 # The chrome surfaces that stack in one view, darkest first. Each must be
 # lighter than the one under it, or a control disappears into its ground.
 LADDER = ("canvas_bg", "chrome_fill", "tab_inactive", "node_fill",
-          "pal_elem_hover", "header_fill")
+          "elem_hover", "header_fill")
 
 CHROME_GREYS = ("gray_24", "gray_29", "gray_34", "gray_39", "gray_44")
 
@@ -153,9 +148,9 @@ CHROME_GREYS = ("gray_24", "gray_29", "gray_34", "gray_39", "gray_44")
 SECTIONS = (
     ("Chrome — the surfaces the editor is built out of, and the inks on them.", (
         "canvas_bg", "canvas_dot", "chrome_fill", "tab_inactive", "node_fill",
-        "node_border", "header_fill", "node_ambient_shadow", "pal_text",
-        "text_muted", "pal_text_disabled", "pal_elem_hover", "pal_elem_active",
-        "pal_border_focused")),
+        "node_border", "header_fill", "node_ambient_shadow", "text",
+        "text_muted", "text_disabled", "elem_hover", "elem_active",
+        "border_focused")),
     ("Graph — the wires, and the marks drawn over them.", (
         "selection_rect", "connection_broken", "breaker_stroke")),
     ("Ports — an untyped port's circle, and the ink beside it. A typed port\n"
@@ -169,53 +164,13 @@ SECTIONS = (
 )
 
 
-def channels(hex6: str) -> list[float]:
-    h = hex6.lstrip("#")
-    return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
-
-
-def to_linear(c: float) -> float:
-    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
-
-
-def luminance(hex6: str) -> float:
-    r, g, b = (to_linear(c) for c in channels(hex6))
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b
-
-
-def oklab(hex6: str) -> tuple[float, float, float]:
-    r, g, b = (to_linear(c) for c in channels(hex6))
-    l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b
-    m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b
-    s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b
-    l_, m_, s_ = l ** (1 / 3), m ** (1 / 3), s ** (1 / 3)
-    return (
-        0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
-        1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
-        0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_,
-    )
-
-
-def grey_at(lightness: float) -> str:
-    """The grey of Oklab lightness `lightness`, as a hex triple.
-
-    A neutral has all three channels equal, so its Oklab L is the cube root
-    of its linear value and this inverts in one step.
-    """
-    linear = lightness ** 3
-    v = (12.92 * linear if linear <= 0.0031308
-         else 1.055 * linear ** (1 / 2.4) - 0.055)
-    byte = max(0, min(255, round(v * 255)))
-    return f"#{byte:02x}{byte:02x}{byte:02x}"
-
-
 def ramp_step(primitives: dict[str, str]) -> float:
     """The mean Oklab lightness between adjacent chrome greys.
 
     Measured off the palette rather than written down here, so the rung this
     file adds keeps the ramp's spacing when the ramp is respaced.
     """
-    lights = [oklab(primitives[name])[0] for name in CHROME_GREYS]
+    lights = [color.oklab(primitives[name])[0] for name in CHROME_GREYS]
     return (lights[-1] - lights[0]) / (len(lights) - 1)
 
 
@@ -229,7 +184,9 @@ def resolve(palette: Palette, primitives: dict[str, str]) -> dict:
 
     step = ramp_step(primitives)
     for role, key in DERIVED.items():
-        values[role] = grey_at(oklab(roles[key])[0] - step)
+        # A neutral's three channels are equal, so its Oklab lightness is the
+        # cube root of its linear value and the step inverts in one line.
+        values[role] = color.grey((color.oklab(roles[key])[0] - step) ** 3)
 
     values["type_colors"] = {field: roles[key] for field, key in TYPE.items()}
     values["type_colors"]["ramp"] = [roles[key] for key in RAMP]
@@ -237,13 +194,13 @@ def resolve(palette: Palette, primitives: dict[str, str]) -> dict:
 
 
 def check(values: dict) -> None:
-    """The three things a palette edit could quietly break here.
+    """The two things a palette edit could quietly break here.
 
     Each is a rule darkroom's own drawing depends on and cannot state: the
     file it reads is a table of colours, and a table cannot say that two of
     its entries have to differ.
     """
-    lights = [luminance(values[role]) for role in LADDER]
+    lights = [color.luminance(values[role]) for role in LADDER]
     for lower, upper, under, over in zip(LADDER, LADDER[1:], lights, lights[1:]):
         assert under < over, (
             f"{lower} ({values[lower]}) is not darker than {upper} "
@@ -252,33 +209,36 @@ def check(values: dict) -> None:
     wires = dict(values["type_colors"])
     ramp = wires.pop("ramp")
     wires.update({f"ramp[{i}]": hexstr for i, hexstr in enumerate(ramp)})
+    points = {name: color.oklab(hexstr) for name, hexstr in wires.items()}
     names = sorted(wires)
     for i, one in enumerate(names):
         for other in names[i + 1:]:
-            gap = sum((a - b) ** 2 for a, b in
-                      zip(oklab(wires[one]), oklab(wires[other]))) ** 0.5
+            gap = dist(points[one], points[other])
             assert gap >= WIRE_FLOOR, (
                 f"the {one} and {other} wires are {gap:.3f} apart in OKLab "
                 f"({wires[one]}, {wires[other]}) — under {WIRE_FLOOR}, a 2px "
                 f"line reads as one colour")
 
+
+def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
+    """Every flat role, with the two columns of provenance behind it."""
+    def entry(role, key, note):
+        return emit.RonEntry(role, values[role], key, note)
+
+    out = {role: entry(role, key, semantic[key]) for role, key in ROLE.items()}
+    out.update({role: entry(role, key, semantic[key])
+                for role, (key, _) in ALPHA.items()})
+    out.update({role: entry(role, "(the ramp's step)", f"below {semantic[key]}")
+                for role, key in DERIVED.items()})
+    out.update({role: entry(role, "(no outline)", "the shadow carries the edge")
+                for role in LITERAL})
+
     # A role left out of SECTIONS would be dropped from the file, and darkroom
     # would report it as a field its table is missing — true, and a long way
     # from the line that caused it.
     written = {role for _, roles in SECTIONS for role in roles}
-    flat = {role for role in values if role != "type_colors"}
-    assert written == flat, f"SECTIONS and the roles disagree: {written ^ flat}"
-
-
-def sources(semantic: dict[str, str]) -> dict[str, tuple[str, str]]:
-    """Per role, the role it came from and the primitive that resolved to —
-    the two columns of provenance every line carries."""
-    out = {role: (key, semantic[key]) for role, key in ROLE.items()}
-    out.update({role: (key, semantic[key]) for role, (key, _) in ALPHA.items()})
-    out.update({role: ("(the ramp's step)", f"below {semantic[key]}")
-                for role, key in DERIVED.items()})
-    out.update({role: ("(no outline)", "the shadow carries the edge")
-                for role in LITERAL})
+    assert written == set(out), (
+        f"SECTIONS and the roles disagree: {written ^ set(out)}")
     return out
 
 
@@ -286,20 +246,8 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
                    primitives: dict[str, str]) -> str:
     values = resolve(palette, primitives)
     check(values)
-    source = sources(semantic)
-
-    # One set of column widths for the whole table, so provenance reads as
-    # three columns rather than as a comment trailing each value.
-    name_w = max(len(role) for role in source) + 2
-    # +5: the two quotes, the comma, and the two spaces before the comment.
-    value_w = max(len(values[role]) for role in source) + 5
-    key_w = max(len(key) for key, _ in source.values()) + 2
-
-    def entry(role: str) -> str:
-        key, primitive = source[role]
-        value = f'"{values[role]}",'
-        return (f"    {role + ':':{name_w}}{value:{value_w}}"
-                f"// {key:{key_w}}{primitive}")
+    table = entries(values, semantic)
+    columns = emit.RonColumns.of(table.values())
 
     lines = [
         "// Ayu Graphite, for darkroom — generated. Do not edit by hand.",
@@ -319,34 +267,35 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
     ]
     for heading, roles in SECTIONS:
         lines.extend(f"    // {line}" for line in heading.split("\n"))
-        lines.extend(entry(role) for role in roles)
+        lines += [columns.row(table[role]) for role in roles]
         lines.append("")
 
     lines.append("    // A wire's hue is the type flowing along it. `ramp` backs the")
     lines.append("    // open-ended custom and enum families, keyed by type id.")
     lines.append("    type_colors: (")
-    field_w = max(len(field) for field in TYPE) + 2
-    for field, key in TYPE.items():
-        value = f'"{values["type_colors"][field]}",'
-        lines.append(f'        {field + ":":{field_w}}{value:{value_w}}'
-                     f"// {key:{key_w}}{semantic[key]}")
-    lines.append("        ramp: [")
-    for key, hexstr in zip(RAMP, values["type_colors"]["ramp"]):
-        value = f'"{hexstr}",'
-        lines.append(f"            {value:{value_w}}// {key:{key_w}}{semantic[key]}")
-    lines.append("        ],")
+    # The nested block keeps the table's value and comment columns; only its
+    # names are narrower.
+    nested = dataclasses.replace(
+        columns, name=max(len(field) for field in TYPE) + 2)
+    types = values["type_colors"]
+    lines += [nested.row(emit.RonEntry(field, types[field], key, semantic[key]),
+                         indent=8)
+              for field, key in TYPE.items()]
+    # A RON tuple, not a list: `ramp` is a fixed-size array on the other side,
+    # and serde reads one of those as a tuple.
+    lines.append("        ramp: (")
+    lines += [nested.row(emit.RonEntry("", hexstr, key, semantic[key]), indent=12)
+              for key, hexstr in zip(RAMP, types["ramp"])]
+    lines.append("        ),")
     lines.append("    ),")
     lines.append(")")
     return "\n".join(lines) + "\n"
 
 
 def main() -> None:
-    with open(SOURCE, "rb") as f:
-        data = tomllib.load(f)
-    body = build_darkroom(load_palette(SOURCE), data["semantic"], data["primitives"])
-    with open(OUT, "w") as f:
-        f.write(body)
-    print(f"wrote {OUT}")
+    src = load_source()
+    emit.write_text(emit.beside(__file__, "ayu-graphite.ron"),
+                    build_darkroom(src.palette, src.semantic, src.primitives))
 
 
 if __name__ == "__main__":

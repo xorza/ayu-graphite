@@ -1,14 +1,17 @@
 """Shared palette dataclass + TOML loader.
 
 Single source of truth for the shape of ayu-graphite.toml. Every target builder
-imports from here so adding a token is a one-file edit instead of a five-file
-ritual."""
+imports from here, so a new token is one edit instead of one per target."""
 import dataclasses
+import os
 try:
     import tomllib  # py311+
 except ModuleNotFoundError:
     import tomli as tomllib  # pip install -r requirements.txt
 from dataclasses import dataclass
+
+TOML = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                    "ayu-graphite.toml")
 
 
 @dataclass
@@ -118,21 +121,24 @@ class Palette:
         return dataclasses.asdict(self)
 
 
-def load_primitives(path: str) -> dict[str, str]:
-    """The raw [primitives] table, for tools that check the palette's shape
-    rather than read a role out of it."""
-    with open(path, "rb") as f:
-        return tomllib.load(f)["primitives"]
+@dataclass
+class Source:
+    """The whole file, for a reader that needs the names as well as the values:
+    the audit checks the tint rows the primitives are named by, and the two RON
+    targets print the ref each role resolved through."""
+    primitives: dict[str, str]
+    semantic: dict[str, str]
+    palette: Palette
 
 
-def load_palette(path: str) -> Palette:
-    """Resolve [semantic] string refs against [primitives] hex values.
+def load_source() -> Source:
+    """Read ayu-graphite.toml and resolve [semantic] refs against [primitives].
 
     A semantic value is either a literal `#rrggbb` (escape hatch) or the name
     of a key in [primitives]. Anything that doesn't resolve is a hard error —
     we'd rather break the build than silently render a typo as a missing key
     fallback elsewhere."""
-    with open(path, "rb") as f:
+    with open(TOML, "rb") as f:
         data = tomllib.load(f)
     primitives = data["primitives"]
     semantic = data["semantic"]
@@ -147,4 +153,9 @@ def load_palette(path: str) -> Palette:
                 f"semantic.{key} = {value!r} is neither a hex literal nor a "
                 f"primitive name. Available primitives: {sorted(primitives)}"
             )
-    return Palette(**resolved)
+    return Source(primitives, semantic, Palette(**resolved))
+
+
+def load_palette() -> Palette:
+    """Just the roles, which is all a target builder reads."""
+    return load_source().palette

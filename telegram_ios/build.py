@@ -16,6 +16,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
 
 
@@ -451,13 +452,8 @@ def render(node, indent: int = 0) -> str:
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out = os.path.join(here, "ayu-graphite.tgios-theme")
-    with open(out, "w") as f:
-        f.write(render(build_ios(p)) + "\n")
-    print(f"wrote {out}")
+    emit.write_text(emit.beside(__file__, "ayu-graphite.tgios-theme"),
+                    render(build_ios(load_palette())) + "\n")
 
 
 if __name__ == "__main__":

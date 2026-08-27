@@ -9,14 +9,11 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
-sys.path.insert(0, HERE)
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
 from color import contrast, hk_lightness
-from palette import load_palette, load_primitives
+from palette import load_source
 
-ROOT = os.path.dirname(HERE)
-TOML = os.path.join(ROOT, "ayu-graphite.toml")
 OUT = os.path.join(ROOT, "palette.png")
 
 CELL_W = 148
@@ -159,12 +156,11 @@ def draw_semantic(draw, items, sheet, top, cols, fonts):
 
 
 def main():
-    primitives = load_primitives(TOML)
-    p = load_palette(TOML)
-    semantic = list(p.as_dict().items())
+    src = load_source()
+    semantic = list(src.palette.as_dict().items())
 
-    ladder = Ladder(primitives)
-    sheet = Sheet(p)
+    ladder = Ladder(src.primitives)
+    sheet = Sheet(src.palette)
     width = ladder.width
     cols = max(1, (width - 2 * PAD + GAP) // (CELL_W + GAP))
     sem_rows = (len(semantic) + cols - 1) // cols

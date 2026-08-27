@@ -7,6 +7,8 @@ A higher-contrast variant of [Ayu](https://github.com/dempfi/ayu) for [Zed](http
 ```
 ayu-graphite.toml       SINGLE SOURCE OF TRUTH — hand-edited semantic palette
 palette.py              dataclass + TOML loader (schema lives once)
+color.py                contrast, APCA Lc, Oklab, perceived lightness
+emit.py                 the one hex parse, the shared formats, the file writing
 build.py                orchestrator (runs every target builder)
 zed/build.py            → ayu-graphite.json
 claude/build.py         → ayu-graphite.json
@@ -22,7 +24,7 @@ tools/audit.py          contrast rules — runs before every build, fails on a v
 tools/render_palette.py renders palette.png — every token as a labeled swatch
 ```
 
-To add a target, drop a `<target>/build.py` next to its siblings (copy `claude/build.py` — it's the smallest) and add the directory name to `TARGETS` in the root `build.py`.
+To add a target, drop a `<target>/build.py` next to its siblings (copy `claude/build.py` — it's the smallest) and add the directory name to `TARGETS` in the root `build.py` and to `TARGETS` in the `Makefile`. The Makefile builds its per-target rule and its `clean` line off that list.
 
 ## Usage
 

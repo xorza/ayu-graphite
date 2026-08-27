@@ -16,25 +16,19 @@ leans. Each neutral role is re-emitted at the grey of the same relative
 luminance, which drops the chroma and leaves the ramp's spacing exactly where
 tools/audit.py checks it.
 
-One role has no step to take. The ramp is spaced near 1.15:1 everywhere except
-gray_750 to gray_600, which jumps 1.975:1, and CatCad's dimmest ink wants to sit
-in that gap. It is placed evenly between the two steps that do exist rather than
-added to the palette, because nothing else needs it.
+One role has no step of its own. CatCad's dimmest ink wants the gap between the
+step `elem_active` sits on and the step `line_number` sits on, so it is placed
+evenly between those two rather than added to the palette, because nothing else
+needs it. Both ends are read out of the palette, and each line of the table says
+which two it landed between.
 """
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from palette import Palette, load_palette
-
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(os.path.dirname(HERE), "ayu-graphite.toml")
-OUT = os.path.join(HERE, "ayu-graphite.ron")
+import color
+import emit
+from palette import Palette, load_source
 
 # CatCad role -> the semantic role it is taken from. Split by what happens on
 # the way: the first group is re-emitted grey, the second passes through.
@@ -104,26 +98,10 @@ SECTIONS = (
 )
 
 
-def channels(hex6: str) -> list[float]:
-    h = hex6.lstrip("#")
-    return [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
-
-
-def luminance(hex6: str) -> float:
-    ch = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
-          for c in channels(hex6)]
-    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2]
-
-
-def grey(y: float) -> str:
-    """The grey of relative luminance `y`, as a hex triple."""
-    v = y * 12.92 if y <= 0.0031308 else 1.055 * y ** (1 / 2.4) - 0.055
-    byte = max(0, min(255, round(v * 255)))
-    return f"#{byte:02x}{byte:02x}{byte:02x}"
-
-
 def neutralise(hex6: str) -> str:
-    return grey(luminance(hex6))
+    """The same colour with its tint taken off: the grey that emits as much
+    light as it does."""
+    return color.grey(color.luminance(hex6))
 
 
 def between(dark: str, light: str, part: float) -> str:
@@ -133,33 +111,38 @@ def between(dark: str, light: str, part: float) -> str:
     ramp is built on — an average of the two luminances would land closer to
     the light end than to the dark one.
     """
-    lo, hi = luminance(dark), luminance(light)
+    lo, hi = color.luminance(dark), color.luminance(light)
     ratio = ((hi + 0.05) / (lo + 0.05)) ** part
-    return grey((lo + 0.05) * ratio - 0.05)
+    return color.grey((lo + 0.05) * ratio - 0.05)
 
 
-def build_catcad(p: Palette, primitives: dict[str, str]) -> str:
-    resolved = p.as_dict()
-    values, sources = {}, {}
-    for role, key in NEUTRAL.items():
-        values[role] = neutralise(resolved[key])
-        sources[role] = (key, primitives[key])
-    for role, key in HUE.items():
-        values[role] = resolved[key]
-        sources[role] = (key, primitives[key])
+def entries(p: Palette, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
+    """Every CatCad role, with the two columns of provenance behind it."""
+    roles = p.as_dict()
+    out = {role: emit.RonEntry(role, neutralise(roles[key]), key, semantic[key])
+           for role, key in NEUTRAL.items()}
+    out.update({role: emit.RonEntry(role, roles[key], key, semantic[key])
+                for role, key in HUE.items()})
     # A third of the way up the ramp's one gap, which is where the step would
     # sit if the palette had one.
-    values["ink_dim"] = between(
-        neutralise(p.elem_active), neutralise(p.line_number), 1 / 3)
-    sources["ink_dim"] = ("(the ramp's gap)", "between gray_750 and gray_600")
+    out["ink_dim"] = emit.RonEntry(
+        "ink_dim",
+        between(neutralise(p.elem_active), neutralise(p.line_number), 1 / 3),
+        "(the ramp's gap)",
+        f"between {semantic['elem_active']} and {semantic['line_number']}")
 
     # A role left out of SECTIONS would be dropped from the file, and CatCad
     # would report it as a field its table is missing — true, and a long way
     # from the line that caused it.
     written = {role for _, roles in SECTIONS for role in roles}
-    assert written == set(values), (
-        f"SECTIONS and the mapping disagree: {written ^ set(values)}")
+    assert written == set(out), (
+        f"SECTIONS and the mapping disagree: {written ^ set(out)}")
+    return out
 
+
+def build_catcad(p: Palette, semantic: dict[str, str]) -> str:
+    table = entries(p, semantic)
+    columns = emit.RonColumns.of(table.values())
     lines = [
         "// Ayu Graphite, for CatCad — generated. Do not edit by hand.",
         "//",
@@ -175,21 +158,16 @@ def build_catcad(p: Palette, primitives: dict[str, str]) -> str:
     ]
     for heading, roles in SECTIONS:
         lines.append(f"    // {heading}")
-        for role in roles:
-            key, primitive = sources[role]
-            lines.append(
-                f'    {role + ":":14}"{values[role]}",  // {key:23}{primitive}')
+        lines += [columns.row(table[role]) for role in roles]
         lines.append("")
     lines[-1] = ")"
     return "\n".join(lines) + "\n"
 
 
 def main() -> None:
-    with open(SOURCE, "rb") as f:
-        primitives = tomllib.load(f)["semantic"]
-    with open(OUT, "w") as f:
-        f.write(build_catcad(load_palette(SOURCE), primitives))
-    print(f"wrote {OUT}")
+    src = load_source()
+    emit.write_text(emit.beside(__file__, "ayu-graphite.ron"),
+                    build_catcad(src.palette, src.semantic))
 
 
 if __name__ == "__main__":

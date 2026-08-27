@@ -5,23 +5,22 @@ No upstream JSON, no pipeline, no math beyond appending alpha hex digits.
 Every Zed style key is mapped explicitly to a palette token (or a constant
 where the role is purely structural like a transparent border).
 """
-import json
 import os
 import sys
 from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import emit
 from palette import Palette, load_palette
 
 
-def opaque(hex6: str) -> str:
-    """#rrggbb -> #rrggbbff."""
-    return hex6 + "ff"
-
-
 def alpha(hex6: str, aa: str) -> str:
-    """#rrggbb + 'bf' -> #rrggbbbf."""
+    """Zed takes #rrggbbaa. `aa` is the two hex digits of alpha."""
     return hex6 + aa
+
+
+def opaque(hex6: str) -> str:
+    return alpha(hex6, "ff")
 
 
 def syn(color: str, italic: bool = False, bold: bool = False) -> dict[str, Any]:
@@ -99,9 +98,9 @@ def build_zed(p: Palette) -> dict[str, Any]:
         "editor.subheader.background": opaque(p.panel),
         "editor.active_line.background":      alpha(p.panel, "bf"),
         "editor.highlighted_line.background": opaque(p.panel),
-        "editor.line_number":          p.line_number,
-        "editor.active_line_number":   p.line_number_active,
-        "editor.hover_line_number":    p.line_number_hover,
+        "editor.line_number":          opaque(p.line_number),
+        "editor.active_line_number":   opaque(p.line_number_active),
+        "editor.hover_line_number":    opaque(p.line_number_hover),
         "editor.invisible":            opaque(p.text_disabled),
         "editor.wrap_guide":           alpha(p.text, "0d"),
         "editor.active_wrap_guide":    alpha(p.text, "1a"),
@@ -266,13 +265,8 @@ def _build_syntax(p: Palette) -> dict:
 
 
 def main() -> None:
-    here = os.path.dirname(os.path.abspath(__file__))
-    repo = os.path.dirname(here)
-    p = load_palette(os.path.join(repo, "ayu-graphite.toml"))
-    out = os.path.join(here, "ayu-graphite.json")
-    with open(out, "w") as f:
-        json.dump(build_zed(p), f, indent=2)
-    print(f"wrote {out}")
+    emit.write_json(emit.beside(__file__, "ayu-graphite.json"),
+                    build_zed(load_palette()))
 
 
 if __name__ == "__main__":
