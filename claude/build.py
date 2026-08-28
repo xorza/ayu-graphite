@@ -58,16 +58,30 @@ def build_claude(p: Palette) -> dict:
         "diffRemovedDimmed":  p.error_bg,
         "diffRemovedWord":    p.diff_word_minus,
 
+        # Eight names, five hues. The five with a hue of their own take its
+        # bright or vivid cell. Pink, purple and cyan take the other tint of
+        # the nearest hue still free, so every pair stays a step apart. The
+        # two ink cells left out, orange_vivid and yellow_bright, each sit
+        # under 7 Oklab points from one in use.
         "red_FOR_SUBAGENTS_ONLY":    p.error,
         "blue_FOR_SUBAGENTS_ONLY":   p.accent,
         "green_FOR_SUBAGENTS_ONLY":  p.success,
         "yellow_FOR_SUBAGENTS_ONLY": p.warning,
-        "purple_FOR_SUBAGENTS_ONLY": p.syn_number,
+        "purple_FOR_SUBAGENTS_ONLY": p.syn_type,
         "orange_FOR_SUBAGENTS_ONLY": p.syn_keyword,
-        "pink_FOR_SUBAGENTS_ONLY":   p.syn_operator,
+        "pink_FOR_SUBAGENTS_ONLY":   p.syn_number,
         "cyan_FOR_SUBAGENTS_ONLY":   p.syn_string_regex,
         "professionalBlue":          p.accent,
     }
+    # Two subagents in one color read as one subagent. The syntax roles the
+    # eight borrow may share a cell — keyword and operator do — so the
+    # mapping, not the palette, has to hold them apart.
+    by_color: dict[str, list[str]] = {}
+    for key, value in raw.items():
+        if key.endswith("_FOR_SUBAGENTS_ONLY"):
+            by_color.setdefault(value, []).append(key)
+    shared = [names for names in by_color.values() if len(names) > 1]
+    assert not shared, f"subagent colors collide: {shared}"
     overrides = {k: rgb(v) for k, v in raw.items()}
     # Claude Code 2.1.x ignores `overrides` for diff line backgrounds
     # (`diffAdded`/`diffRemoved`/`*Dimmed`); they come from the chosen `base`.

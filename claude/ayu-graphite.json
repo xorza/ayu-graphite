@@ -38,9 +38,9 @@
     "blue_FOR_SUBAGENTS_ONLY": "rgb(77,179,241)",
     "green_FOR_SUBAGENTS_ONLY": "rgb(185,221,13)",
     "yellow_FOR_SUBAGENTS_ONLY": "rgb(254,205,18)",
-    "purple_FOR_SUBAGENTS_ONLY": "rgb(255,204,193)",
+    "purple_FOR_SUBAGENTS_ONLY": "rgb(170,219,254)",
     "orange_FOR_SUBAGENTS_ONLY": "rgb(242,148,7)",
-    "pink_FOR_SUBAGENTS_ONLY": "rgb(242,148,7)",
+    "pink_FOR_SUBAGENTS_ONLY": "rgb(255,204,193)",
     "cyan_FOR_SUBAGENTS_ONLY": "rgb(152,182,20)",
     "professionalBlue": "rgb(77,179,241)"
   }
