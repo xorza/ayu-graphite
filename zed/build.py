@@ -199,12 +199,11 @@ def build_zed(p: Palette) -> dict[str, Any]:
 
 
 def _build_players(p: Palette) -> list:
-    """8 collaboration cursors. Cursor hue rotates through the five inks and
-    the two text greys, and the eighth is the accent again; background is a
-    fixed mid-gray (Zed's convention)."""
+    """8 collaboration cursors. Cursor hue rotates through the bright inks
+    and the normal row; background is a fixed mid-gray (Zed's convention)."""
     cursors = [
-        p.hint, p.syn_keyword, p.warning, p.success,
-        p.error, p.text_muted, p.text, p.accent,
+        p.ansi_blue, p.ansi_magenta, p.syn_keyword, p.ansi_green,
+        p.hint, p.error, p.warning, p.success,
     ]
     return [
         {

@@ -26,43 +26,46 @@
     text_disabled:       "#a4a4a4",    // text_disabled      gray_6
     elem_hover:          "#454545",    // elem_hover         gray_4
     elem_active:         "#525252",    // elem_active        gray_5
-    border_focused:      "#74c3f7",    // border_focused     blue_bright
+    border_focused:      "#0072ad",    // border_focused     blue_normal
 
     // Graph — the wires, and the marks drawn over them.
-    selection_rect:      "#74c3f7",    // accent             blue_bright
-    connection_broken:   "#f77f71",    // error              red_bright
-    breaker_stroke:      "#f77f71",    // error              red_bright
+    selection_rect:      "#20acfd",    // accent             blue_bright
+    connection_broken:   "#ff8a78",    // error              red_bright
+    breaker_stroke:      "#ff8a78",    // error              red_bright
 
     // Ports — an untyped port's circle, and the ink beside it. A typed port
     // takes its hue from the type table instead.
-    input_port:          "#6cea4e",    // success            green_bright
-    output_port:         "#f8b065",    // syn_keyword        orange_bright
-    event_port:          "#f77f71",    // error              red_bright
+    input_port:          "#69bc56",    // success            green_bright
+    output_port:         "#f5912b",    // syn_keyword        orange_bright
+    event_port:          "#ff8a78",    // error              red_bright
     port_label:          "#a4a4a4",    // text_muted         gray_6
 
     // Badges — what a node's head says about itself.
-    badge_graph:         "#74c3f7",    // accent             blue_bright
-    badge_sink:          "#f77f71",    // error              red_bright
-    badge_cache:         "#fbdd89",    // warning            yellow_bright
+    badge_graph:         "#20acfd",    // accent             blue_bright
+    badge_sink:          "#ff8a78",    // error              red_bright
+    badge_cache:         "#ccab00",    // warning            yellow_bright
     badge_impure:        "#ebebeb",    // text               gray_7
 
     // Status — what a node's head says about its last run.
-    status_success:      "#6cea4e",    // success            green_bright
-    status_info:         "#74c3f7",    // accent             blue_bright
+    status_success:      "#69bc56",    // success            green_bright
+    status_info:         "#20acfd",    // accent             blue_bright
     status_busy:         "#a4a4a4",    // text_muted         gray_6
-    status_warning:      "#f8b065",    // syn_keyword        orange_bright
-    status_error:        "#f77f71",    // error              red_bright
+    status_warning:      "#f5912b",    // syn_keyword        orange_bright
+    status_error:        "#ff8a78",    // error              red_bright
 
     // A wire's hue is the type flowing along it. `ramp` backs the
     // open-ended custom and enum families, keyed by type id.
     type_colors: (
-        boolean: "#f77f71",    // error              red_bright
-        int:     "#fbdd89",    // ansi_bright_yellow yellow_bright
-        float:   "#ebebeb",    // syn_punctuation    gray_7
-        string:  "#6cea4e",    // syn_string         green_bright
-        path:    "#74c3f7",    // hint               blue_bright
-        image:   "#f8b065",    // syn_keyword        orange_bright
+        boolean: "#ff8a78",    // error              red_bright
+        int:     "#ccab00",    // ansi_bright_yellow yellow_bright
+        float:   "#8e7600",    // ansi_yellow        yellow_normal
+        string:  "#69bc56",    // syn_string         green_bright
+        path:    "#20acfd",    // hint               blue_bright
+        image:   "#f5912b",    // syn_keyword        orange_bright
         ramp: (
+            "#b65345",    // ansi_red           red_normal
+            "#0072ad",    // ansi_blue          blue_normal
+            "#ebebeb",    // syn_punctuation    gray_7
             "#a4a4a4",    // text_muted         gray_6
         ),
     ),

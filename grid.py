@@ -1,19 +1,15 @@
-"""Derive the primitives: five base colors and two tints make the ten
+"""Derive the primitives: five base colors and three tints make the fifteen
 chromatic cells, and one ladder makes the greys.
 
-A base color contributes its hue and nothing else. A tint is a perceived
-brightness, Fairchild-Pirrotta L**, given one of two ways. A level tint is one
-number every hue lands on, and its chroma is as much as each hue holds there,
-in Oklab, up to a line drawn `ROW_SPREAD` above the lowest ceiling on the row.
-sRGB is lopsided — red and blue hold chroma when dark, yellow and green when
-light — so a row of bare gamut maxima reads uneven, and a row cut to its
-lowest ceiling reads pale; the line between keeps each hue at its own maximum
-unless it stands out. A per-hue tint is one number for each hue, and each
-cell takes the ceiling at its own brightness, or the share of it the tint
-names: an ink reads as its hue only in a band of brightness, yellow when light
-and red when not, so the ink tint puts each hue where it is most itself and
-levels nothing. A share under one steps every cell toward the grey axis, and
-with the brightness raised beside it, toward white.
+A base color contributes its hue and nothing else. A tint is one perceived
+brightness, Fairchild-Pirrotta L**, that every hue on the row lands on. Chroma
+is as much as each hue holds at that brightness, in Oklab, up to a line drawn
+`ROW_SPREAD` above the lowest ceiling on the row. sRGB is lopsided — red and
+blue hold chroma when dark, yellow and green when light — so a row of bare
+gamut maxima reads uneven: at a mid brightness red holds half again the
+chroma yellow does, and the eye takes the surplus for brightness however the
+model levels it. The line keeps every cell within the eye's threshold of the
+row's chroma, so a row reads as one brightness and one saturation.
 
 Each cell is solved, not looked up. At fixed hue and chroma, L** rises with
 Oklab lightness, so a bisection lands the row's brightness to within rounding.
@@ -78,35 +74,19 @@ def ceiling(hue: float, target: float) -> float:
     return lo
 
 
-def level(tint) -> bool:
-    """Whether a tint is one brightness for the row or one per hue."""
-    return not isinstance(tint, dict)
-
-
-def chromatic(base: dict[str, str], tints: dict) -> dict[str, str]:
-    """`<hue>_<tint>` for every base color and every tint. A key `<tint>_chroma`
-    beside a per-hue tint is the share of the ceiling its cells take."""
+def chromatic(base: dict[str, str], tints: dict[str, float]) -> dict[str, str]:
+    """`<hue>_<tint>` for every base color and every tint."""
     hues = {name: hue_of(hex6) for name, hex6 in base.items()}
     cells = {}
     for tint, target in tints.items():
-        if tint.endswith("_chroma"):
-            continue
-        if level(target):
-            targets = {name: target for name in hues}
-            ceilings = {name: ceiling(hue, target) for name, hue in hues.items()}
-            line = min(ceilings.values()) + ROW_SPREAD
-            chromas = {name: min(c, line) for name, c in ceilings.items()}
-        else:
-            share = tints.get(f"{tint}_chroma", 1.0)
-            targets = {name: target[name] for name in hues}
-            chromas = {name: ceiling(hue, targets[name]) * share
-                       for name, hue in hues.items()}
+        ceilings = {name: ceiling(hue, target) for name, hue in hues.items()}
+        line = min(ceilings.values()) + ROW_SPREAD
         for name, hue in hues.items():
-            rgb = solve(hue, chromas[name], targets[name])
+            chroma = min(ceilings[name], line)
+            rgb = solve(hue, chroma, target)
             assert rgb is not None, (
-                f"{name}_{tint}: no {name} at chroma {chromas[name]:.4f} reads "
-                f"as L** {targets[name]}, yet that chroma is under the hue's "
-                f"ceiling")
+                f"{name}_{tint}: no {name} at chroma {chroma:.4f} reads as "
+                f"L** {target}, yet that chroma is under the hue's ceiling")
             cells[f"{name}_{tint}"] = hex_from_linear(rgb)
     return cells
 

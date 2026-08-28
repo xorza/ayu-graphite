@@ -126,12 +126,10 @@ class Palette:
 @dataclass
 class Source:
     """The whole file, for a reader that needs the names as well as the values:
-    the audit checks the tint rows the primitives are named by against the
-    tints that made them, and the two RON targets print the ref each role
-    resolved through. The primitives are the grid derived from [base], [tints]
-    and [neutrals], not a table of the file."""
+    the audit checks the tint rows the primitives are named by, and the two RON
+    targets print the ref each role resolved through. The primitives are the
+    grid derived from [base], [tints] and [neutrals], not a table of the file."""
     primitives: dict[str, str]
-    tints: dict
     semantic: dict[str, str]
     palette: Palette
 
@@ -158,7 +156,7 @@ def load_source() -> Source:
                 f"semantic.{key} = {value!r} is neither a hex literal nor a "
                 f"primitive name. Available primitives: {sorted(primitives)}"
             )
-    return Source(primitives, data["tints"], semantic, Palette(**resolved))
+    return Source(primitives, semantic, Palette(**resolved))
 
 
 def load_palette() -> Palette:

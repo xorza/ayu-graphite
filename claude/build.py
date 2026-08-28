@@ -61,20 +61,29 @@ def build_claude(p: Palette) -> dict:
         "diffRemovedDimmed":  p.error_bg,
         "diffRemovedWord":    p.diff_word_minus,
 
-        # Eight names, five hues, one ink tint. The five with a hue of their
-        # own take it. Purple, pink and cyan take the nearest hue — blue, red,
-        # green — and so repeat one, as Claude Code's own dark-ansi theme
-        # repeats red and magenta.
+        # Eight names, five hues. The five with a hue of their own take its
+        # bright cell. Pink, purple and cyan take the normal cell of the
+        # nearest hue — red, blue, green — a full tint below its bright, so
+        # every pair stays a step apart.
         "red_FOR_SUBAGENTS_ONLY":    p.error,
         "blue_FOR_SUBAGENTS_ONLY":   p.accent,
         "green_FOR_SUBAGENTS_ONLY":  p.success,
         "yellow_FOR_SUBAGENTS_ONLY": p.warning,
-        "purple_FOR_SUBAGENTS_ONLY": p.accent,
+        "purple_FOR_SUBAGENTS_ONLY": p.ansi_blue,
         "orange_FOR_SUBAGENTS_ONLY": p.syn_keyword,
-        "pink_FOR_SUBAGENTS_ONLY":   p.error,
-        "cyan_FOR_SUBAGENTS_ONLY":   p.success,
+        "pink_FOR_SUBAGENTS_ONLY":   p.ansi_red,
+        "cyan_FOR_SUBAGENTS_ONLY":   p.ansi_green,
         "professionalBlue":          p.accent,
     }
+    # Two subagents in one color read as one subagent. The roles the eight
+    # borrow may share a cell — keyword and operator do — so the mapping, not
+    # the palette, has to hold them apart.
+    by_color: dict[str, list[str]] = {}
+    for key, value in raw.items():
+        if key.endswith("_FOR_SUBAGENTS_ONLY"):
+            by_color.setdefault(value, []).append(key)
+    shared = [names for names in by_color.values() if len(names) > 1]
+    assert not shared, f"subagent colors collide: {shared}"
     overrides = {k: rgb(v) for k, v in raw.items()}
     # Claude Code 2.1.x ignores `overrides` for diff line backgrounds
     # (`diffAdded`/`diffRemoved`/`*Dimmed`); they come from the chosen `base`.

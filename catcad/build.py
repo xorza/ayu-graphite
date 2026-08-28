@@ -74,9 +74,9 @@ HUE = {
     "sheet_side": "ansi_red",
     # The five bright inks are the five constraint states above, so the two
     # marks that must differ from all of them leave the row: a mark takes the
-    # muted text grey, and a hover is the one ink above every state,
-    # including the white a solid wears.
-    "mark": "text_muted",
+    # one normal-row hue no plane or answer spends, and a hover is the one
+    # ink above every state, including the white a solid wears.
+    "mark": "ansi_magenta",
     "redundant": "ansi_bright_red",
     "hovered": "ansi_bright_white",
     "selected": "success",

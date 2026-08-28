@@ -26,12 +26,12 @@ blending toward white at the call site, which is what it already does for a
 port coloured by its type, so the two now lift the same way and neither one is
 a colour this file could have named.
 
-Five inks and two text greys have to serve ten wires and nine marks on a
-node's head. The six named wires take the five inks and the punctuation white,
-every custom type takes the muted grey, and `check` holds the seven apart. On
-the head, a badge may sit beside any status, so no badge shares a colour with a
-status unless the two mean one thing — a sink and a failed run are one red on
-purpose — and the two that could not take a hue take the text greys.
+Five inks have to serve ten wires and nine marks on a node's head. The wires
+take the bright row, the normal row and the two text greys, and are held apart
+by `check`. On the head, a badge may sit beside any status, so no badge shares
+a colour with a status unless the two mean one thing — a sink and a failed
+run are one red on purpose — and the two that could not take a hue take the
+text greys.
 """
 import dataclasses
 import os
@@ -114,10 +114,10 @@ LITERAL = {"node_border": "#00000000"}
 # are keyed onto RAMP by their type id.
 TYPE = {
     "boolean": "error",
+    # The two numbers are one hue at two tints: a family, told apart by
+    # weight.
     "int": "ansi_bright_yellow",
-    # The other number takes the one ink left once the hues are spent: the
-    # punctuation white.
-    "float": "syn_punctuation",
+    "float": "ansi_yellow",
     "string": "syn_string",
     # `path` is a reference, so it takes the blue the chrome links with.
     "path": "hint",
@@ -125,9 +125,9 @@ TYPE = {
     # than a hash pick: the one warm ink no named type spends.
     "image": "syn_keyword",
 }
-# Seven inks read on the canvas and six are named above, so every custom
-# type is the one left.
-RAMP = ["text_muted"]
+# What the bright row has left is nothing, so the ramp is the normal row's
+# red and blue — green sits 0.06 from the float wire — and the two greys.
+RAMP = ["ansi_red", "ansi_blue", "syn_punctuation", "text_muted"]
 
 # Two wire hues closer than this in OKLab are one colour on a 2px line. The
 # floor is what the ten actually achieve, less a margin — it catches a
