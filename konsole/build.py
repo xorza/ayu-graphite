@@ -16,10 +16,7 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
     # Konsole's three rows are the palette's three ANSI rows verbatim:
     # Color<n> = normal, Color<n>Intense = bright (SGR 1), Color<n>Faint =
     # dim (SGR 2). Reading them straight off ansi_* is what keeps this in
-    # step with terminal/build.py and Zed — the earlier hand-picked mix
-    # reused `error`/`success` for both normal and intense (so bold red was
-    # plain red) and borrowed syntax colors for Faint, which put grey in the
-    # yellow slot and orange in the magenta slot.
+    # step with terminal/build.py and Zed.
     normal = [
         p.ansi_black, p.ansi_red, p.ansi_green, p.ansi_yellow,
         p.ansi_blue, p.ansi_magenta, p.ansi_cyan, p.ansi_white,

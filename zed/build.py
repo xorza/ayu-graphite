@@ -203,7 +203,7 @@ def _build_players(p: Palette) -> list:
     background is a fixed mid-gray (Zed's convention)."""
     cursors = [
         p.ansi_blue, p.ansi_magenta, p.syn_keyword, p.syn_number,
-        p.ansi_cyan, p.error, p.warning, p.success,
+        p.hint, p.error, p.warning, p.success,
     ]
     return [
         {

@@ -7,9 +7,9 @@
 # palette.py resolves the refs at load time. To shift a hue everywhere it's
 # used, edit one primitive — semantic intent stays put.
 #
-# THE GRID. Eight hues by four tints, complete. A hue is one fixed Oklab
+# THE GRID. Five hues by four tints, complete. A hue is one fixed Oklab
 # angle. A tint is one fixed PERCEIVED brightness that every hue shares, so
-# `red_normal` and `cyan_normal` look equally bright and any two names ending
+# `red_normal` and `blue_normal` look equally bright and any two names ending
 # in the same tint sit level with each other.
 #
 # Perceived, not measured. At one luminance a saturated color looks brighter
@@ -20,38 +20,38 @@
 # prediction. Luminance and chroma both vary along a row to hold L** level.
 #
 #   tint      L**    what lands there
-#   vivid     87.4    success, warning, string, type, accent hover
-#   bright    75.4    ANSI 9-14, accent, error, hint, keyword, number
+#   vivid     87.4    success, warning, string, type, number, accent hover
+#   bright    75.4    ANSI 9-14, accent, error, hint, keyword, regex
 #   normal    57.3    ANSI 1-6, status borders, diff word fills, pressed
 #   dim       32.1    ANSI dim (SGR 2), status fills, selection
 #
 # Each cell is the most chroma sRGB holds at that hue while still landing on
-# the row's L**, and each row's L** is the one that buys the most chroma
-# across all eight hues at once. The luminance a cell ends up at is bounded by
-# the audit rules:
+# the row's L**. A row's L** is fixed: a hue that leaves the grid does not
+# move the rows, so every role keeps its brightness across that edit. The
+# luminance a cell ends up at is bounded by the audit rules:
 #
 #   vivid, bright   >= 0.40, so an INK role clears 4.5:1 on `surface` and
 #                   4.5:1 over a selection on `dim`. The two rows are held 12
 #                   points of L** apart so they read as two rows.
 #   normal          the ANSI band, 0.139 to 0.212, tightened to <= 0.183 for
 #                   red and green so near-white clears 4.5:1 on a diff word
-#                   fill, and to >= 0.175 for cyan so `on_accent` clears the
+#                   fill, and to >= 0.175 for blue so `on_accent` clears the
 #                   same on the pressed accent.
 #   dim             <= 0.050 so `text_muted` clears 4.5:1 on a selection,
 #                   >= 0.030 so the fill separates from the editor ground.
 #
-# Chroma still differs across a row, and now that is the point: cyan needs
+# Chroma still differs across a row, and now that is the point: blue needs
 # less of it than red to look equally bright.
 #
-# Twenty-four of the thirty-two cells carry a semantic role. The other eight
-# stay defined: the grid is the artifact, and a hue keeps its four tints.
+# Every one of the twenty cells carries a semantic role.
 #
 # Invariants (tools/audit.py checks all five):
 #   - chrome layers that stack in one view must differ: bg < panel < elem <
 #     elem_hover < elem_active, and border must be visible on panel and elem.
 #   - every bright fill (accent, success, warning, error) is written on with
 #     on_accent, never with text — text on accent is 1.28:1.
-#   - per hue, ANSI dim < normal < bright, and no two of the 16 share a value.
+#   - per hue, ANSI dim < normal < bright, and no two of the 16 share a value,
+#     the cyan row aside: it is the blue row again, and is held equal to it.
 #   - the ANSI rows split the two duties one slot cannot hold at once. See the
 #     [semantic] ANSI block.
 #   - every cell of a tint row looks equally bright, within 1.5 points of L**.
@@ -101,29 +101,11 @@ green_bright    = "#98b614"
 green_normal    = "#687e04"
 green_dim       = "#344004"
 
-# Teal — hue 169.7
-teal_vivid      = "#03eab7"
-teal_bright     = "#14c096"
-teal_normal     = "#048567"
-teal_dim        = "#074434"
-
-# Cyan — hue 220.0
-cyan_vivid      = "#87e2fe"
-cyan_bright     = "#12b9df"
-cyan_normal     = "#0b829d"
-cyan_dim        = "#084250"
-
 # Blue — hue 239.2
 blue_vivid      = "#aadbfe"
 blue_bright     = "#4db3f1"
-blue_normal     = "#0179b1"
+blue_normal     = "#207bae"
 blue_dim        = "#013b58"
-
-# Magenta — hue 312.0
-magenta_vivid   = "#e9c6ff"
-magenta_bright  = "#c698e2"
-magenta_normal  = "#8758a3"
-magenta_dim     = "#412452"
 
 [semantic]
 
@@ -150,10 +132,11 @@ text_muted          = "gray_72"
 text_disabled       = "gray_72"
 
 # Accent / status. Every one of these is an INK role, so all of them sit on
-# `vivid` or `bright` — the two tints that clear 4.5:1 on `surface`.
-accent              = "cyan_bright"
-accent_hover        = "cyan_vivid"
-accent_active       = "cyan_normal"
+# `vivid` or `bright` — the two tints that clear 4.5:1 on `surface`. Blue is
+# the one cool hue, so it carries the accent and the hint family both.
+accent              = "blue_bright"
+accent_hover        = "blue_vivid"
+accent_active       = "blue_normal"
 success             = "green_vivid"
 warning             = "yellow_vivid"
 error               = "red_bright"
@@ -162,7 +145,7 @@ hint                = "blue_bright"
 # Ink for anything drawn on a bright fill — accent buttons, unread badges,
 # success/warning/error chips. `text` on `accent` is 1.28:1.
 on_accent           = "black"
-on_accent_muted     = "cyan_dim"
+on_accent_muted     = "blue_dim"
 
 # Selection (list row, selected message, selected text). On `dim`, the one
 # tint dark enough for `accent` to stay legible on top of it.
@@ -198,7 +181,7 @@ line_number_active  = "gray_94"
 line_number_hover   = "gray_94"
 scrollbar_thumb     = "gray_72"
 drop_target         = "gray_72"
-search_highlight    = "cyan_vivid"
+search_highlight    = "blue_vivid"
 search_match_active = "orange_bright"
 
 # ANSI 16 + the dim (SGR 2) siblings. Every terminal target reads exactly
@@ -219,13 +202,18 @@ search_match_active = "orange_bright"
 #   dim 1-6      1.58:1, which is what SGR 2 asks for. `dim` is pinned by the
 #                selection rule, so faint here is the price of a selection
 #                the accent stays legible on.
+#
+# Five hues fill six chromatic slots. Orange has no slot of its own and takes
+# magenta's. Cyan's is the blue row again: no other cell is both a hue and
+# distinct, and tools/audit.py holds the two rows equal so a half-edit cannot
+# split them.
 ansi_black          = "gray_24"
 ansi_red            = "red_normal"
 ansi_green          = "green_normal"
 ansi_yellow         = "yellow_normal"
 ansi_blue           = "blue_normal"
-ansi_magenta        = "magenta_normal"
-ansi_cyan           = "cyan_normal"
+ansi_magenta        = "orange_normal"
+ansi_cyan           = "blue_normal"
 ansi_white          = "gray_94"
 
 ansi_bright_black   = "gray_44"
@@ -233,8 +221,8 @@ ansi_bright_red     = "red_bright"
 ansi_bright_green   = "green_bright"
 ansi_bright_yellow  = "yellow_bright"
 ansi_bright_blue    = "blue_bright"
-ansi_bright_magenta = "magenta_bright"
-ansi_bright_cyan    = "cyan_bright"
+ansi_bright_magenta = "orange_bright"
+ansi_bright_cyan    = "blue_bright"
 ansi_bright_white   = "white"
 
 ansi_dim_black      = "black"
@@ -242,8 +230,8 @@ ansi_dim_red        = "red_dim"
 ansi_dim_green      = "green_dim"
 ansi_dim_yellow     = "yellow_dim"
 ansi_dim_blue       = "blue_dim"
-ansi_dim_magenta    = "magenta_dim"
-ansi_dim_cyan       = "cyan_dim"
+ansi_dim_magenta    = "orange_dim"
+ansi_dim_cyan       = "blue_dim"
 ansi_dim_white      = "gray_72"
 
 # Players (collab cursor bg)
@@ -253,16 +241,17 @@ player_bg           = "gray_72"
 chat_check          = "green_vivid"
 chat_msg_bg         = "gray_34"
 
-# Syntax
+# Syntax. Red is the one hue no other token spends, so its vivid tint is the
+# number: the pale pink that stands where a purple would.
 syn_keyword         = "orange_bright"
 syn_function        = "yellow_vivid"
 syn_string          = "green_vivid"
-syn_string_regex    = "teal_vivid"
+syn_string_regex    = "green_bright"
 syn_comment         = "gray_72"
-syn_number          = "magenta_bright"
-syn_type            = "cyan_vivid"
+syn_number          = "red_vivid"
+syn_type            = "blue_vivid"
 syn_operator        = "orange_bright"
-syn_attribute       = "cyan_vivid"
+syn_attribute       = "blue_vivid"
 syn_punctuation     = "gray_94"
 syn_doc             = "gray_72"
 syn_string_special  = "orange_vivid"

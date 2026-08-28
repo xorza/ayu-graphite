@@ -40,8 +40,8 @@ def build_telegram(p: Palette) -> str:
         ("windowBoldFgOver",          p.text),
         # Ink for everything drawn on windowBgActive — the "Update Telegram"
         # button in the chat list is the loudest of them. Upstream pairs a
-        # white fg with a mid-blue fill; our accent is a light cyan, so the
-        # inherited `text` sat on it at 1.28:1 and the label disappeared.
+        # white fg with a mid-blue fill; our accent is a light blue, and the
+        # inherited `text` sits on it at 1.28:1.
         ("windowFgActive",            p.on_accent),
         ("windowActiveTextFg",        p.accent),
 
@@ -106,10 +106,10 @@ def build_telegram(p: Palette) -> str:
         ("historyUnreadBarBorder",    p.border),
         ("historyUnreadBarFg",        p.accent),
 
-        # The filled primary button. It was inverted — a grey fill with cyan
-        # text — which read as a plain surface on its own and went cyan-on-
-        # cyan wherever tdesktop pairs activeButtonFg with a windowBgActive
-        # fill. Accent fill, dark ink, matching the constant's intent.
+        # The filled primary button: accent fill, dark ink, matching the
+        # constant's intent. A grey fill under accent text reads as a plain
+        # surface on its own, and goes accent-on-accent wherever tdesktop
+        # pairs activeButtonFg with a windowBgActive fill.
         ("activeButtonBg",            p.accent),
         ("activeButtonBgOver",        p.accent_hover),
         ("activeButtonBgRipple",      p.accent_active),

@@ -34,7 +34,7 @@ make audit      # contrast rules only
 make install    # copy generated themes into their app dirs (Telegram and Brave are manual)
 ```
 
-`make audit` guards what the targets silently depend on: chrome layers that stack in one view stay separable, every foreground clears 4.5:1 where it lands, and the 24 ANSI slots stay distinct with dim &lt; normal &lt; bright per hue. It runs first, so a bad palette edit fails before any theme is written.
+`make audit` guards what the targets silently depend on: chrome layers that stack in one view stay separable, every foreground clears 4.5:1 where it lands, and the 24 ANSI slots stay distinct with dim &lt; normal &lt; bright per hue, the cyan row aside, which is the blue row again. It runs first, so a bad palette edit fails before any theme is written.
 
 ## Applying
 

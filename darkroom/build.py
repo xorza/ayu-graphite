@@ -26,12 +26,12 @@ port by blending toward white at the call site, which is what it already does
 for a port coloured by its type, so the two now lift the same way and neither
 one is a colour this file could have named.
 
-Two pairs would land on one colour. The palette reaches magenta at exactly one
-tint through its semantic layer, and darkroom asks for two violets that meet
-on a node's head; it reaches teal at one tint, and asks for a tenth wire hue
-after the obvious nine are spent. Both are resolved below, on the entries they
-affect, against what the two roles are for rather than by moving one of them a
-shade.
+Two pairs would land on one colour. The palette reaches pink at exactly one
+tint through its semantic layer, and darkroom asks for it on a node's head and
+on the wire most of the canvas is; of the two yellow tints that read as ink,
+one is already a badge on that head, and darkroom asks for a busy status. Both
+are resolved below, on the entries they affect, against what the two roles are
+for rather than by moving one of them a shade.
 """
 import dataclasses
 import os
@@ -77,18 +77,17 @@ ROLE = {
     "badge_cache": "warning",
     "status_success": "success",
     "status_warning": "syn_keyword",
-    # The violet a node's head wears to say it is never cached. It shares
-    # the palette's one bright magenta with the `image` wire below, which is
-    # the pair the palette can afford to collapse: a glyph on a head and a
-    # line between two nodes are never the same mark.
+    # The pink a node's head wears to say it is never cached. It shares the
+    # palette's one pink with the `image` wire below, which is the pair the
+    # palette can afford to collapse: a glyph on a head and a line between
+    # two nodes are never the same mark.
     "badge_impure": "syn_number",
     # Busy is the status with no colour of its own — nothing about work in
-    # progress is red or green — so it takes the one vivid hue the status
-    # roster does not already spend. It cannot have the second magenta,
-    # because there is no second magenta and `badge_impure` sits beside it
-    # on the same head. It shares teal with the `int` wire instead, on the
-    # same grounds the violet is shared.
-    "status_busy": "syn_string_regex",
+    # progress is red or green — so it takes the one hue the status roster
+    # does not already spend. Yellow's vivid tint is `badge_cache` on the
+    # same head, so busy takes the bright one, and shares it with a ramp
+    # wire on the same grounds the pink is shared.
+    "status_busy": "ansi_bright_yellow",
     # Ports that carry no type. Position is what these say, so they take the
     # two hues the editor already reads as a direction, and an event takes
     # the sink marker's red because a subscription pin sits beside one.
@@ -121,16 +120,14 @@ TYPE = {
     "boolean": "error",
     "int": "syn_string_regex",
     "float": "syn_type",
-    "string": "syn_string_special",
-    # `path` cannot have the magenta it reads best as — `image` has the
-    # palette's only one — so it takes the blue, which is the hue no other
-    # wire and no status is using.
+    "string": "syn_string",
+    # `path` is a reference, so it takes the blue the chrome links with.
     "path": "hint",
     # The dominant payload on this canvas earns a deliberate colour rather
-    # than a hash pick, and this is the one it has always had.
+    # than a hash pick: the number pink, which `badge_impure` shares.
     "image": "syn_number",
 }
-RAMP = ["syn_keyword", "success", "ansi_bright_yellow", "syn_punctuation"]
+RAMP = ["syn_keyword", "warning", "ansi_bright_yellow", "syn_punctuation"]
 
 # Two wire hues closer than this in OKLab are one colour on a 2px line. The
 # floor is what the ten actually achieve, less a margin — it catches a

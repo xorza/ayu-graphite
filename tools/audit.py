@@ -15,7 +15,9 @@ Five rules:
             The `on_accent` family exists because `text` on `accent` is 1.28.
   ansi      per hue, dim < normal < bright in luminance, and no two of the
             16 share a value — a terminal that renders bright red as normal
-            red has thrown away half its palette.
+            red has thrown away half its palette. The cyan row is the one
+            exception: five hues fill six slots, so cyan is the blue row
+            again, and is checked to be exactly that.
   roles     a program picks any slot as a foreground (SGR 30-37, 90-97) or as
             a background (SGR 40-47, 100-107) and the theme cannot tell which.
             On this bg nothing clears 4.5:1 in both roles — ink needs
@@ -49,7 +51,10 @@ MIN_ANSI_DUAL = 3.0
 MAX_PERCEIVED_SPREAD = 1.5
 
 HUES = ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
-CHROMATIC = HUES[1:7]
+# The slot that is another slot's row again. It is held equal to its source
+# rather than counted as a duplicate, and sits out of the per-hue reports.
+ALIAS = {"cyan": "blue"}
+CHROMATIC = tuple(hue for hue in HUES[1:7] if hue not in ALIAS)
 TINTS = ("vivid", "bright", "normal", "dim")
 
 
@@ -129,10 +134,18 @@ def check_ansi(p: Palette) -> list[str]:
     seen: dict[str, str] = {}
     for prefix in ("ansi_", "ansi_bright_"):
         for hue in HUES:
+            if hue in ALIAS:
+                continue
             key = f"{prefix}{hue}"
             if d[key] in seen:
                 out.append(f"ansi: {key} duplicates {seen[d[key]]} ({d[key]})")
             seen[d[key]] = key
+    for hue, source in ALIAS.items():
+        for prefix in ("ansi_", "ansi_bright_", "ansi_dim_"):
+            own, theirs = d[f"{prefix}{hue}"], d[f"{prefix}{source}"]
+            if own != theirs:
+                out.append(f"ansi: {prefix}{hue} is {own}, not "
+                           f"{prefix}{source} ({theirs})")
     return out
 
 

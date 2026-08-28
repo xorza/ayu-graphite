@@ -33,9 +33,8 @@ def a(aa: str, color: str) -> str:
 def build_ios(p: Palette) -> dict:
     accent = p.accent
     # One accent, used for both fills and inline text — the desktop target
-    # does the same. The old split (cyan_500 for fills, cyan_300 for inline
-    # text) meant a link and a filled button were different cyans in the same
-    # window, and neither matched Zed or KDE.
+    # does the same, so a link and a filled button are one colour in one
+    # window, and both match Zed and KDE.
     inline_accent = p.accent
     incoming_bubble = p.chat_msg_bg
     outgoing_bubble = p.chat_msg_bg
