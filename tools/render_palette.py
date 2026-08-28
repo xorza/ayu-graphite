@@ -1,8 +1,8 @@
 """Render ayu-graphite.toml as a PNG swatch sheet.
 
 The primitives are drawn as the grid they are: one column per hue, one row per
-tint. A row is one perceived brightness, so the number under each row label is
-L**, not a luminance."""
+tint. The number under a row label is L**, not a luminance: one figure for a
+level row, and the span for a row where each hue sits at its own."""
 import os
 import re
 import sys
@@ -82,7 +82,10 @@ class Ladder:
             self.cells[(hue, tint)] = value
             by_tint.setdefault(tint, []).append(hk_lightness(value))
         self.tints = sorted(by_tint, key=lambda t: -sum(by_tint[t]) / len(by_tint[t]))
-        self.brightness = {t: sum(v) / len(v) for t, v in by_tint.items()}
+        self.brightness = {
+            t: (f"{sum(v) / len(v):.1f}" if max(v) - min(v) <= 1.5
+                else f"{min(v):.0f}–{max(v):.0f}")
+            for t, v in by_tint.items()}
 
     @property
     def width(self):
@@ -122,7 +125,7 @@ def draw_ladder(draw, ladder, sheet, top, fonts):
     for row, tint in enumerate(ladder.tints):
         cy = y + row * (CELL_H + GAP)
         draw.text((PAD, cy + 18), tint, fill=sheet.fg, font=fonts["label"])
-        draw.text((PAD, cy + 36), f"L** {ladder.brightness[tint]:.1f}",
+        draw.text((PAD, cy + 36), f"L** {ladder.brightness[tint]}",
                   fill=sheet.dim, font=fonts["hex"])
         for col, hue in enumerate(ladder.hues):
             x = PAD + GUTTER + col * (CELL_W + GAP)

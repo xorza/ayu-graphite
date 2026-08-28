@@ -13,60 +13,57 @@
 // the ground is placed one of that ramp's own steps below `bg`.
 (
     // Chrome — the surfaces the editor is built out of, and the inks on them.
-    canvas_bg:           "#131313",    // (the ramp's step)   below gray_24
-    canvas_dot:          "#444444",    // border              gray_39
-    chrome_fill:         "#1e1e1e",    // bg                  gray_24
-    tab_inactive:        "#2a2a2a",    // panel               gray_29
-    node_fill:           "#373737",    // elem                gray_34
-    node_border:         "#00000000",  // (no outline)        the shadow carries the edge
-    header_fill:         "#515151",    // elem_active         gray_44
-    node_ambient_shadow: "#00000080",  // overlay_black       black
-    text:                "#eaeaea",    // text                gray_94
-    text_muted:          "#a4a4a4",    // text_muted          gray_72
-    text_disabled:       "#a4a4a4",    // text_disabled       gray_72
-    elem_hover:          "#444444",    // elem_hover          gray_39
-    elem_active:         "#515151",    // elem_active         gray_44
-    border_focused:      "#207bae",    // border_focused      blue_normal
+    canvas_bg:           "#141414",    // (the ramp's step)  below gray_1
+    canvas_dot:          "#454545",    // border             gray_4
+    chrome_fill:         "#1f1f1f",    // bg                 gray_1
+    tab_inactive:        "#2b2b2b",    // panel              gray_2
+    node_fill:           "#383838",    // elem               gray_3
+    node_border:         "#00000000",  // (no outline)       the shadow carries the edge
+    header_fill:         "#525252",    // elem_active        gray_5
+    node_ambient_shadow: "#00000080",  // overlay_black      black
+    text:                "#ebebeb",    // text               gray_7
+    text_muted:          "#a4a4a4",    // text_muted         gray_6
+    text_disabled:       "#a4a4a4",    // text_disabled      gray_6
+    elem_hover:          "#454545",    // elem_hover         gray_4
+    elem_active:         "#525252",    // elem_active        gray_5
+    border_focused:      "#74c3f7",    // border_focused     blue_bright
 
     // Graph — the wires, and the marks drawn over them.
-    selection_rect:      "#4db3f1",    // accent              blue_bright
-    connection_broken:   "#fd8974",    // error               red_bright
-    breaker_stroke:      "#fd8974",    // error               red_bright
+    selection_rect:      "#74c3f7",    // accent             blue_bright
+    connection_broken:   "#f77f71",    // error              red_bright
+    breaker_stroke:      "#f77f71",    // error              red_bright
 
     // Ports — an untyped port's circle, and the ink beside it. A typed port
     // takes its hue from the type table instead.
-    input_port:          "#b9dd0d",    // success             green_vivid
-    output_port:         "#f29407",    // syn_keyword         orange_bright
-    event_port:          "#fd8974",    // error               red_bright
-    port_label:          "#a4a4a4",    // text_muted          gray_72
+    input_port:          "#6cea4e",    // success            green_bright
+    output_port:         "#f8b065",    // syn_keyword        orange_bright
+    event_port:          "#f77f71",    // error              red_bright
+    port_label:          "#a4a4a4",    // text_muted         gray_6
 
     // Badges — what a node's head says about itself.
-    badge_graph:         "#4db3f1",    // accent              blue_bright
-    badge_sink:          "#fd8974",    // error               red_bright
-    badge_cache:         "#fecd12",    // warning             yellow_vivid
-    badge_impure:        "#ffccc1",    // syn_number          red_vivid
+    badge_graph:         "#74c3f7",    // accent             blue_bright
+    badge_sink:          "#f77f71",    // error              red_bright
+    badge_cache:         "#fbdd89",    // warning            yellow_bright
+    badge_impure:        "#ebebeb",    // text               gray_7
 
     // Status — what a node's head says about its last run.
-    status_success:      "#b9dd0d",    // success             green_vivid
-    status_info:         "#4db3f1",    // accent              blue_bright
-    status_busy:         "#d0a70e",    // ansi_bright_yellow  yellow_bright
-    status_warning:      "#f29407",    // syn_keyword         orange_bright
-    status_error:        "#fd8974",    // error               red_bright
+    status_success:      "#6cea4e",    // success            green_bright
+    status_info:         "#74c3f7",    // accent             blue_bright
+    status_busy:         "#a4a4a4",    // text_muted         gray_6
+    status_warning:      "#f8b065",    // syn_keyword        orange_bright
+    status_error:        "#f77f71",    // error              red_bright
 
     // A wire's hue is the type flowing along it. `ramp` backs the
     // open-ended custom and enum families, keyed by type id.
     type_colors: (
-        boolean: "#fd8974",    // error               red_bright
-        int:     "#98b614",    // syn_string_regex    green_bright
-        float:   "#aadbfe",    // syn_type            blue_vivid
-        string:  "#b9dd0d",    // syn_string          green_vivid
-        path:    "#4db3f1",    // hint                blue_bright
-        image:   "#ffccc1",    // syn_number          red_vivid
+        boolean: "#f77f71",    // error              red_bright
+        int:     "#fbdd89",    // ansi_bright_yellow yellow_bright
+        float:   "#ebebeb",    // syn_punctuation    gray_7
+        string:  "#6cea4e",    // syn_string         green_bright
+        path:    "#74c3f7",    // hint               blue_bright
+        image:   "#f8b065",    // syn_keyword        orange_bright
         ramp: (
-            "#f29407",    // syn_keyword         orange_bright
-            "#fecd12",    // warning             yellow_vivid
-            "#d0a70e",    // ansi_bright_yellow  yellow_bright
-            "#eaeaea",    // syn_punctuation     gray_94
+            "#a4a4a4",    // text_muted         gray_6
         ),
     ),
 )

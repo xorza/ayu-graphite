@@ -20,18 +20,18 @@ below `bg` rather than added to the palette, because nothing else needs it,
 and the step is measured off the five greys instead of assumed.
 
 Nothing here says what a port looks like under the pointer. Every port role
-below is a resting colour, and most of them already sit on `vivid`, which is
-the top of the grid — there is no tint above it to lift into. darkroom lifts a
-port by blending toward white at the call site, which is what it already does
-for a port coloured by its type, so the two now lift the same way and neither
-one is a colour this file could have named.
+below is a resting colour, and all of them sit on `bright`, which is the top
+of the grid — there is no tint above it to lift into. darkroom lifts a port by
+blending toward white at the call site, which is what it already does for a
+port coloured by its type, so the two now lift the same way and neither one is
+a colour this file could have named.
 
-Two pairs would land on one colour. The palette reaches pink at exactly one
-tint through its semantic layer, and darkroom asks for it on a node's head and
-on the wire most of the canvas is; of the two yellow tints that read as ink,
-one is already a badge on that head, and darkroom asks for a busy status. Both
-are resolved below, on the entries they affect, against what the two roles are
-for rather than by moving one of them a shade.
+Five inks and two text greys have to serve ten wires and nine marks on a
+node's head. The six named wires take the five inks and the punctuation white,
+every custom type takes the muted grey, and `check` holds the seven apart. On
+the head, a badge may sit beside any status, so no badge shares a colour with a
+status unless the two mean one thing — a sink and a failed run are one red on
+purpose — and the two that could not take a hue take the text greys.
 """
 import dataclasses
 import os
@@ -77,17 +77,14 @@ ROLE = {
     "badge_cache": "warning",
     "status_success": "success",
     "status_warning": "syn_keyword",
-    # The pink a node's head wears to say it is never cached. It shares the
-    # palette's one pink with the `image` wire below, which is the pair the
-    # palette can afford to collapse: a glyph on a head and a line between
-    # two nodes are never the same mark.
-    "badge_impure": "syn_number",
+    # The mark a node's head wears to say it is never cached. Every hue on
+    # the head is a status or another badge, so this one is the title's own
+    # white: a glyph beside the title, not a word in it.
+    "badge_impure": "text",
     # Busy is the status with no colour of its own — nothing about work in
-    # progress is red or green — so it takes the one hue the status roster
-    # does not already spend. Yellow's vivid tint is `badge_cache` on the
-    # same head, so busy takes the bright one, and shares it with a ramp
-    # wire on the same grounds the pink is shared.
-    "status_busy": "ansi_bright_yellow",
+    # progress is red or green — and the one hue left, yellow, is
+    # `badge_cache` on the same head. So busy is grey: no verdict yet.
+    "status_busy": "text_muted",
     # Ports that carry no type. Position is what these say, so they take the
     # two hues the editor already reads as a direction, and an event takes
     # the sink marker's red because a subscription pin sits beside one.
@@ -114,20 +111,23 @@ ALPHA = {
 LITERAL = {"node_border": "#00000000"}
 
 # A wire's hue is the type flowing along it. Six types are named; the rest
-# are keyed onto RAMP by their type id, so two custom types stay two colours
-# without either one being enumerated here.
+# are keyed onto RAMP by their type id.
 TYPE = {
     "boolean": "error",
-    "int": "syn_string_regex",
-    "float": "syn_type",
+    "int": "ansi_bright_yellow",
+    # The other number takes the one ink left once the hues are spent: the
+    # punctuation white.
+    "float": "syn_punctuation",
     "string": "syn_string",
     # `path` is a reference, so it takes the blue the chrome links with.
     "path": "hint",
     # The dominant payload on this canvas earns a deliberate colour rather
-    # than a hash pick: the number pink, which `badge_impure` shares.
-    "image": "syn_number",
+    # than a hash pick: the one warm ink no named type spends.
+    "image": "syn_keyword",
 }
-RAMP = ["syn_keyword", "warning", "ansi_bright_yellow", "syn_punctuation"]
+# Seven inks read on the canvas and six are named above, so every custom
+# type is the one left.
+RAMP = ["text_muted"]
 
 # Two wire hues closer than this in OKLab are one colour on a 2px line. The
 # floor is what the ten actually achieve, less a margin — it catches a
@@ -139,7 +139,7 @@ WIRE_FLOOR = 0.06
 LADDER = ("canvas_bg", "chrome_fill", "tab_inactive", "node_fill",
           "elem_hover", "header_fill")
 
-CHROME_GREYS = ("gray_24", "gray_29", "gray_34", "gray_39", "gray_44")
+CHROME_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
 # The order the table is written in, and the headings it is written under.
 SECTIONS = (

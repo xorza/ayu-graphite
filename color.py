@@ -37,13 +37,23 @@ def contrast(a: str, b: str) -> float:
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
+def encode(c: float) -> float:
+    """One linear channel, sRGB-encoded. The inverse of `to_linear`."""
+    return 12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055
+
+
+def hex_from_linear(rgb: tuple[float, float, float]) -> str:
+    """The nearest 8-bit triple. A channel a hair outside the gamut is clamped
+    onto its edge first, so a solver that lands on the boundary still rounds."""
+    return "#%02x%02x%02x" % tuple(
+        max(0, min(255, round(encode(max(0.0, min(1.0, c))) * 255)))
+        for c in rgb)
+
+
 def grey(value: float) -> str:
     """The neutral of linear value `value`, as a hex triple. A neutral's three
     channels are equal, so its relative luminance is that same number."""
-    v = (12.92 * value if value <= 0.0031308
-         else 1.055 * value ** (1 / 2.4) - 0.055)
-    byte = max(0, min(255, round(v * 255)))
-    return f"#{byte:02x}{byte:02x}{byte:02x}"
+    return hex_from_linear((value, value, value))
 
 
 # APCA 0.1.9 W3 constants. Its transfer curve is a plain 2.4 power, not the
@@ -82,7 +92,11 @@ D65 = (0.95047, 1.0, 1.08883)
 
 def lch(hex6: str) -> tuple[float, float, float]:
     """CIELAB lightness, chroma and hue angle under D65."""
-    r, g, b = linear(hex6)
+    return lch_linear(linear(hex6))
+
+
+def lch_linear(rgb: tuple[float, float, float]) -> tuple[float, float, float]:
+    r, g, b = rgb
     xyz = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b,
            0.2126729 * r + 0.7151522 * g + 0.0721750 * b,
            0.0193339 * r + 0.1191920 * g + 0.9503041 * b)
@@ -110,12 +124,37 @@ def oklab(hex6: str) -> tuple[float, float, float]:
     )
 
 
+def oklab_to_linear(lightness: float, a: float, b: float
+                    ) -> tuple[float, float, float]:
+    """The inverse of `oklab`, unclamped: a channel outside 0..1 says the color
+    is outside the gamut, which is what a gamut search reads off it."""
+    l_ = lightness + 0.3963377774 * a + 0.2158037573 * b
+    m_ = lightness - 0.1055613458 * a - 0.0638541728 * b
+    s_ = lightness - 0.0894841775 * a - 1.2914855480 * b
+    l, m, s = l_ ** 3, m_ ** 3, s_ ** 3
+    return (
+        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+        -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+    )
+
+
+def oklch(hex6: str) -> tuple[float, float, float]:
+    """Oklab lightness, chroma and hue angle in degrees."""
+    lightness, a, b = oklab(hex6)
+    return lightness, hypot(a, b), degrees(atan2(b, a)) % 360
+
+
 def hk_lightness(hex6: str) -> float:
     """How bright the color looks, not how much light it emits.
 
     Fairchild-Pirrotta. At one luminance a saturated color reads brighter than
     a dull one — the Helmholtz-Kohlrausch effect — so CIELAB L* alone predicts
     a level row that the eye sees as uneven."""
-    lightness, chroma, hue = lch(hex6)
+    return hk_lightness_linear(linear(hex6))
+
+
+def hk_lightness_linear(rgb: tuple[float, float, float]) -> float:
+    lightness, chroma, hue = lch_linear(rgb)
     gain = 0.116 * abs(sin(radians((hue - 90) / 2))) + 0.085
     return lightness + (2.5 - 0.025 * lightness) * gain * chroma

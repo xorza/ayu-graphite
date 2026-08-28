@@ -10,6 +10,8 @@ except ModuleNotFoundError:
     import tomli as tomllib  # pip install -r requirements.txt
 from dataclasses import dataclass
 
+import grid
+
 TOML = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "ayu-graphite.toml")
 
@@ -124,23 +126,26 @@ class Palette:
 @dataclass
 class Source:
     """The whole file, for a reader that needs the names as well as the values:
-    the audit checks the tint rows the primitives are named by, and the two RON
-    targets print the ref each role resolved through."""
+    the audit checks the tint rows the primitives are named by against the
+    tints that made them, and the two RON targets print the ref each role
+    resolved through. The primitives are the grid derived from [base], [tints]
+    and [neutrals], not a table of the file."""
     primitives: dict[str, str]
+    tints: dict
     semantic: dict[str, str]
     palette: Palette
 
 
 def load_source() -> Source:
-    """Read ayu-graphite.toml and resolve [semantic] refs against [primitives].
+    """Read ayu-graphite.toml, derive the primitives, and resolve [semantic].
 
     A semantic value is either a literal `#rrggbb` (escape hatch) or the name
-    of a key in [primitives]. Anything that doesn't resolve is a hard error —
-    we'd rather break the build than silently render a typo as a missing key
+    of a primitive. Anything that doesn't resolve is a hard error — we'd
+    rather break the build than silently render a typo as a missing key
     fallback elsewhere."""
     with open(TOML, "rb") as f:
         data = tomllib.load(f)
-    primitives = data["primitives"]
+    primitives = grid.primitives(data["base"], data["tints"], data["neutrals"])
     semantic = data["semantic"]
     resolved = {}
     for key, value in semantic.items():
@@ -153,7 +158,7 @@ def load_source() -> Source:
                 f"semantic.{key} = {value!r} is neither a hex literal nor a "
                 f"primitive name. Available primitives: {sorted(primitives)}"
             )
-    return Source(primitives, semantic, Palette(**resolved))
+    return Source(primitives, data["tints"], semantic, Palette(**resolved))
 
 
 def load_palette() -> Palette:

@@ -29,7 +29,7 @@ def color_set(p: Palette, *, bg: str, alt: str, fg: str) -> dict[str, str]:
         "ForegroundNeutral":   emit.rgb_csv(p.warning),
         "ForegroundNormal":    emit.rgb_csv(fg),
         "ForegroundPositive":  emit.rgb_csv(p.success),
-        "ForegroundVisited":   emit.rgb_csv(p.syn_number),
+        "ForegroundVisited":   emit.rgb_csv(p.ansi_bright_magenta),
     }
 
 

@@ -1,144 +1,150 @@
-# Ayu Graphite — semantic palette (single source of truth)
+# Ayu Graphite — palette (single source of truth)
 #
-# Two-tier:
-#   [primitives] are the actual hex values, named by hue and tint.
-#   [semantic]   keys reference primitives by name; that's what builders read.
+# Three tables of inputs and one table of roles. grid.py derives every
+# primitive from the inputs when the file is loaded, so no hex value below
+# the roles table is written by hand.
 #
-# palette.py resolves the refs at load time. To shift a hue everywhere it's
-# used, edit one primitive — semantic intent stays put.
+#   [base]      five colors. Only the hue of each survives.
+#   [tints]     a perceived brightness per row of the grid.
+#   [neutrals]  the grey ladder, as Oklab lightness.
+#   [semantic]  roles, each naming a primitive: `red_bright`, `gray_3`.
 #
-# THE GRID. Five hues by four tints, complete. A hue is one fixed Oklab
-# angle. A tint is one fixed PERCEIVED brightness that every hue shares, so
-# `red_normal` and `blue_normal` look equally bright and any two names ending
-# in the same tint sit level with each other.
+# THE GRID. Five hues by two tints, complete. A hue is one fixed Oklab
+# angle, the angle of its base color. A tint is a PERCEIVED brightness. `dim`
+# is one that every hue shares, so `red_dim` and `blue_dim` look equally
+# bright, with a chroma the hues share to within 1.5 points. `bright` is one
+# per hue: an ink reads as its hue only in a band of brightness — yellow when
+# light, red when not — so each sits where it is most itself, at the share of
+# the chroma sRGB holds there that [tints] names.
 #
 # Perceived, not measured. At one luminance a saturated color looks brighter
 # than a dull one — the Helmholtz-Kohlrausch effect — so an equal-luminance
 # row reads uneven: it put red at 65 and yellow at 55 on a scale where the
-# whole row measured CIE L* 49.5. Each cell here is placed by Fairchild-
-# Pirrotta corrected lightness L** instead, which folds chroma into the
-# prediction. Luminance and chroma both vary along a row to hold L** level.
+# whole row measured CIE L* 49.5. Each cell is placed by Fairchild-Pirrotta
+# corrected lightness L** instead, which folds chroma into the prediction.
 #
-#   tint      L**    what lands there
-#   vivid     87.4    success, warning, string, type, number, accent hover
-#   bright    75.4    ANSI 9-14, accent, error, hint, keyword, regex
-#   normal    57.3    ANSI 1-6, status borders, diff word fills, pressed
-#   dim       32.1    ANSI dim (SGR 2), status fills, selection
+# Saturated, and level where level helps. sRGB is lopsided: red and blue
+# hold chroma when dark, yellow and green when light. A level row of gamut
+# maxima reads uneven whatever the model says — at a mid brightness red holds
+# half again the chroma of yellow, and the eye takes the surplus for
+# brightness — and a row cut to its lowest ceiling reads pale. `dim` is a row
+# of fills, so it is levelled: each hue keeps its own ceiling up to a line 1.5
+# points above the row's lowest, and only the hue over that line is cut to
+# it, red. `bright` is the row of inks, and an ink levelled to its neighbours
+# stops being its hue: at one brightness a yellow is a gold and a red is a
+# salmon. So it is not levelled.
 #
-# Each cell is the most chroma sRGB holds at that hue while still landing on
-# the row's L**. A row's L** is fixed: a hue that leaves the grid does not
-# move the rows, so every role keeps its brightness across that edit. The
-# luminance a cell ends up at is bounded by the audit rules:
+#   tint      L**       what lands there
+#   bright    71 to 88  ANSI 1-6 and 9-14, accent, status, borders, syntax
+#   dim       32.1      ANSI dim (SGR 2), status fills, diff word fills,
+#                       selection, pressed
 #
-#   vivid, bright   >= 0.40, so an INK role clears 4.5:1 on `surface` and
-#                   4.5:1 over a selection on `dim`. The two rows are held 12
-#                   points of L** apart so they read as two rows.
-#   normal          the ANSI band, 0.139 to 0.212, tightened to <= 0.183 for
-#                   red and green so near-white clears 4.5:1 on a diff word
-#                   fill, and to >= 0.175 for blue so `on_accent` clears the
-#                   same on the pressed accent.
-#   dim             <= 0.050 so `text_muted` clears 4.5:1 on a selection,
-#                   >= 0.030 so the fill separates from the editor ground.
+# What pins each cell is a rule tools/audit.py checks, and its report prints
+# the live figures:
 #
-# Chroma still differs across a row, and now that is the point: blue needs
-# less of it than red to look equally bright.
+#   bright          an INK role clears 4.5:1 on `surface` and over a
+#                   selection on `dim`. Blue sits a step over that floor.
+#                   Red is the one ink let under it: it reads as red only
+#                   near where 4.5:1 holds on `bg` alone, and above `bg` it
+#                   is held to 3:1. Yellow and orange sit a step over their
+#                   chroma peaks, and green where it reads as itself.
+#   dim             at or under 0.044 so `text_muted` clears 4.5:1 on a
+#                   selection, at or over 0.030 so the fill separates from
+#                   the editor ground.
 #
-# Every one of the twenty cells carries a semantic role.
+# Every one of the ten cells carries a semantic role.
 #
-# Invariants (tools/audit.py checks all five):
+# Invariants (tools/audit.py checks all six):
 #   - chrome layers that stack in one view must differ: bg < panel < elem <
 #     elem_hover < elem_active, and border must be visible on panel and elem.
 #   - every bright fill (accent, success, warning, error) is written on with
 #     on_accent, never with text — text on accent is 1.28:1.
-#   - per hue, ANSI dim < normal < bright, and no two of the 16 share a value,
-#     the cyan row aside: it is the blue row again, and is held equal to it.
-#   - the ANSI rows split the two duties one slot cannot hold at once. See the
-#     [semantic] ANSI block.
-#   - every cell of a tint row looks equally bright, within 1.5 points of L**.
-#     Nothing else defends that, so a hand-edit would break it silently.
+#   - per hue, ANSI dim < normal, no two slots of one row share a value, and
+#     the normal row is the bright row again for every hue but black and
+#     white, as the cyan row is the blue row again: both are held equal, so a
+#     half-edit cannot split them.
+#   - the bright row clears 4.5:1 as ink on `bg`. See the [semantic] ANSI
+#     block for the fill duty it gives up.
+#   - every cell of `dim` looks equally bright, within 1.5 points of L**, and
+#     every cell of `bright` lands within the same of its own brightness.
+#   - every cell of `dim` is equally saturated, within the 1.5 points of
+#     Oklab chroma the grid allows plus rounding. The grid solves for all of
+#     this, and the checks catch a solver that drifts or a rounding that
+#     lands a cell off its row.
 
-[primitives]
-# Neutrals, dark to light. Saturation zero — every channel equal, no hue at
-# all — and named for their Oklab L. Seven is the floor, not a preference.
-# Five go to chrome: bg, panel, surface, hover and press are checked against
-# each other pairwise, so none may repeat, and they run evenly at 0.05, the
-# widest step that still leaves `text` clearing 4.5:1 on the press fill. The
-# other two are the whole text hierarchy, one dim and one bright, and the dim
-# one sits at 0.72 because below that `text_muted` stops clearing 4.5:1 on a
-# surface. A sixth grey has to come out of that pair, which leaves muted text
-# and body text the same color.
-black     = "#000000"
-gray_24   = "#1e1e1e"
-gray_29   = "#2a2a2a"
-gray_34   = "#373737"
-gray_39   = "#444444"
-gray_44   = "#515151"
-gray_72   = "#a4a4a4"
-gray_94   = "#eaeaea"
-white     = "#ffffff"
+[base]
+# One hue each. The lightness and chroma of a base color are discarded: every
+# cell of its column is solved from the row it sits on.
+red    = "#ff3a32"
+orange = "#f29407"
+yellow = "#d0a70e"
+green  = "#3bc100"
+blue   = "#4db3f1"
 
-# Red — hue 31.6
-red_vivid       = "#ffccc1"
-red_bright      = "#fd8974"
-red_normal      = "#c33b26"
-red_dim         = "#621106"
+[tints]
+# Fairchild-Pirrotta L**. The header says what pins each one. `dim` is one
+# brightness for the row, the most `text_muted` still clears 4.5:1 over as a
+# selection. `bright` is one per hue, each a step above where its hue is
+# most itself: red above the last brightness that clears 4.5:1 on `bg`,
+# orange and yellow above their chroma peaks, blue above the 4.5:1 floor on
+# `surface`, green by eye, short of a peak that sits at pure green. The
+# step, and the share of the ceiling under one, are what move the whole row
+# toward white.
+bright        = { red = 72.8, orange = 80.5, yellow = 90.0, green = 88.0, blue = 80.0 }
+bright_chroma = 0.85
+dim           = 33.5
 
-# Orange — hue 66.0
-orange_vivid    = "#fecfa1"
-orange_bright   = "#f29407"
-orange_normal   = "#ab6700"
-orange_dim      = "#573306"
-
-# Yellow — hue 91.0
-yellow_vivid    = "#fecd12"
-yellow_bright   = "#d0a70e"
-yellow_normal   = "#94770b"
-yellow_dim      = "#4e3d01"
-
-# Green — hue 121.0
-green_vivid     = "#b9dd0d"
-green_bright    = "#98b614"
-green_normal    = "#687e04"
-green_dim       = "#344004"
-
-# Blue — hue 239.2
-blue_vivid      = "#aadbfe"
-blue_bright     = "#4db3f1"
-blue_normal     = "#207bae"
-blue_dim        = "#013b58"
+[neutrals]
+# Oklab lightness. Saturation zero — every channel equal, no hue at all — so
+# a rung's luminance is its lightness cubed. Seven greys is the floor, not a
+# preference. Five go to chrome: bg, panel, surface, hover and press are
+# checked against each other pairwise, so none may repeat, and they climb
+# evenly from `floor` by `step`. The step has to clear 1.10:1 between rungs,
+# and the top rung has to hold `text` at 4.5:1, which bounds it at 0.07. The
+# other two are the whole text hierarchy, one dim and one bright. The dim one
+# sits at 0.72 because below 0.71 `text_muted` stops clearing 4.5:1 on a
+# surface. A sixth grey would have to come out of that pair, which leaves
+# muted text and body text the same color, and the ANSI white family needs
+# all three of dim, normal and bright to differ.
+floor      = 0.24
+step       = 0.05
+text_muted = 0.72
+text       = 0.94
 
 [semantic]
 
 # Backgrounds / chrome. Each step must be distinguishable from the one under
 # it — a control that shares its fill with the panel it sits on disappears.
-bg                  = "gray_24"             # deepest: editor, list/view interiors
-panel               = "gray_29"             # window, sidebar, menu, tab bar
-surface             = "gray_34"             # elevated: popup, tooltip, dialog
-elem                = "gray_34"             # control resting fill
-elem_hover          = "gray_39"
-elem_active         = "gray_44"
-elem_disabled       = "gray_29"             # recessed below resting, not equal to it
-title_bar           = "gray_34"
-title_bar_inactive  = "gray_29"
+bg                  = "gray_1"             # deepest: editor, list/view interiors
+panel               = "gray_2"             # window, sidebar, menu, tab bar
+surface             = "gray_3"             # elevated: popup, tooltip, dialog
+elem                = "gray_3"             # control resting fill
+elem_hover          = "gray_4"
+elem_active         = "gray_5"
+elem_disabled       = "gray_2"             # recessed below resting, not equal to it
+title_bar           = "gray_3"
+title_bar_inactive  = "gray_2"
 overlay_black       = "black"
 
 # Borders
-border              = "gray_39"
-border_focused      = "blue_normal"
+border              = "gray_4"
+border_focused      = "blue_bright"
 
 # Text
-text                = "gray_94"
-text_muted          = "gray_72"
-text_disabled       = "gray_72"
+text                = "gray_7"
+text_muted          = "gray_6"
+text_disabled       = "gray_6"
 
 # Accent / status. Every one of these is an INK role, so all of them sit on
-# `vivid` or `bright` — the two tints that clear 4.5:1 on `surface`. Blue is
-# the one cool hue, so it carries the accent and the hint family both.
+# `bright`, the one tint that clears 4.5:1 on `surface`. Blue is the one cool
+# hue, so it carries the accent and the hint family both. There is no tint
+# above `bright` for a hover to lift into, so the hover is the accent again,
+# and a press drops to `dim`.
 accent              = "blue_bright"
-accent_hover        = "blue_vivid"
-accent_active       = "blue_normal"
-success             = "green_vivid"
-warning             = "yellow_vivid"
+accent_hover        = "blue_bright"
+accent_active       = "blue_dim"
+success             = "green_bright"
+warning             = "yellow_bright"
 error               = "red_bright"
 hint                = "blue_bright"
 
@@ -150,73 +156,74 @@ on_accent_muted     = "blue_dim"
 # Selection (list row, selected message, selected text). On `dim`, the one
 # tint dark enough for `accent` to stay legible on top of it.
 selection_bg        = "blue_dim"
-selection_fg        = "gray_94"
+selection_fg        = "gray_7"
 
-# Status fills take `dim`, their borders `normal`.
+# Status fills take `dim`, their borders `bright`.
 info_bg             = "blue_dim"
-info_border         = "blue_normal"
+info_border         = "blue_bright"
 hint_bg             = "blue_dim"
-hint_border         = "blue_normal"
+hint_border         = "blue_bright"
 success_bg          = "green_dim"
-success_border      = "green_normal"
+success_border      = "green_bright"
 warning_bg          = "yellow_dim"
-warning_border      = "yellow_normal"
+warning_border      = "yellow_bright"
 error_bg            = "red_dim"
-error_border        = "red_normal"
-diagnostic_muted_bg = "gray_44"
+error_border        = "red_bright"
+diagnostic_muted_bg = "gray_5"
 
 # Diff (terminal-pane variants — louder than line-bg diffs)
-diff_term_plus      = "green_vivid"
+diff_term_plus      = "green_bright"
 diff_term_minus     = "red_bright"
 
 # Word-level diff fills. These are BACKGROUNDS — Claude Code paints the
 # changed word of a line with them and draws its own near-white syntax ink on
-# top. `normal` is the darkest tint that ink still clears 4.5:1 on.
-diff_word_plus      = "green_normal"
-diff_word_minus     = "red_normal"
+# top. That ink clears 4.5:1 only on a fill at or under luminance 0.183, and
+# `dim` is the one tint under it, so a changed word sits darker than the line
+# around it, not lighter.
+diff_word_plus      = "green_dim"
+diff_word_minus     = "red_dim"
 
 # Editor chrome
-line_number         = "gray_44"
-line_number_active  = "gray_94"
-line_number_hover   = "gray_94"
-scrollbar_thumb     = "gray_72"
-drop_target         = "gray_72"
-search_highlight    = "blue_vivid"
+line_number         = "gray_5"
+line_number_active  = "gray_7"
+line_number_hover   = "gray_7"
+scrollbar_thumb     = "gray_6"
+drop_target         = "gray_6"
+search_highlight    = "blue_bright"
 search_match_active = "orange_bright"
 
 # ANSI 16 + the dim (SGR 2) siblings. Every terminal target reads exactly
-# these — bright is lighter than normal, dim is darker, per hue. Black is the
-# one family where "normal" is already the floor, so dim goes to pure black.
+# these. One chromatic row serves normal and bright both — SGR 1 is bold and
+# nothing else, and tools/audit.py holds the two rows equal so a half-edit
+# cannot split them. Dim is darker, per hue. Black is the one family where
+# "normal" is already the floor, so dim goes to pure black.
 #
 # A program picks any slot as a foreground (SGR 30-37, 90-97) or as a
 # background (SGR 40-47, 100-107) and the theme cannot tell which. On this bg
 # no color clears 4.5:1 in both roles: a foreground needs luminance >= 0.234,
-# a background needs <= 0.125. So the rows divide the work.
+# a background under `text` needs <= 0.146. This palette takes the foreground
+# side: slots 1-6 read at 4.6:1 to 11:1 as ink, and `text` on one of them as
+# a fill reads at 1.3:1 to 3:1. That is the cost of one loud row. A mid row
+# held that case at 3:1, at the price of a dark gold and an olive.
 #
-#   normal 1-6   3.62:1 as ink on bg, 3.45:1 under `text` when a program
-#                fills with it. This is the row that stops the
-#                bright-on-bright case, and it costs the vivid ayu hues: at
-#                this luminance yellow is dark gold and green is olive.
-#   bright 1-6   7.46:1 as ink, foreground-first. As a fill it needs dark
-#                ink, which no palette can fix.
-#   dim 1-6      1.58:1, which is what SGR 2 asks for. `dim` is pinned by the
-#                selection rule, so faint here is the price of a selection
-#                the accent stays legible on.
+#   dim 1-6      about 1.5:1, which is what SGR 2 asks for. `dim` is pinned
+#                by the selection rule, so faint here is the price of a
+#                selection the accent stays legible on.
 #
 # Five hues fill six chromatic slots. Orange has no slot of its own and takes
 # magenta's. Cyan's is the blue row again: no other cell is both a hue and
 # distinct, and tools/audit.py holds the two rows equal so a half-edit cannot
 # split them.
-ansi_black          = "gray_24"
-ansi_red            = "red_normal"
-ansi_green          = "green_normal"
-ansi_yellow         = "yellow_normal"
-ansi_blue           = "blue_normal"
-ansi_magenta        = "orange_normal"
-ansi_cyan           = "blue_normal"
-ansi_white          = "gray_94"
+ansi_black          = "gray_1"
+ansi_red            = "red_bright"
+ansi_green          = "green_bright"
+ansi_yellow         = "yellow_bright"
+ansi_blue           = "blue_bright"
+ansi_magenta        = "orange_bright"
+ansi_cyan           = "blue_bright"
+ansi_white          = "gray_7"
 
-ansi_bright_black   = "gray_44"
+ansi_bright_black   = "gray_5"
 ansi_bright_red     = "red_bright"
 ansi_bright_green   = "green_bright"
 ansi_bright_yellow  = "yellow_bright"
@@ -232,27 +239,31 @@ ansi_dim_yellow     = "yellow_dim"
 ansi_dim_blue       = "blue_dim"
 ansi_dim_magenta    = "orange_dim"
 ansi_dim_cyan       = "blue_dim"
-ansi_dim_white      = "gray_72"
+ansi_dim_white      = "gray_6"
 
 # Players (collab cursor bg)
-player_bg           = "gray_72"
+player_bg           = "gray_6"
 
 # Chat
-chat_check          = "green_vivid"
-chat_msg_bg         = "gray_34"
+chat_check          = "green_bright"
+chat_msg_bg         = "gray_3"
 
-# Syntax. Red is the one hue no other token spends, so its vivid tint is the
-# number: the pale pink that stands where a purple would.
+# Syntax. Five inks read on the editor ground, one per hue, so every token
+# family shares a hue with its neighbours: red is the number, where a purple
+# would stand, orange the keyword and the operator, yellow the function,
+# green the string and its regex, blue the type and the attribute.
 syn_keyword         = "orange_bright"
-syn_function        = "yellow_vivid"
-syn_string          = "green_vivid"
+syn_function        = "yellow_bright"
+syn_string          = "green_bright"
 syn_string_regex    = "green_bright"
-syn_comment         = "gray_72"
-syn_number          = "red_vivid"
-syn_type            = "blue_vivid"
+syn_comment         = "gray_6"
+syn_number          = "red_bright"
+syn_type            = "blue_bright"
 syn_operator        = "orange_bright"
-syn_attribute       = "blue_vivid"
-syn_punctuation     = "gray_94"
-syn_doc             = "gray_72"
-syn_string_special  = "orange_vivid"
-syn_predictive      = "blue_normal"
+syn_attribute       = "blue_bright"
+syn_punctuation     = "gray_7"
+syn_doc             = "gray_6"
+syn_string_special  = "orange_bright"
+# An inline prediction is text that is not there yet, so it reads as muted
+# text rather than as any token.
+syn_predictive      = "gray_6"

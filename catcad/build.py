@@ -66,16 +66,19 @@ HUE = {
     "pinned": "error",
     "dormant_face": "info_bg",
     "face": "info_border",
-    # The ANSI normal row is pinned to one luminance per hue by this palette's
-    # own arithmetic, which is what a three-axis plane trio wants: three hues at
-    # one weight, so no face of the world reads louder than another. No other
-    # family here is luminance-matched across hues.
+    # The ANSI row is level across hues by this palette's own arithmetic,
+    # which is what a three-axis plane trio wants: three hues at one weight,
+    # so no face of the world reads louder than another.
     "sheet_ground": "ansi_green",
     "sheet_front": "ansi_blue",
     "sheet_side": "ansi_red",
-    "mark": "syn_number",
+    # The five bright inks are the five constraint states above, so the two
+    # marks that must differ from all of them leave the row: a mark takes the
+    # muted text grey, and a hover is the one ink above every state,
+    # including the white a solid wears.
+    "mark": "text_muted",
     "redundant": "ansi_bright_red",
-    "hovered": "syn_string_special",
+    "hovered": "ansi_bright_white",
     "selected": "success",
     "goes": "success_border",
     "stops": "error_border",

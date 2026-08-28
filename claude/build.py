@@ -32,24 +32,27 @@ def build_claude(p: Palette) -> dict:
         "suggestion":   p.warning,
         "remember":     p.syn_number,
 
+        # A shimmer is a lighter band swept over its base. The grid has no
+        # tint above `bright`, so the band is `text`, the one ink lighter
+        # than every base it sweeps.
         "claude":         p.syn_keyword,
         "claudeShimmer":  p.syn_function,
         "claudeBlue_FOR_SYSTEM_SPINNER":        p.accent,
-        "claudeBlueShimmer_FOR_SYSTEM_SPINNER": p.syn_type,
+        "claudeBlueShimmer_FOR_SYSTEM_SPINNER": p.text,
 
         "success":          p.success,
         "error":            p.error,
         "warning":          p.warning,
-        "warningShimmer":   p.syn_function,
+        "warningShimmer":   p.text,
 
         "permission":         p.warning,
-        "permissionShimmer":  p.syn_function,
+        "permissionShimmer":  p.text,
         "planMode":           p.accent,
         "ide":                p.accent,
         "autoAccept":         p.success,
         "promptBorder":         p.accent,
-        "promptBorderShimmer":  p.syn_type,
-        "bashBorder":           p.syn_number,
+        "promptBorderShimmer":  p.text,
+        "bashBorder":           p.ansi_magenta,
 
         "diffAdded":          p.success_bg,
         "diffAddedDimmed":    p.success_bg,
@@ -58,30 +61,20 @@ def build_claude(p: Palette) -> dict:
         "diffRemovedDimmed":  p.error_bg,
         "diffRemovedWord":    p.diff_word_minus,
 
-        # Eight names, five hues. The five with a hue of their own take its
-        # bright or vivid cell. Pink, purple and cyan take the other tint of
-        # the nearest hue still free, so every pair stays a step apart. The
-        # two ink cells left out, orange_vivid and yellow_bright, each sit
-        # under 7 Oklab points from one in use.
+        # Eight names, five hues, one ink tint. The five with a hue of their
+        # own take it. Purple, pink and cyan take the nearest hue — blue, red,
+        # green — and so repeat one, as Claude Code's own dark-ansi theme
+        # repeats red and magenta.
         "red_FOR_SUBAGENTS_ONLY":    p.error,
         "blue_FOR_SUBAGENTS_ONLY":   p.accent,
         "green_FOR_SUBAGENTS_ONLY":  p.success,
         "yellow_FOR_SUBAGENTS_ONLY": p.warning,
-        "purple_FOR_SUBAGENTS_ONLY": p.syn_type,
+        "purple_FOR_SUBAGENTS_ONLY": p.accent,
         "orange_FOR_SUBAGENTS_ONLY": p.syn_keyword,
-        "pink_FOR_SUBAGENTS_ONLY":   p.syn_number,
-        "cyan_FOR_SUBAGENTS_ONLY":   p.syn_string_regex,
+        "pink_FOR_SUBAGENTS_ONLY":   p.error,
+        "cyan_FOR_SUBAGENTS_ONLY":   p.success,
         "professionalBlue":          p.accent,
     }
-    # Two subagents in one color read as one subagent. The syntax roles the
-    # eight borrow may share a cell — keyword and operator do — so the
-    # mapping, not the palette, has to hold them apart.
-    by_color: dict[str, list[str]] = {}
-    for key, value in raw.items():
-        if key.endswith("_FOR_SUBAGENTS_ONLY"):
-            by_color.setdefault(value, []).append(key)
-    shared = [names for names in by_color.values() if len(names) > 1]
-    assert not shared, f"subagent colors collide: {shared}"
     overrides = {k: rgb(v) for k, v in raw.items()}
     # Claude Code 2.1.x ignores `overrides` for diff line backgrounds
     # (`diffAdded`/`diffRemoved`/`*Dimmed`); they come from the chosen `base`.
