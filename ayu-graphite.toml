@@ -81,14 +81,14 @@
 # theme, and two cool ones stand off them, every neighbour 30° or more away.
 red    = "#ff8a78"
 orange = "#f78b00"
-yellow = "#ccab00"
+yellow = "#ffd500"
 green  = "#38b700"
 blue   = "#07abff"
 
 [tints]
 # Fairchild-Pirrotta L**. The header says what pins each one. Raise `bright`
 # and the row steps toward white, red first.
-bright = 75.4
+bright = 78.4
 normal = 56.4
 dim    = 33.5
 
