@@ -1,8 +1,8 @@
 # ayu-graphite
 
-A higher-contrast variant of [Ayu](https://github.com/dempfi/ayu) for [Zed](https://zed.dev), [Claude Code](https://claude.com/claude-code), Telegram, KDE Plasma / Konsole, Brave, macOS Terminal, CatCad, and darkroom.
+A variant of [Ayu](https://github.com/dempfi/ayu) with higher-contrast text and chrome, for [Zed](https://zed.dev), [Claude Code](https://claude.com/claude-code), Telegram, KDE Plasma / Konsole, Brave, macOS Terminal, CatCad, and darkroom.
 
-`ayu-graphite.toml` is the only thing you edit. It holds five base colors, one tint brightness, the grounds the other two tints are solved from, one grey ladder, and the roles that name cells of the grid those make. `grid.py` solves the grid when the file is loaded. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a base color, a tint or a role and run `make`.
+`ayu-graphite.toml` is the only thing you edit. It holds seven base colors, the hues that stand apart from the row rule, one tint brightness, the grounds the other two tints are solved from, the inks the selection fill is solved from, one grey ladder, and the roles that name cells of the grid those make. `grid.py` solves the grid when the file is loaded. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a base color, a tint or a role and run `make`.
 
 ```
 ayu-graphite.toml       SINGLE SOURCE OF TRUTH — base colors, tints, greys, roles
@@ -35,7 +35,7 @@ make audit      # contrast rules only
 make install    # copy generated themes into their app dirs (Telegram and Brave are manual)
 ```
 
-`make audit` guards what the targets silently depend on: chrome layers that stack in one view stay separable, every foreground clears 4.5:1 where it lands, the 24 ANSI slots stay distinct with dim &lt; normal &lt; bright per hue, the cyan row aside, which is the blue row again, and every cell of a tint row looks equally bright and equally saturated. It runs first, so a bad palette edit fails before any theme is written.
+`make audit` guards what the targets silently depend on: chrome layers that stack in one view stay separable, every foreground clears 4.5:1 where it lands, the 24 ANSI slots stay distinct with dim &lt; normal &lt; bright per hue, every cell of a tint row looks equally bright and equally saturated, and the inks are equally saturated. It runs first, so a bad palette edit fails before any theme is written.
 
 ## Applying
 

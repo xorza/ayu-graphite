@@ -26,45 +26,45 @@
     text_disabled:       "#a4a4a4",    // text_disabled      gray_6
     elem_hover:          "#454545",    // elem_hover         gray_4
     elem_active:         "#525252",    // elem_active        gray_5
-    border_focused:      "#006fa7",    // border_focused     blue_normal
+    border_focused:      "#0077b4",    // border_focused     blue_normal
 
     // Graph — the wires, and the marks drawn over them.
-    selection_rect:      "#1facfd",    // accent             blue_bright
-    connection_broken:   "#ff8a77",    // error              red_bright
-    breaker_stroke:      "#ff8a77",    // error              red_bright
+    selection_rect:      "#00abff",    // accent             blue_bright
+    connection_broken:   "#ff7763",    // error              red_bright
+    breaker_stroke:      "#ff7763",    // error              red_bright
 
     // Ports — an untyped port's circle, and the ink beside it. A typed port
     // takes its hue from the type table instead.
-    input_port:          "#68bc55",    // success            green_bright
-    output_port:         "#f5902a",    // syn_keyword        orange_bright
-    event_port:          "#ff8a77",    // error              red_bright
+    input_port:          "#7cdd66",    // success            green_bright
+    output_port:         "#ff9000",    // syn_keyword        orange_bright
+    event_port:          "#ff7763",    // error              red_bright
     port_label:          "#a4a4a4",    // text_muted         gray_6
 
     // Badges — what a node's head says about itself.
-    badge_graph:         "#1facfd",    // accent             blue_bright
-    badge_sink:          "#ff8a77",    // error              red_bright
-    badge_cache:         "#cdaa00",    // warning            yellow_bright
+    badge_graph:         "#00abff",    // accent             blue_bright
+    badge_sink:          "#ff7763",    // error              red_bright
+    badge_cache:         "#f9de1a",    // warning            yellow_bright
     badge_impure:        "#ebebeb",    // text               gray_7
 
     // Status — what a node's head says about its last run.
-    status_success:      "#68bc55",    // success            green_bright
-    status_info:         "#1facfd",    // accent             blue_bright
+    status_success:      "#7cdd66",    // success            green_bright
+    status_info:         "#00abff",    // accent             blue_bright
     status_busy:         "#a4a4a4",    // text_muted         gray_6
-    status_warning:      "#f5902a",    // syn_keyword        orange_bright
-    status_error:        "#ff8a77",    // error              red_bright
+    status_warning:      "#ff9000",    // syn_keyword        orange_bright
+    status_error:        "#ff7763",    // error              red_bright
 
     // A wire's hue is the type flowing along it. `ramp` backs the
     // open-ended custom and enum families, keyed by type id.
     type_colors: (
-        boolean: "#ff8a77",    // error              red_bright
-        int:     "#cdaa00",    // ansi_bright_yellow yellow_bright
-        float:   "#8a7200",    // ansi_yellow        yellow_normal
-        string:  "#68bc55",    // syn_string         green_bright
-        path:    "#1facfd",    // hint               blue_bright
-        image:   "#f5902a",    // syn_keyword        orange_bright
+        boolean: "#ff7763",    // error              red_bright
+        int:     "#f9de1a",    // ansi_bright_yellow yellow_bright
+        float:   "#8d7d00",    // ansi_yellow        yellow_normal
+        string:  "#7cdd66",    // syn_string         green_bright
+        path:    "#00abff",    // hint               blue_bright
+        image:   "#ff9000",    // syn_keyword        orange_bright
         ramp: (
-            "#b15042",    // ansi_red           red_normal
-            "#006fa7",    // ansi_blue          blue_normal
+            "#be5648",    // ansi_red           red_normal
+            "#0077b4",    // ansi_blue          blue_normal
             "#ebebeb",    // syn_punctuation    gray_7
             "#a4a4a4",    // text_muted         gray_6
         ),

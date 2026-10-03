@@ -128,11 +128,13 @@ class Source:
     """The whole file, for a reader that needs the names as well as the values:
     the audit checks the tint rows the primitives are named by, and the two RON
     targets print the ref each role resolved through. The primitives are the
-    grid derived from [base], [tints], [neutrals] and [ink], not a table of the
-    file."""
+    grid derived from [base], [hues], [tints], [neutrals], [ink] and
+    [selection], not a table of the file. `terminal` is the [hues] list, which
+    the audit needs to know which cells sit level."""
     primitives: dict[str, str]
     semantic: dict[str, str]
     palette: Palette
+    terminal: list[str]
 
 
 def load_source() -> Source:
@@ -146,8 +148,12 @@ def load_source() -> Source:
         data = tomllib.load(f)
     semantic = data["semantic"]
     grounds = [semantic[role] for role in data["ink"]["on"]]
-    primitives = grid.primitives(data["base"], data["tints"]["dim"],
-                                 data["neutrals"], grounds)
+    selection = data["selection"]
+    hues = data["hues"]
+    primitives = grid.primitives(
+        data["base"], data["tints"]["dim"], data["neutrals"], grounds,
+        hues["terminal"], selection["hue"],
+        [semantic[role] for role in selection["ink"]])
     resolved = {}
     for key, value in semantic.items():
         if value.startswith("#"):
@@ -159,7 +165,7 @@ def load_source() -> Source:
                 f"semantic.{key} = {value!r} is neither a hex literal nor a "
                 f"primitive name. Available primitives: {sorted(primitives)}"
             )
-    return Source(primitives, semantic, Palette(**resolved))
+    return Source(primitives, semantic, Palette(**resolved), hues["terminal"])
 
 
 def load_palette() -> Palette:

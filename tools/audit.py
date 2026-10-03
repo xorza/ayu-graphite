@@ -15,9 +15,7 @@ Six rules:
             The `on_accent` family exists because `text` on `accent` is 1.28.
   ansi      per hue, dim < normal < bright in luminance, and no two of the
             16 share a value — a terminal that renders bright red as normal
-            red has thrown away half its palette. The cyan row is the one
-            exception: five hues fill six slots, so cyan is the blue row
-            again, and is checked to be exactly that.
+            red has thrown away half its palette.
   roles     a program picks any slot as a foreground (SGR 30-37, 90-97) or as
             a background (SGR 40-47, 100-107) and the theme cannot tell which.
             On this bg nothing clears 4.5:1 in both roles — ink needs
@@ -26,14 +24,15 @@ Six rules:
             legible on an SGR 4x fill. Bright 1-6 are foreground-first and
             carry the full 4.5:1 instead. Slots 0 and 7 sit out: black is the
             background itself and white is the text.
-  perceived every cell of a tint row must look equally bright. Luminance does
-            not say that on its own: a saturated color reads brighter than a
-            dull one at the same luminance, and the equal-luminance rows this
-            palette replaced spread 22.6 points.
+  perceived every cell of a tint row must look equally bright — the inks are
+            not a row and are left out. Luminance does not say that on its
+            own: a saturated color reads brighter than a dull one at the same
+            luminance, and the equal-luminance rows this palette replaced
+            spread 22.6 points.
   chroma    every cell of a tint row must be equally saturated, in Oklab,
             within the eye's threshold. A row of gamut maxima is not: red
-            holds half again what yellow does at a mid brightness, and the
-            eye takes the surplus for brightness however the row is levelled.
+            holds half again what yellow does at a mid brightness, and a hue
+            that much more saturated stands out of a row that L** levels.
 
 The last two are what grid.py solves for. The checks stay because the solver
 rounds each cell to 8 bits, and because a change to the solver should fail
@@ -45,7 +44,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import grid
 from color import apca, contrast, hk_lightness, luminance, oklch
-from palette import Palette, load_source
+from palette import Palette, Source, load_source
 
 # Separate enough to read as two layers. 1.10 is roughly one step of the
 # neutral ramp — below that the eye merges them under any gamma.
@@ -57,15 +56,12 @@ MIN_ANSI_DUAL = 3.0
 # Room for the gamut search to round into. The rebuilt rows land inside 1.0,
 # and the equal-luminance rows they replaced were out by 22.6.
 MAX_PERCEIVED_SPREAD = 1.5
-# Oklab chroma, times 100: the spread the grid allows a row, plus what one
-# 8-bit step moves a cell by.
-MAX_CHROMA_SPREAD = grid.ROW_SPREAD * 100 + 0.3
+# Oklab chroma, times 100: what one 8-bit step moves a cell by.
+ROUNDING = 0.3
+MAX_CHROMA_SPREAD = grid.ROW_SPREAD * 100 + ROUNDING
 
 HUES = ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
-# The slot that is another slot's row again. It is held equal to its source
-# rather than counted as a duplicate, and sits out of the per-hue reports.
-ALIAS = {"cyan": "blue"}
-CHROMATIC = tuple(hue for hue in HUES[1:7] if hue not in ALIAS)
+CHROMATIC = HUES[1:7]
 TINTS = ("bright", "normal", "dim")
 
 
@@ -146,18 +142,10 @@ def check_ansi(p: Palette) -> list[str]:
     seen: dict[str, str] = {}
     for prefix in ("ansi_", "ansi_bright_"):
         for hue in HUES:
-            if hue in ALIAS:
-                continue
             key = f"{prefix}{hue}"
             if d[key] in seen:
                 out.append(f"ansi: {key} duplicates {seen[d[key]]} ({d[key]})")
             seen[d[key]] = key
-    for hue, source in ALIAS.items():
-        for prefix in ("ansi_", "ansi_bright_", "ansi_dim_"):
-            own, theirs = d[f"{prefix}{hue}"], d[f"{prefix}{source}"]
-            if own != theirs:
-                out.append(f"ansi: {prefix}{hue} is {own}, not "
-                           f"{prefix}{source} ({theirs})")
     return out
 
 
@@ -179,19 +167,28 @@ def check_ansi_roles(p: Palette) -> list[str]:
     return out
 
 
-def tint_rows(primitives: dict[str, str]) -> dict[str, dict[str, str]]:
-    """The chromatic primitives regrouped as tint -> hue -> hex."""
-    rows: dict[str, dict[str, str]] = {t: {} for t in TINTS}
-    for key, value in primitives.items():
-        hue, _, tint = key.rpartition("_")
-        if hue and tint in rows:
-            rows[tint][hue] = value
-    return rows
+def tint_cells(src: Source, tint: str) -> dict[str, str]:
+    """Every chromatic primitive of one tint, as hue -> hex."""
+    out = {}
+    for key, value in src.primitives.items():
+        hue, _, own = key.rpartition("_")
+        if hue and own == tint:
+            out[hue] = value
+    return out
 
 
-def check_perceived(primitives: dict[str, str]) -> list[str]:
+def tint_rows(src: Source) -> dict[str, dict[str, str]]:
+    """The chromatic primitives that sit on a row, as tint -> hue -> hex. A
+    syntax hue's bright cell is its ink, placed alone, so on the bright row
+    only the terminal hues sit level."""
+    return {tint: {hue: value for hue, value in tint_cells(src, tint).items()
+                   if tint != "bright" or hue in src.terminal}
+            for tint in TINTS}
+
+
+def check_perceived(src: Source) -> list[str]:
     out = []
-    for tint, cells in tint_rows(primitives).items():
+    for tint, cells in tint_rows(src).items():
         if len(cells) < 2:
             continue
         lit = {h: hk_lightness(v) for h, v in cells.items()}
@@ -204,23 +201,31 @@ def check_perceived(primitives: dict[str, str]) -> list[str]:
     return out
 
 
-def check_chroma(primitives: dict[str, str]) -> list[str]:
+def check_chroma(src: Source) -> list[str]:
+    """The syntax hues of a row are level in chroma, the inks too, each
+    under one line. A terminal hue sets no line and may fall short of it, but
+    never climbs over the syntax hues."""
     out = []
-    for tint, cells in tint_rows(primitives).items():
-        if len(cells) < 2:
-            continue
-        chroma = {h: oklch(v)[1] * 100 for h, v in cells.items()}
-        low, high = min(chroma, key=chroma.get), max(chroma, key=chroma.get)
-        spread = chroma[high] - chroma[low]
+    for tint in TINTS:
+        chroma = {hue: oklch(value)[1] * 100
+                  for hue, value in tint_cells(src, tint).items()}
+        syntax = {h: c for h, c in chroma.items() if h not in src.terminal}
+        low, high = min(syntax, key=syntax.get), max(syntax, key=syntax.get)
+        spread = syntax[high] - syntax[low]
         if spread > MAX_CHROMA_SPREAD:
             out.append(f"chroma: {tint} row spreads {spread:.2f} points — "
-                       f"{high} {chroma[high]:.1f} vs {low} {chroma[low]:.1f} "
+                       f"{high} {syntax[high]:.1f} vs {low} {syntax[low]:.1f} "
                        f"(> {MAX_CHROMA_SPREAD})")
+        for hue in src.terminal:
+            if chroma[hue] > syntax[high] + ROUNDING:
+                out.append(f"chroma: {hue}_{tint} at {chroma[hue]:.1f} climbs "
+                           f"over the syntax hues' {syntax[high]:.1f}")
     return out
 
 
-def report(p: Palette, primitives: dict[str, str]) -> None:
+def report(src: Source) -> None:
     """The pairs and rows worth seeing even when nothing is broken."""
+    p = src.palette
     d = p.as_dict()
     print(f"  {'pair':34}{'WCAG':>9}{'APCA':>8}")
     rows = [("text on bg", p.text, p.bg),
@@ -233,28 +238,39 @@ def report(p: Palette, primitives: dict[str, str]) -> None:
     for label, fg, bg in rows:
         print(f"  {label:34}{contrast(fg, bg):8.2f}{abs(apca(fg, bg)):8.0f}")
     print(f"\n  {'tint row':34}{'L**':>9}{'spread':>8}{'chroma':>8}{'spread':>8}")
-    for tint, cells in tint_rows(primitives).items():
+    for tint, cells in tint_rows(src).items():
         lit = [hk_lightness(v) for v in cells.values()]
-        chroma = [oklch(v)[1] * 100 for v in cells.values()]
+        if tint == "bright":
+            print(f"  {'bright (terminal hues)':34}{sum(lit) / len(lit):9.1f}"
+                  f"{max(lit) - min(lit):8.2f}")
+            continue
+        chroma = [oklch(v)[1] * 100 for h, v in cells.items()
+                  if h not in src.terminal]
         print(f"  {tint:34}{sum(lit) / len(lit):9.1f}"
               f"{max(lit) - min(lit):8.2f}"
               f"{sum(chroma) / len(chroma):8.1f}"
               f"{max(chroma) - min(chroma):8.2f}")
+    print(f"\n  {'ink':34}{'L**':>9}{'chroma':>8}{'APCA':>8}")
+    for hue, value in tint_cells(src, "bright").items():
+        if hue not in src.terminal:
+            print(f"  {hue:34}{hk_lightness(value):9.1f}"
+                  f"{oklch(value)[1] * 100:8.1f}"
+                  f"{abs(apca(value, p.bg)):8.0f}")
 
 
 def main() -> None:
     src = load_source()
-    p, primitives = src.palette, src.primitives
+    p = src.palette
     problems = (check_layers(p) + check_ink(p) + check_ansi(p)
-                + check_ansi_roles(p) + check_perceived(primitives)
-                + check_chroma(primitives))
+                + check_ansi_roles(p) + check_perceived(src)
+                + check_chroma(src))
     for line in problems:
         print(line)
     if problems:
         print(f"\n{len(problems)} problem(s)")
         sys.exit(1)
     print("palette ok: layers, ink, ansi, roles, perceived, chroma")
-    report(p, primitives)
+    report(src)
 
 
 if __name__ == "__main__":

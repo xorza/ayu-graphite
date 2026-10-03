@@ -1,29 +1,43 @@
-"""Derive the primitives: five base colors and three tints make the fifteen
-chromatic cells, and one ladder makes the greys.
+"""Derive the primitives: the base colors and three tints make the chromatic
+cells, one ladder makes the greys, and the selection fill is solved apart.
 
 A base color contributes its hue and nothing else. A tint is one perceived
 brightness, Fairchild-Pirrotta L**, that every hue on the row lands on. Chroma
 is as much as each hue holds at that brightness, in Oklab, up to a line drawn
 `ROW_SPREAD` above the lowest ceiling on the row. sRGB is lopsided — red and
 blue hold chroma when dark, yellow and green when light — so a row of bare
-gamut maxima reads uneven: at a mid brightness red holds half again the
-chroma yellow does, and the eye takes the surplus for brightness however the
-model levels it. The line keeps every cell within the eye's threshold of the
-row's chroma, so a row reads as one brightness and one saturation.
+gamut maxima is level in L**, which already counts chroma as brightness, but
+not in saturation: a hue with half again its neighbours' chroma stands out of
+the row on its own. The line keeps every cell within the eye's threshold of
+the row's chroma, so a row reads as one brightness and one saturation.
 
 Each cell is solved, not looked up. At fixed hue and chroma, L** rises with
 Oklab lightness, so a bisection lands the row's brightness to within rounding.
 The chroma ceiling is a second bisection on top of the first: the largest
 chroma at which that solve still lands inside the gamut.
 
-One tint is set and two are solved. The bright row carries every ink,
-and above a mid brightness its chroma falls as it climbs, red first, because a
-light red is a pink. So `bright` is the brightness where the row holds the
-most chroma among those where every cell clears `MIN_INK` on every ground ink
-is written on. A set value drifts off that point the first time anything
-under it moves. `normal` sits midway between `dim` and `bright`, so the three
-rows climb in two equal steps of L**."""
-from math import atan2, cos, degrees, radians, sin
+One tint is set and two are solved. Above a mid brightness a row's chroma
+falls as it climbs, red first, because a light red is a pink. So `bright` is
+the brightness where the syntax hues, held level, keep the most chroma among
+those where every cell clears `MIN_INK` on every ground ink is written on. A
+set value drifts off that point the first time anything under it moves.
+`normal` sits midway between `dim` and `bright`, so the three rows climb in
+two equal steps of L**.
+
+The bright row is where the inks would sit level, not where they sit. Each
+syntax hue's ink takes the same rule the row does, alone: the most chroma at
+or above the brightness where it clears `MIN_INK`, under one chroma line
+drawn `ROW_SPREAD` above the weakest ink's best. A hue that holds that line
+over a band of brightness sits in the middle of the band. So red sits low,
+where it is still red and not a pink, and yellow sits high, where it is
+still yellow and not a gold or an olive. The inks stay level in chroma, not
+in brightness.
+
+A terminal hue sits on every row, the bright one too, and sets no line: it
+is drawn only by programs in a terminal, so it is held under the syntax
+hues' chroma rather than dragging all of them down to its own."""
+from collections.abc import Callable
+from math import atan2, cos, degrees, inf, radians, sin
 
 from color import (contrast, hex_from_linear, grey, hk_lightness_linear,
                    oklab, oklab_to_linear)
@@ -88,30 +102,64 @@ def ceiling(hue: float, target: float) -> float:
     return lo
 
 
-def row(hues: dict[str, float], target: float) -> dict[str, str]:
-    """Every hue at L** `target`, each at its own chroma ceiling up to the
-    row's line."""
-    ceilings = {name: ceiling(hue, target) for name, hue in hues.items()}
-    line = min(ceilings.values()) + ROW_SPREAD
-    cells = {}
-    for name, hue in hues.items():
-        chroma = min(ceilings[name], line)
-        rgb = solve(hue, chroma, target)
-        assert rgb is not None, (
-            f"no {name} at chroma {chroma:.4f} reads as L** {target}, yet "
-            f"that chroma is under the hue's ceiling")
-        cells[name] = hex_from_linear(rgb)
-    return cells
+def line_at(hues: dict[str, float], target: float) -> float:
+    """The chroma line of a row at L** `target`: the lowest ceiling among
+    `hues`, plus `ROW_SPREAD`."""
+    return min(ceiling(hue, target) for hue in hues.values()) + ROW_SPREAD
 
 
-def cells(hues: dict[str, float], tint: str, target: float) -> dict[str, str]:
-    """A row as primitives: `<hue>_<tint>`."""
-    return {f"{name}_{tint}": cell for name, cell in row(hues, target).items()}
+def cell(hue: float, target: float, line: float) -> str:
+    """One hue at L** `target`, at its own chroma ceiling up to `line`."""
+    chroma = min(ceiling(hue, target), line)
+    rgb = solve(hue, chroma, target)
+    assert rgb is not None, (
+        f"no hue {hue:.1f} at chroma {chroma:.4f} reads as L** {target}, yet "
+        f"that chroma is under the hue's ceiling")
+    return hex_from_linear(rgb)
 
 
-def row_chroma(hues: dict[str, float], target: float) -> float:
-    """The chroma a row at L** `target` is levelled to: its lowest ceiling."""
-    return min(ceiling(hue, target) for hue in hues.values())
+def row(hues: dict[str, float], target: float, line: float) -> dict[str, str]:
+    """Every hue at L** `target`, each at its own chroma ceiling up to
+    `line`."""
+    return {name: cell(hue, target, line) for name, hue in hues.items()}
+
+
+def threshold(holds: Callable[[float], bool], inside: float,
+              outside: float) -> float:
+    """Where `holds` stops holding between L** `inside`, where it holds, and
+    `outside`, where it does not, to within `SOLVED`: the side that holds."""
+    while abs(outside - inside) > SOLVED:
+        mid = (inside + outside) / 2
+        if holds(mid):
+            inside = mid
+        else:
+            outside = mid
+    return inside
+
+
+def peak(f: Callable[[float], float], lo: float, hi: float) -> float:
+    """Where `f` peaks on [lo, hi], to within `SOLVED`, for an `f` with one
+    peak there: a golden-section search."""
+    left, right = hi - GOLDEN * (hi - lo), lo + GOLDEN * (hi - lo)
+    at_left, at_right = f(left), f(right)
+    while hi - lo > SOLVED:
+        if at_left < at_right:
+            lo, left, at_left = left, right, at_right
+            right = lo + GOLDEN * (hi - lo)
+            at_right = f(right)
+        else:
+            hi, right, at_right = right, left, at_left
+            left = hi - GOLDEN * (hi - lo)
+            at_left = f(left)
+    return (lo + hi) / 2
+
+
+def summit(f: Callable[[float], float], floor: float) -> float:
+    """Where `f`, with one peak, is highest at or above L** `floor`: the
+    floor itself when `f` already falls there."""
+    if f(floor + SOLVED) <= f(floor):
+        return floor
+    return peak(f, floor, 100.0)
 
 
 def bright(hues: dict[str, float], dim: float, grounds: list[str]) -> float:
@@ -122,38 +170,76 @@ def bright(hues: dict[str, float], dim: float, grounds: list[str]) -> float:
     minimum has one peak, and on the brightnesses that clear the floor the
     best is the peak or, when the peak sits below the floor, the floor."""
     def clears(target: float) -> bool:
-        return all(contrast(cell, ground) >= MIN_INK
-                   for cell in row(hues, target).values() for ground in grounds)
+        cells = row(hues, target, line_at(hues, target)).values()
+        return all(contrast(ink, ground) >= MIN_INK
+                   for ink in cells for ground in grounds)
 
-    lo, hi = dim, 100.0
-    assert clears(hi), (
+    assert clears(100.0), (
         f"no bright row clears {MIN_INK}:1 on every ground: {grounds}")
-    while hi - lo > SOLVED:
-        mid = (lo + hi) / 2
-        if clears(mid):
-            hi = mid
-        else:
-            lo = mid
-    floor = hi
-    if row_chroma(hues, floor + SOLVED) <= row_chroma(hues, floor):
-        return floor
-    lo, hi = floor, 100.0
-    left, right = hi - GOLDEN * (hi - lo), lo + GOLDEN * (hi - lo)
-    at_left, at_right = row_chroma(hues, left), row_chroma(hues, right)
-    while hi - lo > SOLVED:
-        if at_left < at_right:
-            lo, left, at_left = left, right, at_right
-            right = lo + GOLDEN * (hi - lo)
-            at_right = row_chroma(hues, right)
-        else:
-            hi, right, at_right = right, left, at_left
-            left = hi - GOLDEN * (hi - lo)
-            at_left = row_chroma(hues, left)
-    peak = (lo + hi) / 2
-    assert clears(peak), (
-        f"the bright row's chroma peaks at L** {peak:.2f}, above the floor at "
+    floor = threshold(clears, 100.0, dim)
+    top = summit(lambda target: line_at(hues, target), floor)
+    assert clears(top), (
+        f"the bright row's chroma peaks at L** {top:.2f}, above the floor at "
         f"{floor:.2f}, yet does not clear {MIN_INK}:1 there")
-    return peak
+    return top
+
+
+def ink_floor(hue: float, lo: float, grounds: list[str]) -> float:
+    """The lowest L** at or above `lo` where `hue`, at its own ceiling,
+    clears `MIN_INK` on every ground. Less chroma at the same L** carries
+    more luminance, so a cell cut to a line clears there too."""
+    def clears(target: float) -> bool:
+        ink = cell(hue, target, inf)
+        return all(contrast(ink, ground) >= MIN_INK for ground in grounds)
+
+    assert clears(100.0), (
+        f"hue {hue:.1f} clears {MIN_INK}:1 nowhere: {grounds}")
+    return threshold(clears, 100.0, lo)
+
+
+def inks(hues: dict[str, float], lo: float, grounds: list[str]
+         ) -> dict[str, str]:
+    """Each hue's ink: the most chroma at or above its own `MIN_INK` floor,
+    under a line `ROW_SPREAD` above the weakest ink's best, and in the middle
+    of the band of brightness that holds the line, for a hue that holds it
+    over one."""
+    floors = {name: ink_floor(hue, lo, grounds) for name, hue in hues.items()}
+    bests = {name: summit(lambda target, hue=hue: ceiling(hue, target),
+                          floors[name])
+             for name, hue in hues.items()}
+    line = min(ceiling(hues[name], best)
+               for name, best in bests.items()) + ROW_SPREAD
+    out = {}
+    for name, hue in hues.items():
+        floor, best = floors[name], bests[name]
+        def holds(target: float, hue: float = hue) -> bool:
+            return ceiling(hue, target) >= line
+
+        if not holds(best):
+            target = best
+        else:
+            low = floor if holds(floor) else threshold(holds, best, floor)
+            target = (low + threshold(holds, best, 100.0)) / 2
+        out[name] = cell(hue, target, line)
+        assert all(contrast(out[name], ground) >= MIN_INK
+                   for ground in grounds), (
+            f"{name}'s ink at L** {target:.2f} does not clear {MIN_INK}:1")
+    return out
+
+
+def selection(hue: float, drawn: list[str]) -> str:
+    """The lightest fill at `hue` on which every ink clears `MIN_INK`.
+
+    Lighter reads more clearly as a selection, and every ink drawn over it
+    loses contrast as it lightens, so the bisection lands where the weakest
+    ink meets the floor."""
+    def clears(target: float) -> bool:
+        ground = cell(hue, target, inf)
+        return all(contrast(ink, ground) >= MIN_INK for ink in drawn)
+
+    assert clears(0.0), (
+        f"an ink does not clear {MIN_INK}:1 even on black: {drawn}")
+    return cell(hue, threshold(clears, 0.0, 100.0), inf)
 
 
 def neutrals(ladder: dict[str, float]) -> dict[str, str]:
@@ -174,20 +260,44 @@ def neutrals(ladder: dict[str, float]) -> dict[str, str]:
 
 
 def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
-               grounds: list[str]) -> dict[str, str]:
+               grounds: list[str], terminal: list[str], selection_hue: str,
+               selection_inks: list[str]) -> dict[str, str]:
     """Every primitive the semantic layer can name.
 
     `dim` is the one tint set. `bright` is solved to clear `MIN_INK` on each
     of `grounds`, primitives named off the bright and normal rows, and
-    `normal` is the midpoint of the two."""
+    `normal` is the midpoint of the two. A row's chroma line comes from every
+    hue but the `terminal` ones, which sit on the row under that line. The
+    syntax hues' bright cells are their inks, each solved alone. `selection`
+    is the one primitive off the grid: a fill of the base hue
+    `selection_hue`, solved from the primitives `selection_inks` drawn over
+    it."""
     hues = {name: hue_of(hex6) for name, hex6 in base.items()}
+    unknown = [name for name in terminal if name not in hues]
+    assert not unknown, f"not a base hue: {unknown}"
+    syntax = {name: hue for name, hue in hues.items() if name not in terminal}
     out = neutrals(ladder)
-    out.update(cells(hues, "dim", dim))
+
+    def put(names: dict[str, float], tint: str, target: float,
+            line: float) -> None:
+        out.update({f"{name}_{tint}": hex6
+                    for name, hex6 in row(names, target, line).items()})
+
+    put(hues, "dim", dim, line_at(syntax, dim))
     missing = [name for name in grounds if name not in out]
     assert not missing, (
         f"an ink ground is not a primitive off the bright and normal rows: "
         f"{missing}")
-    top = bright(hues, dim, [out[name] for name in grounds])
-    out.update(cells(hues, "bright", top))
-    out.update(cells(hues, "normal", (dim + top) / 2))
+    on = [out[name] for name in grounds]
+    top = bright(syntax, dim, on)
+    put({name: hues[name] for name in terminal}, "bright", top,
+        line_at(syntax, top))
+    out.update({f"{name}_bright": hex6
+                for name, hex6 in inks(syntax, dim, on).items()})
+    middle = (dim + top) / 2
+    put(hues, "normal", middle, line_at(syntax, middle))
+    missing = [name for name in selection_inks if name not in out]
+    assert not missing, f"a selection ink is not a grid primitive: {missing}"
+    out["selection"] = selection(hues[selection_hue],
+                                 [out[name] for name in selection_inks])
     return out
