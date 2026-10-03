@@ -1,12 +1,13 @@
 # Ayu Graphite — palette (single source of truth)
 #
-# Three tables of inputs and one table of roles. grid.py derives every
+# Four tables of inputs and one table of roles. grid.py derives every
 # primitive from the inputs when the file is loaded, so no hex value below
 # the roles table is written by hand.
 #
 #   [base]      five colors. Only the hue of each survives.
-#   [tints]     a perceived brightness per row of the grid.
+#   [tints]     the perceived brightness of `dim`, the one row that is set.
 #   [neutrals]  the grey ladder, as Oklab lightness.
+#   [ink]       the grounds ink is written on, which `bright` is solved from.
 #   [semantic]  roles, each naming a primitive: `red_bright`, `gray_3`.
 #
 # THE GRID. Five hues by three tints, complete. A hue is one fixed Oklab
@@ -33,25 +34,31 @@
 # each row the most: see [base].
 #
 #   tint      L**    what lands there
-#   bright    75.4   ANSI 9-14, accent, status, every syntax ink
-#   normal    56.4   ANSI 1-6, status borders, diff word fills, pressed
-#   dim       33.5   ANSI dim (SGR 2), status fills, selection
+#   bright    solved ANSI 9-14, accent, status, every syntax ink
+#   normal    midway ANSI 1-6, status borders, diff word fills, pressed
+#   dim       34.59  ANSI dim (SGR 2), status fills, selection
 #
 # What pins each row is a rule tools/audit.py checks, and its report prints
 # the live figures:
 #
-#   bright          an INK role clears 4.5:1 on `surface` and over a
-#                   selection on `dim`. Blue sits on that floor. Higher, and
-#                   red loses chroma: the row sits where red's ceiling meets
-#                   yellow's.
-#   normal          the ANSI band: a slot clears 3:1 as ink on `bg` and
-#                   `text` clears 3:1 on it as a fill. Red and green also
-#                   stay at or under luminance 0.183, where near-white ink
-#                   clears 4.5:1 on a diff word fill, and that cap holds the
-#                   row from above.
-#   dim             at or under 0.044 so `text_muted` clears 4.5:1 on a
-#                   selection, at or over 0.030 so the fill separates from
-#                   the editor ground.
+#   bright          solved, not set. A row's chroma peaks at one brightness
+#                   and falls on either side of it, red first above it,
+#                   because a light red is a pink. The row takes the peak,
+#                   or the lowest brightness where every cell clears 4.5:1 on
+#                   each [ink] ground when the peak sits under that floor.
+#                   Today the floor wins, and blue sits on it.
+#   normal          midway between `dim` and `bright`, so the three rows
+#                   climb in two equal steps. It must also hold the ANSI
+#                   band: a slot clears 3:1 as ink on `bg` and `text` clears
+#                   3:1 on it as a fill. Red and green also stay at or under
+#                   luminance 0.183, where near-white ink clears 4.5:1 on a
+#                   diff word fill. Blue as ink on `bg` is the rule the
+#                   midpoint sits on.
+#   dim             as high as `text_muted` still clears 4.5:1 on a
+#                   selection, because the midpoint only reaches the ANSI
+#                   floor from there: a step lower and blue drops under 3:1.
+#                   At or over luminance 0.030 so the fill separates from the
+#                   editor ground.
 #
 # Every one of the fifteen cells carries a semantic role.
 #
@@ -86,11 +93,17 @@ green  = "#38b700"
 blue   = "#07abff"
 
 [tints]
-# Fairchild-Pirrotta L**. The header says what pins each one. Raise `bright`
-# and the row steps toward white, red first.
-bright = 78.4
-normal = 56.4
-dim    = 33.5
+# Fairchild-Pirrotta L**. The header says what pins it. There is no `bright`:
+# a set value drifts off the row's best point, and above it every step toward
+# white costs the whole row chroma. There is no `normal`: it is the midpoint.
+dim = 34.59
+
+[ink]
+# Every ground an INK role is written on: the chrome, and a selection. The
+# bright row is solved to clear 4.5:1 on each. A role named here must not
+# sit on the bright or the normal row, which are solved from it.
+on = ["bg", "panel", "surface", "elem", "title_bar", "chat_msg_bg",
+      "selection_bg"]
 
 [neutrals]
 # Oklab lightness. Saturation zero — every channel equal, no hue at all — so

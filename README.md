@@ -2,7 +2,7 @@
 
 A higher-contrast variant of [Ayu](https://github.com/dempfi/ayu) for [Zed](https://zed.dev), [Claude Code](https://claude.com/claude-code), Telegram, KDE Plasma / Konsole, Brave, macOS Terminal, CatCad, and darkroom.
 
-`ayu-graphite.toml` is the only thing you edit. It holds five base colors, three tint brightnesses, one grey ladder, and the roles that name cells of the grid those make. `grid.py` solves the grid when the file is loaded. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a base color, a tint or a role and run `make`.
+`ayu-graphite.toml` is the only thing you edit. It holds five base colors, one tint brightness, the grounds the other two tints are solved from, one grey ladder, and the roles that name cells of the grid those make. `grid.py` solves the grid when the file is loaded. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a base color, a tint or a role and run `make`.
 
 ```
 ayu-graphite.toml       SINGLE SOURCE OF TRUTH — base colors, tints, greys, roles

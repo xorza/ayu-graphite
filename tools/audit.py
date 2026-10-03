@@ -50,7 +50,7 @@ from palette import Palette, load_source
 # Separate enough to read as two layers. 1.10 is roughly one step of the
 # neutral ramp — below that the eye merges them under any gamma.
 MIN_LAYER = 1.10
-MIN_INK = 4.5
+MIN_INK = grid.MIN_INK
 # The widest floor a color can hold in both ANSI roles at once. 4.5 both ways
 # is an empty band on this background; 3.0 leaves a band to aim at.
 MIN_ANSI_DUAL = 3.0
