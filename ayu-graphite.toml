@@ -41,7 +41,7 @@
 #   bright    solved terminal hues' ANSI 9-14, and the anchor for `normal`
 #   (inks)    each   ANSI 9-14, accent, status, every syntax ink
 #   normal    midway ANSI 1-6, status borders, diff word fills, pressed
-#   dim       41.8   ANSI dim (SGR 2), status fills
+#   dim       42.2   ANSI dim (SGR 2), status fills
 #
 # What pins each row is a rule tools/audit.py checks, and its report prints
 # the live figures:
@@ -60,22 +60,23 @@
 #                   luminance 0.183, where near-white ink clears 4.5:1 on a
 #                   diff word fill.
 #   dim             set so `normal` lands mid-band between its two rules.
-#                   From about 41.5 down, the midpoint drops purple under
+#                   From about 42.0 down, the midpoint drops purple under
 #                   3:1 as ink on `bg`: purple reads brighter than its
 #                   luminance, so on a level row it has the least. From about
-#                   42.0 up, it lifts red past the diff word cap. 41.8
+#                   42.45 up, it lifts green past the diff word cap. 42.2
 #                   leaves equal room both ways, and that room is thin.
 #
 # The inks. Each syntax hue's ink takes the bright row's rule alone: the most
 # chroma at or above the lowest brightness where it clears 4.5:1 on each
-# [ink] ground, under one line 1.5 points above the weakest ink's best. A hue
-# that holds the line over a band of brightness sits in its middle. Red,
-# orange and blue never reach the line and sit at their best: red on its
-# floor, since a lighter red is a pink, orange and blue at their peaks. Green
-# and yellow hold it high: a darker yellow is not a dimmer yellow but a gold
-# and then an olive, so the rule is what keeps yellow yellow. The inks stay
-# level in chroma and spread in brightness, red lowest and yellow highest,
-# which is how sRGB lets each be itself.
+# [ink] ground. A hue that holds the line 1.5 points above the weakest ink's
+# best over a band of brightness sits in its middle. Red, orange and blue
+# never reach that line and sit at their best: red on its floor, since a
+# lighter red is a pink, orange and blue at their peaks. Green and yellow
+# hold it high: a darker yellow is not a dimmer yellow but a gold and then an
+# olive, so the band is what keeps yellow yellow. Then the APCA floor in
+# [ink] lifts red, orange and blue, which sit darkest, and the line drops to
+# what the weakest holds there, so every ink pays the same chroma. The inks
+# stay level in chroma and spread in brightness, yellow highest.
 #
 # Nineteen of the twenty-one cells carry a semantic role. Orange's normal and
 # dim stay defined: the grid is complete, and a role can name them.
@@ -97,30 +98,30 @@
 
 [base]
 # One hue each. The lightness and chroma of a base color are discarded: every
-# cell of its column is solved from the row it sits on. Red at 30°, a true
-# red: lower is crimson and gains nothing, higher is orange. Orange at 60°,
-# its peak on `bright`. Yellow at 100°: its ink sits high (see the inks), and
-# a high yellow grows paler the nearer it turns to green, so 105° is a lemon,
-# 90° a warmer gold, and 100° the yellow between. On the darker rows it is
-# olive.
-# Green at 140°, its peak. Blue at 242°, its
-# peak on `bright`: past 250° it is violet and weak there. Three warm hues
-# about 32° apart carry the theme, and two cool ones stand off them.
+# cell of its column is solved from the row it sits on.
+#
+# Red at 20°: sRGB's own red is at 29°, but at an ink's brightness that is a
+# coral that reads as orange beside orange, and 20° turns it toward crimson,
+# as Ayu's red does. Orange at 60°, its peak on `bright`. Yellow at 100°: its
+# ink sits high (see the inks), and a high yellow grows paler the nearer it
+# turns to green, so 105° is a lemon, 90° a warmer gold, and 100° the yellow
+# between. On the darker rows it is olive. The three warm hues stand 40°
+# apart. Green at 140°, its peak. Blue at 242°, its peak on `bright`: past
+# 250° it is violet and weak there.
 #
 # Cyan and purple exist so every ANSI slot has a hue of its own, so they sit
 # where they are told apart best: each at the middle of the gap it fills.
-# Cyan at 190.9°, 51° from green and from blue. Purple at 315.9°, 74° from
-# blue and from red. Cyan is the weakest hue in sRGB at every brightness and
-# sets every row's chroma line, lowest near 200°. A teal at 175° would hold
-# about 0.9 points more, 35° from green, where a terminal's green and cyan
-# start to read as one.
-red    = "#ff8a78"
+# Cyan at 190.9°, 51° from green and from blue. Purple at 310.9°, 69° from
+# blue and from red. Cyan is the weakest hue in sRGB at every brightness,
+# lowest near 200°. As a terminal hue it sets no line, so that costs cyan
+# alone.
+red    = "#c50032"
 orange = "#f78b00"
 yellow = "#9b8900"
 green  = "#38b700"
 cyan   = "#00e8e1"
 blue   = "#07abff"
-purple = "#d870ff"
+purple = "#be41ff"
 
 [hues]
 # A `terminal` hue is drawn only by programs in a terminal, never in code. It
@@ -134,7 +135,7 @@ terminal = ["cyan", "purple"]
 # Fairchild-Pirrotta L**. The header says what pins it. There is no `bright`:
 # a set value drifts off the row's best point, and above it every step toward
 # white costs the whole row chroma. There is no `normal`: it is the midpoint.
-dim = 41.8
+dim = 42.2
 
 [ink]
 # Every chrome ground an INK role is written on. The bright row is solved to
@@ -142,6 +143,13 @@ dim = 41.8
 # normal row, which are solved from it. The selection is not here: it is
 # solved from the inks instead, the other way round.
 on = ["bg", "panel", "surface", "elem", "title_bar", "chat_msg_bg"]
+
+# The inks also clear APCA Lc `apca` on `apca_on`, the editor ground code is
+# read on. 4.5:1 alone leaves red, orange and blue at their most saturated,
+# which in sRGB is darker than green and yellow can be and stay themselves:
+# the floor lifts those three, and every ink pays the same chroma for it.
+apca    = 56
+apca_on = "bg"
 
 [selection]
 # The fill under a selection, solved rather than taken from a row: the

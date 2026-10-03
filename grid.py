@@ -30,16 +30,18 @@ or above the brightness where it clears `MIN_INK`, under one chroma line
 drawn `ROW_SPREAD` above the weakest ink's best. A hue that holds that line
 over a band of brightness sits in the middle of the band. So red sits low,
 where it is still red and not a pink, and yellow sits high, where it is
-still yellow and not a gold or an olive. The inks stay level in chroma, not
-in brightness.
+still yellow and not a gold or an olive. An APCA floor then lifts the inks
+that sit darkest, and the line drops to what the weakest holds there. The
+inks stay level in chroma, not in brightness.
 
 A terminal hue sits on every row, the bright one too, and sets no line: it
 is drawn only by programs in a terminal, so it is held under the syntax
 hues' chroma rather than dragging all of them down to its own."""
 from collections.abc import Callable
+from dataclasses import dataclass
 from math import atan2, cos, degrees, inf, radians, sin
 
-from color import (contrast, hex_from_linear, grey, hk_lightness_linear,
+from color import (apca, contrast, hex_from_linear, grey, hk_lightness_linear,
                    oklab, oklab_to_linear)
 
 # Below the gamut, some channel is negative: the color is too dark to hold the
@@ -184,47 +186,82 @@ def bright(hues: dict[str, float], dim: float, grounds: list[str]) -> float:
     return top
 
 
-def ink_floor(hue: float, lo: float, grounds: list[str]) -> float:
+def ink_floor(hue: float, lo: float, grounds: list[str], editor: str,
+              lc: float) -> float:
     """The lowest L** at or above `lo` where `hue`, at its own ceiling,
-    clears `MIN_INK` on every ground. Less chroma at the same L** carries
-    more luminance, so a cell cut to a line clears there too."""
+    clears `MIN_INK` on every ground and APCA Lc `lc` on `editor`. Less
+    chroma at the same L** carries more luminance, so a cell cut to a line
+    clears there too."""
     def clears(target: float) -> bool:
         ink = cell(hue, target, inf)
-        return all(contrast(ink, ground) >= MIN_INK for ground in grounds)
+        return (all(contrast(ink, ground) >= MIN_INK for ground in grounds)
+                and abs(apca(ink, editor)) >= lc)
 
     assert clears(100.0), (
-        f"hue {hue:.1f} clears {MIN_INK}:1 nowhere: {grounds}")
+        f"hue {hue:.1f} clears {MIN_INK}:1 and Lc {lc} nowhere: {grounds}")
     return threshold(clears, 100.0, lo)
 
 
-def inks(hues: dict[str, float], lo: float, grounds: list[str]
-         ) -> dict[str, str]:
-    """Each hue's ink: the most chroma at or above its own `MIN_INK` floor,
-    under a line `ROW_SPREAD` above the weakest ink's best, and in the middle
-    of the band of brightness that holds the line, for a hue that holds it
-    over one."""
-    floors = {name: ink_floor(hue, lo, grounds) for name, hue in hues.items()}
+@dataclass
+class Reach:
+    """Where each ink's floor sits, where it holds the most chroma at or
+    above it, and the line `ROW_SPREAD` above the weakest of those bests."""
+    floors: dict[str, float]
+    bests: dict[str, float]
+    line: float
+
+
+def reach(hues: dict[str, float], lo: float, grounds: list[str], editor: str,
+          lc: float) -> Reach:
+    floors = {name: ink_floor(hue, lo, grounds, editor, lc)
+              for name, hue in hues.items()}
     bests = {name: summit(lambda target, hue=hue: ceiling(hue, target),
                           floors[name])
              for name, hue in hues.items()}
     line = min(ceiling(hues[name], best)
                for name, best in bests.items()) + ROW_SPREAD
+    return Reach(floors, bests, line)
+
+
+@dataclass
+class Inks:
+    """Each syntax hue's ink, and the chroma line they all sit under."""
+    cells: dict[str, str]
+    line: float
+
+
+def inks(hues: dict[str, float], lo: float, grounds: list[str], editor: str,
+         lc: float) -> Inks:
+    """Each hue's ink, under one chroma line.
+
+    Where an ink sits comes from the plain `MIN_INK` floor: a hue that holds
+    that floor's line over a band of brightness sits in the middle of the
+    band, and any other sits at its best. Then the APCA floor `lc` lifts any
+    ink under it, and the line drops to what the weakest ink holds there. So
+    the floor brightens the dark inks, red, orange and blue, and costs every
+    ink the same chroma, while green and yellow keep the brightness where
+    each reads as itself."""
+    plain = reach(hues, lo, grounds, editor, 0.0)
+    full = reach(hues, lo, grounds, editor, lc)
     out = {}
     for name, hue in hues.items():
-        floor, best = floors[name], bests[name]
         def holds(target: float, hue: float = hue) -> bool:
-            return ceiling(hue, target) >= line
+            return ceiling(hue, target) >= plain.line
 
-        if not holds(best):
-            target = best
-        else:
+        floor, best = plain.floors[name], plain.bests[name]
+        if holds(best):
             low = floor if holds(floor) else threshold(holds, best, floor)
-            target = (low + threshold(holds, best, 100.0)) / 2
-        out[name] = cell(hue, target, line)
-        assert all(contrast(out[name], ground) >= MIN_INK
-                   for ground in grounds), (
-            f"{name}'s ink at L** {target:.2f} does not clear {MIN_INK}:1")
-    return out
+            middle = (low + threshold(holds, best, 100.0)) / 2
+            target = max(middle, full.floors[name])
+        else:
+            target = full.bests[name]
+        out[name] = cell(hue, target, full.line)
+        assert (all(contrast(out[name], ground) >= MIN_INK
+                    for ground in grounds)
+                and abs(apca(out[name], editor)) >= lc), (
+            f"{name}'s ink at L** {target:.2f} does not clear {MIN_INK}:1 "
+            f"and Lc {lc}")
+    return Inks(out, full.line)
 
 
 def selection(hue: float, drawn: list[str]) -> str:
@@ -260,7 +297,8 @@ def neutrals(ladder: dict[str, float]) -> dict[str, str]:
 
 
 def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
-               grounds: list[str], terminal: list[str], selection_hue: str,
+               grounds: list[str], editor: str, lc: float,
+               terminal: list[str], selection_hue: str,
                selection_inks: list[str]) -> dict[str, str]:
     """Every primitive the semantic layer can name.
 
@@ -268,7 +306,8 @@ def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
     of `grounds`, primitives named off the bright and normal rows, and
     `normal` is the midpoint of the two. A row's chroma line comes from every
     hue but the `terminal` ones, which sit on the row under that line. The
-    syntax hues' bright cells are their inks, each solved alone. `selection`
+    syntax hues' bright cells are their inks, each solved alone, and each
+    clears APCA Lc `lc` on `editor`, a ground among `grounds`. `selection`
     is the one primitive off the grid: a fill of the base hue
     `selection_hue`, solved from the primitives `selection_inks` drawn over
     it."""
@@ -290,10 +329,10 @@ def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
         f"{missing}")
     on = [out[name] for name in grounds]
     top = bright(syntax, dim, on)
+    ink = inks(syntax, dim, on, out[editor], lc)
+    out.update({f"{name}_bright": hex6 for name, hex6 in ink.cells.items()})
     put({name: hues[name] for name in terminal}, "bright", top,
-        line_at(syntax, top))
-    out.update({f"{name}_bright": hex6
-                for name, hex6 in inks(syntax, dim, on).items()})
+        min(line_at(syntax, top), ink.line))
     middle = (dim + top) / 2
     put(hues, "normal", middle, line_at(syntax, middle))
     missing = [name for name in selection_inks if name not in out]

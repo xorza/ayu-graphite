@@ -28,28 +28,28 @@
 
     // Drawing — what the geometry and the solids beside it are painted in.
     solid:        "#ebebeb",  // line_number_hover  gray_7
-    determined:   "#00abff",  // syn_type           blue_bright
-    partly:       "#f9de1a",  // warning            yellow_bright
-    free:         "#ff9000",  // syn_keyword        orange_bright
-    pinned:       "#ff7763",  // error              red_bright
+    determined:   "#44b5ff",  // syn_type           blue_bright
+    partly:       "#f6e055",  // warning            yellow_bright
+    free:         "#fa993b",  // syn_keyword        orange_bright
+    pinned:       "#ff8b8c",  // error              red_bright
     dormant:      "#a4a4a4",  // text_muted         gray_6
-    dormant_face: "#004e79",  // info_bg            blue_dim
-    face:         "#0077b4",  // info_border        blue_normal
+    dormant_face: "#004f7a",  // info_bg            blue_dim
+    face:         "#0078b5",  // info_border        blue_normal
     ghost:        "#ebebeb",  // text               gray_7
     sheet_ground: "#418531",  // ansi_green         green_normal
-    sheet_front:  "#0077b4",  // ansi_blue          blue_normal
-    sheet_side:   "#be5648",  // ansi_red           red_normal
+    sheet_front:  "#0078b5",  // ansi_blue          blue_normal
+    sheet_side:   "#bf5459",  // ansi_red           red_normal
     sheet_datum:  "#525252",  // line_number        gray_5
-    mark:         "#8d52a3",  // ansi_magenta       purple_normal
-    redundant:    "#ff7763",  // ansi_bright_red    red_bright
+    mark:         "#8753a7",  // ansi_magenta       purple_normal
+    redundant:    "#ff8b8c",  // ansi_bright_red    red_bright
     depth_arrow:  "#ebebeb",  // selection_fg       gray_7
 
     // Lighting — what singling something out looks like.
     hovered:      "#ffffff",  // ansi_bright_white  white
-    selected:     "#7cdd66",  // success            green_bright
+    selected:     "#8bdd79",  // success            green_bright
 
     // Form — the answers a prompt standing on the drawing offers.
     goes:         "#418531",  // success_border     green_normal
-    stops:        "#be5648",  // error_border       red_normal
-    doing:        "#0077b4",  // info_border        blue_normal
+    stops:        "#bf5459",  // error_border       red_normal
+    doing:        "#0078b5",  // info_border        blue_normal
 )

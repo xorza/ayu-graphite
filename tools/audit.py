@@ -13,6 +13,8 @@ Six rules:
             bug), and a border that equals its panel draws nothing.
   ink       every foreground must clear 4.5:1 on the surfaces it lands on.
             The `on_accent` family exists because `text` on `accent` is 1.28.
+            The syntax inks also clear the APCA floor [ink] sets on the
+            editor ground.
   ansi      per hue, dim < normal < bright in luminance, and no two of the
             16 share a value — a terminal that renders bright red as normal
             red has thrown away half its palette.
@@ -127,6 +129,15 @@ def check_ink(p: Palette) -> list[str]:
             out.append(f"ink: on_accent on {fill} = "
                        f"{both(p.on_accent, d[fill])} (< {MIN_INK}:1)")
     return out
+
+
+def check_ink_lc(src: Source) -> list[str]:
+    ground = src.palette.as_dict()[src.ink_lc_on]
+    return [f"ink: {hue}_bright on {src.ink_lc_on} = {both(value, ground)} "
+            f"(< Lc {src.ink_lc})"
+            for hue, value in tint_cells(src, "bright").items()
+            if hue not in src.terminal
+            and abs(apca(value, ground)) < src.ink_lc]
 
 
 def check_ansi(p: Palette) -> list[str]:
@@ -261,7 +272,8 @@ def report(src: Source) -> None:
 def main() -> None:
     src = load_source()
     p = src.palette
-    problems = (check_layers(p) + check_ink(p) + check_ansi(p)
+    problems = (check_layers(p) + check_ink(p) + check_ink_lc(src)
+                + check_ansi(p)
                 + check_ansi_roles(p) + check_perceived(src)
                 + check_chroma(src))
     for line in problems:
