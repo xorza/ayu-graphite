@@ -58,13 +58,13 @@
     type_colors: (
         boolean: "#ff8b8c",    // error              red_bright
         int:     "#f6e055",    // ansi_bright_yellow yellow_bright
-        float:   "#8e7d00",    // ansi_yellow        yellow_normal
+        float:   "#8e7d00",    // warning_border     yellow_normal
         string:  "#8bdd79",    // syn_string         green_bright
         path:    "#44b5ff",    // hint               blue_bright
         image:   "#fa993b",    // syn_keyword        orange_bright
         ramp: (
-            "#bf5459",    // ansi_red           red_normal
-            "#0078b5",    // ansi_blue          blue_normal
+            "#bf5459",    // error_border       red_normal
+            "#0078b5",    // info_border        blue_normal
             "#ebebeb",    // syn_punctuation    gray_7
             "#a4a4a4",    // text_muted         gray_6
         ),

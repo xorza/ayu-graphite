@@ -16,13 +16,14 @@ Oklab lightness, so a bisection lands the row's brightness to within rounding.
 The chroma ceiling is a second bisection on top of the first: the largest
 chroma at which that solve still lands inside the gamut.
 
-One tint is set and two are solved. Above a mid brightness a row's chroma
+One tint is set and three are solved. Above a mid brightness a row's chroma
 falls as it climbs, red first, because a light red is a pink. So `bright` is
 the brightness where the syntax hues, held level, keep the most chroma among
 those where every cell clears `MIN_INK` on every ground ink is written on. A
 set value drifts off that point the first time anything under it moves.
 `normal` sits midway between `dim` and `bright`, so the three rows climb in
-two equal steps of L**.
+two equal steps of L**. `light` is the lowest brightness above `normal` where
+every cell clears an APCA floor as text, the row ANSI 1-6 are read in.
 
 The bright row is where the inks would sit level, not where they sit. Each
 syntax hue's ink takes the same rule the row does, alone: the most chroma at
@@ -186,6 +187,19 @@ def bright(hues: dict[str, float], dim: float, grounds: list[str]) -> float:
     return top
 
 
+def light(hues: dict[str, float], syntax: dict[str, float], lo: float,
+          hi: float, ground: str, lc: float) -> float:
+    """The L** of the light row: the lowest brightness between `lo` and `hi`
+    where every cell clears APCA Lc `lc` on `ground`. The chroma line comes
+    from the `syntax` hues, as on every row."""
+    def clears(target: float) -> bool:
+        cells = row(hues, target, line_at(syntax, target)).values()
+        return all(abs(apca(ink, ground)) >= lc for ink in cells)
+
+    assert clears(hi), f"no light row under L** {hi:.2f} clears Lc {lc}"
+    return threshold(clears, hi, lo)
+
+
 def ink_floor(hue: float, lo: float, grounds: list[str], editor: str,
               lc: float) -> float:
     """The lowest L** at or above `lo` where `hue`, at its own ceiling,
@@ -298,16 +312,19 @@ def neutrals(ladder: dict[str, float]) -> dict[str, str]:
 
 def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
                grounds: list[str], editor: str, lc: float,
-               terminal: list[str], selection_hue: str,
-               selection_inks: list[str]) -> dict[str, str]:
+               terminal_lc: float, terminal_on: str, terminal: list[str],
+               selection_hue: str, selection_inks: list[str]
+               ) -> dict[str, str]:
     """Every primitive the semantic layer can name.
 
     `dim` is the one tint set. `bright` is solved to clear `MIN_INK` on each
-    of `grounds`, primitives named off the bright and normal rows, and
-    `normal` is the midpoint of the two. A row's chroma line comes from every
-    hue but the `terminal` ones, which sit on the row under that line. The
-    syntax hues' bright cells are their inks, each solved alone, and each
-    clears APCA Lc `lc` on `editor`, a ground among `grounds`. `selection`
+    of `grounds`, primitives named off the solved rows, and
+    `normal` is the midpoint of the two. `light` is the lowest row between
+    `normal` and `bright` where every cell clears APCA Lc `terminal_lc` on
+    `terminal_on`. A row's chroma line comes from every hue but the
+    `terminal` ones, which sit on the row under that line. The syntax hues'
+    bright cells are their inks, each solved alone, and each clears APCA Lc
+    `lc` on `editor`, a ground among `grounds`. `selection`
     is the one primitive off the grid: a fill of the base hue
     `selection_hue`, solved from the primitives `selection_inks` drawn over
     it."""
@@ -325,7 +342,7 @@ def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
     put(hues, "dim", dim, line_at(syntax, dim))
     missing = [name for name in grounds if name not in out]
     assert not missing, (
-        f"an ink ground is not a primitive off the bright and normal rows: "
+        f"an ink ground is not a primitive off the solved rows: "
         f"{missing}")
     on = [out[name] for name in grounds]
     top = bright(syntax, dim, on)
@@ -335,6 +352,8 @@ def primitives(base: dict[str, str], dim: float, ladder: dict[str, float],
         min(line_at(syntax, top), ink.line))
     middle = (dim + top) / 2
     put(hues, "normal", middle, line_at(syntax, middle))
+    lit = light(hues, syntax, middle, top, out[terminal_on], terminal_lc)
+    put(hues, "light", lit, line_at(syntax, lit))
     missing = [name for name in selection_inks if name not in out]
     assert not missing, f"a selection ink is not a grid primitive: {missing}"
     out["selection"] = selection(hues[selection_hue],

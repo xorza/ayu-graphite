@@ -25,8 +25,7 @@ all: audit build palette
 
 # Contrast rules the targets rely on: chrome layers stay separable, every
 # foreground clears 4.5:1 where it lands, ANSI stays dim<normal<bright, the
-# ANSI rows split ink duty from fill duty, and every cell of a tint row looks
-# equally bright. Every ratio prints an APCA Lc beside it, because WCAG 2
+# ANSI rows read as text, and every cell of a tint row looks equally bright. Every ratio prints an APCA Lc beside it, because WCAG 2
 # overstates contrast at the dark end.
 audit: deps
 	$(PY) tools/audit.py

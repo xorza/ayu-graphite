@@ -36,11 +36,11 @@
     dormant_face: "#004f7a",  // info_bg            blue_dim
     face:         "#0078b5",  // info_border        blue_normal
     ghost:        "#ebebeb",  // text               gray_7
-    sheet_ground: "#418531",  // ansi_green         green_normal
-    sheet_front:  "#0078b5",  // ansi_blue          blue_normal
-    sheet_side:   "#bf5459",  // ansi_red           red_normal
+    sheet_ground: "#5aad47",  // ansi_green         green_light
+    sheet_front:  "#009dec",  // ansi_blue          blue_light
+    sheet_side:   "#f57276",  // ansi_red           red_light
     sheet_datum:  "#525252",  // line_number        gray_5
-    mark:         "#8753a7",  // ansi_magenta       purple_normal
+    mark:         "#b374dc",  // ansi_magenta       purple_light
     redundant:    "#ff8b8c",  // ansi_bright_red    red_bright
     depth_arrow:  "#ebebeb",  // selection_fg       gray_7
 

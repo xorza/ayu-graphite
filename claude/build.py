@@ -63,14 +63,15 @@ def build_claude(p: Palette) -> dict:
 
         # Eight names, seven hues. The seven with a hue of their own take its
         # bright cell. Pink takes red's normal cell, a full tint below its
-        # bright, so the pair stays a step apart.
+        # bright, so the pair stays a step apart. The ANSI red sits too close
+        # to its bright for that.
         "red_FOR_SUBAGENTS_ONLY":    p.error,
         "blue_FOR_SUBAGENTS_ONLY":   p.accent,
         "green_FOR_SUBAGENTS_ONLY":  p.success,
         "yellow_FOR_SUBAGENTS_ONLY": p.warning,
         "purple_FOR_SUBAGENTS_ONLY": p.ansi_bright_magenta,
         "orange_FOR_SUBAGENTS_ONLY": p.syn_keyword,
-        "pink_FOR_SUBAGENTS_ONLY":   p.ansi_red,
+        "pink_FOR_SUBAGENTS_ONLY":   p.error_border,
         "cyan_FOR_SUBAGENTS_ONLY":   p.ansi_bright_cyan,
         "professionalBlue":          p.accent,
     }

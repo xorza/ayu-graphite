@@ -117,7 +117,7 @@ TYPE = {
     # The two numbers are one hue at two tints: a family, told apart by
     # weight.
     "int": "ansi_bright_yellow",
-    "float": "ansi_yellow",
+    "float": "warning_border",
     "string": "syn_string",
     # `path` is a reference, so it takes the blue the chrome links with.
     "path": "hint",
@@ -127,7 +127,8 @@ TYPE = {
 }
 # What the bright row has left is nothing, so the ramp is the normal row's
 # red and blue — green sits 0.06 from the float wire — and the two greys.
-RAMP = ["ansi_red", "ansi_blue", "syn_punctuation", "text_muted"]
+# The ANSI slots sit on the light row, too close to the inks for a wire.
+RAMP = ["error_border", "info_border", "syn_punctuation", "text_muted"]
 
 # Two wire hues closer than this in OKLab are one colour on a 2px line. The
 # floor is what the ten actually achieve, less a margin — it catches a

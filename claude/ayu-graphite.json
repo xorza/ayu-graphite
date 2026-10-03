@@ -27,7 +27,7 @@
     "autoAccept": "rgb(139,221,121)",
     "promptBorder": "rgb(68,181,255)",
     "promptBorderShimmer": "rgb(235,235,235)",
-    "bashBorder": "rgb(135,83,167)",
+    "bashBorder": "rgb(179,116,220)",
     "diffAdded": "rgb(38,88,26)",
     "diffAddedDimmed": "rgb(38,88,26)",
     "diffAddedWord": "rgb(65,133,49)",

@@ -19,7 +19,18 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
+import grid
+from color import contrast
 from palette import Palette, load_palette
+
+
+def faintest_ink(ground: str) -> str:
+    """The darkest grey that still clears `grid.MIN_INK` on `ground`."""
+    for value in range(int(ground[1:3], 16), 256):
+        ink = f"#{value:02x}{value:02x}{value:02x}"
+        if contrast(ink, ground) >= grid.MIN_INK:
+            return ink
+    raise AssertionError(f"no grey clears {grid.MIN_INK}:1 on {ground}")
 
 
 def build_brave(p: Palette) -> dict:
@@ -48,7 +59,10 @@ def build_brave(p: Palette) -> dict:
         "tab_background_text_incognito_inactive":      emit.rgb_bytes(p.text_muted),
 
         "bookmark_text":             emit.rgb_bytes(p.text),
-        "toolbar_button_icon":       emit.rgb_bytes(p.text),
+        # A custom theme gets no key for the line under the toolbar: Chromium
+        # blends it from this color at 0x3A over `toolbar`, so the dimmest
+        # icon that still clears the ink floor draws the faintest line.
+        "toolbar_button_icon":       emit.rgb_bytes(faintest_ink(p.panel)),
 
         "ntp_background":            emit.rgb_bytes(p.bg),
         "ntp_text":                  emit.rgb_bytes(p.text),

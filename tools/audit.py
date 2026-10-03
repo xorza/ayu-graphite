@@ -15,16 +15,16 @@ Six rules:
             The `on_accent` family exists because `text` on `accent` is 1.28.
             The syntax inks also clear the APCA floor [ink] sets on the
             editor ground.
-  ansi      per hue, dim < normal < bright in luminance, and no two of the
-            16 share a value — a terminal that renders bright red as normal
-            red has thrown away half its palette.
-  roles     a program picks any slot as a foreground (SGR 30-37, 90-97) or as
-            a background (SGR 40-47, 100-107) and the theme cannot tell which.
-            On this bg nothing clears 4.5:1 in both roles — ink needs
-            luminance >= 0.237, a fill needs <= 0.144 — so the rows divide the
-            work. Normal 1-6 hold 3:1 each way, which is what keeps `text`
-            legible on an SGR 4x fill. Bright 1-6 are foreground-first and
-            carry the full 4.5:1 instead. Slots 0 and 7 sit out: black is the
+  ansi      per hue, dim < normal < bright in luminance, normal a visible
+            step under bright, and no two of the 16 share a value — a
+            terminal that renders bright red as normal red has thrown away
+            half its palette.
+  roles     ANSI 1-6 are text first, the way most programs draw them. Normal
+            clears the APCA floor [ansi] sets as ink on its ground, and bright
+            clears 4.5:1 on bg. As a fill under `text` they fall under 3:1,
+            which is the price: on this bg nothing clears 4.5:1 both as ink
+            and under `text`. Under `ansi_black`, which is bg, a fill keeps
+            the ink's WCAG ratio. Slots 0 and 7 sit out: black is the
             background itself and white is the text.
   perceived every cell of a tint row must look equally bright — the inks are
             not a row and are left out. Luminance does not say that on its
@@ -52,19 +52,19 @@ from palette import Palette, Source, load_source
 # neutral ramp — below that the eye merges them under any gamma.
 MIN_LAYER = 1.10
 MIN_INK = grid.MIN_INK
-# The widest floor a color can hold in both ANSI roles at once. 4.5 both ways
-# is an empty band on this background; 3.0 leaves a band to aim at.
-MIN_ANSI_DUAL = 3.0
 # Room for the gamut search to round into. The rebuilt rows land inside 1.0,
 # and the equal-luminance rows they replaced were out by 22.6.
 MAX_PERCEIVED_SPREAD = 1.5
+# L**. How far normal sits under bright, per ANSI hue: twice what a row may
+# spread and still read as one brightness.
+MIN_ANSI_STEP = 2 * MAX_PERCEIVED_SPREAD
 # Oklab chroma, times 100: what one 8-bit step moves a cell by.
 ROUNDING = 0.3
 MAX_CHROMA_SPREAD = grid.ROW_SPREAD * 100 + ROUNDING
 
 HUES = ("black", "red", "green", "yellow", "blue", "magenta", "cyan", "white")
 CHROMATIC = HUES[1:7]
-TINTS = ("bright", "normal", "dim")
+TINTS = ("bright", "light", "normal", "dim")
 
 
 def both(fg: str, bg: str) -> str:
@@ -150,6 +150,10 @@ def check_ansi(p: Palette) -> list[str]:
         if not (ld < ln < lb):
             out.append(f"ansi: {hue} not dim<normal<bright "
                        f"({dim} {ld:.3f} / {normal} {ln:.3f} / {bright} {lb:.3f})")
+        step = hk_lightness(bright) - hk_lightness(normal)
+        if step < MIN_ANSI_STEP:
+            out.append(f"ansi: {hue} normal sits {step:.2f} L** under bright "
+                       f"(< {MIN_ANSI_STEP})")
     seen: dict[str, str] = {}
     for prefix in ("ansi_", "ansi_bright_"):
         for hue in HUES:
@@ -160,18 +164,17 @@ def check_ansi(p: Palette) -> list[str]:
     return out
 
 
-def check_ansi_roles(p: Palette) -> list[str]:
+def check_ansi_roles(src: Source) -> list[str]:
+    p = src.palette
     d = p.as_dict()
+    ground = d[src.ansi_lc_on]
     out = []
     for hue in CHROMATIC:
         normal = d[f"ansi_{hue}"]
         bright = d[f"ansi_bright_{hue}"]
-        if contrast(normal, p.bg) < MIN_ANSI_DUAL:
-            out.append(f"roles: ansi_{hue} as ink on bg = "
-                       f"{both(normal, p.bg)} (< {MIN_ANSI_DUAL}:1)")
-        if contrast(p.text, normal) < MIN_ANSI_DUAL:
-            out.append(f"roles: text on ansi_{hue} as fill = "
-                       f"{both(p.text, normal)} (< {MIN_ANSI_DUAL}:1)")
+        if abs(apca(normal, ground)) < src.ansi_lc:
+            out.append(f"roles: ansi_{hue} as ink on {src.ansi_lc_on} = "
+                       f"{both(normal, ground)} (< Lc {src.ansi_lc})")
         if contrast(bright, p.bg) < MIN_INK:
             out.append(f"roles: ansi_bright_{hue} as ink on bg = "
                        f"{both(bright, p.bg)} (< {MIN_INK}:1)")
@@ -274,7 +277,7 @@ def main() -> None:
     p = src.palette
     problems = (check_layers(p) + check_ink(p) + check_ink_lc(src)
                 + check_ansi(p)
-                + check_ansi_roles(p) + check_perceived(src)
+                + check_ansi_roles(src) + check_perceived(src)
                 + check_chroma(src))
     for line in problems:
         print(line)

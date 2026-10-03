@@ -75,22 +75,22 @@
         "terminal.ansi.black": "#1f1f1fff",
         "terminal.ansi.bright_black": "#525252ff",
         "terminal.ansi.dim_black": "#000000ff",
-        "terminal.ansi.red": "#bf5459ff",
+        "terminal.ansi.red": "#f57276ff",
         "terminal.ansi.bright_red": "#ff8b8cff",
         "terminal.ansi.dim_red": "#823438ff",
-        "terminal.ansi.green": "#418531ff",
+        "terminal.ansi.green": "#5aad47ff",
         "terminal.ansi.bright_green": "#8bdd79ff",
         "terminal.ansi.dim_green": "#26581aff",
-        "terminal.ansi.yellow": "#8e7d00ff",
+        "terminal.ansi.yellow": "#b6a100ff",
         "terminal.ansi.bright_yellow": "#f6e055ff",
         "terminal.ansi.dim_yellow": "#605500ff",
-        "terminal.ansi.blue": "#0078b5ff",
+        "terminal.ansi.blue": "#009decff",
         "terminal.ansi.bright_blue": "#44b5ffff",
         "terminal.ansi.dim_blue": "#004f7aff",
-        "terminal.ansi.magenta": "#8753a7ff",
+        "terminal.ansi.magenta": "#b374dcff",
         "terminal.ansi.bright_magenta": "#c183e9ff",
         "terminal.ansi.dim_magenta": "#57316fff",
-        "terminal.ansi.cyan": "#008a85ff",
+        "terminal.ansi.cyan": "#00b1acff",
         "terminal.ansi.bright_cyan": "#00bdb7ff",
         "terminal.ansi.dim_cyan": "#005d5aff",
         "terminal.ansi.white": "#ebebebff",
@@ -118,7 +118,7 @@
         "ignored": "#a4a4a4ff",
         "ignored.background": "#525252ff",
         "ignored.border": "#454545ff",
-        "info": "#0078b5ff",
+        "info": "#009decff",
         "info.background": "#004f7aff",
         "info.border": "#0078b5ff",
         "modified": "#f6e055ff",
@@ -127,7 +127,7 @@
         "predictive": "#0078b5ff",
         "predictive.background": "#26581aff",
         "predictive.border": "#418531ff",
-        "renamed": "#0078b5ff",
+        "renamed": "#009decff",
         "renamed.background": "#004f7aff",
         "renamed.border": "#0078b5ff",
         "success": "#8bdd79ff",
@@ -141,14 +141,14 @@
         "warning.border": "#8e7d00ff",
         "players": [
           {
-            "cursor": "#0078b5ff",
+            "cursor": "#009decff",
             "background": "#a4a4a4ff",
-            "selection": "#0078b53d"
+            "selection": "#009dec3d"
           },
           {
-            "cursor": "#8753a7ff",
+            "cursor": "#b374dcff",
             "background": "#a4a4a4ff",
-            "selection": "#8753a73d"
+            "selection": "#b374dc3d"
           },
           {
             "cursor": "#fa993bff",
@@ -156,9 +156,9 @@
             "selection": "#fa993b3d"
           },
           {
-            "cursor": "#418531ff",
+            "cursor": "#5aad47ff",
             "background": "#a4a4a4ff",
-            "selection": "#4185313d"
+            "selection": "#5aad473d"
           },
           {
             "cursor": "#44b5ffff",

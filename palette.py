@@ -128,16 +128,19 @@ class Source:
     """The whole file, for a reader that needs the names as well as the values:
     the audit checks the tint rows the primitives are named by, and the two RON
     targets print the ref each role resolved through. The primitives are the
-    grid derived from [base], [hues], [tints], [neutrals], [ink] and
+    grid derived from [base], [hues], [tints], [neutrals], [ink], [ansi] and
     [selection], not a table of the file. `terminal` is the [hues] list, which
-    the audit needs to know which cells sit level, and `ink_lc` the APCA
-    floor it holds the inks to on the role `ink_lc_on`."""
+    the audit needs to know which cells sit level, `ink_lc` the APCA floor
+    it holds the inks to on the role `ink_lc_on`, and `ansi_lc` the one it
+    holds ANSI 1-6 to on `ansi_lc_on`."""
     primitives: dict[str, str]
     semantic: dict[str, str]
     palette: Palette
     terminal: list[str]
     ink_lc: float
     ink_lc_on: str
+    ansi_lc: float
+    ansi_lc_on: str
 
 
 def load_source() -> Source:
@@ -154,9 +157,11 @@ def load_source() -> Source:
     grounds = [semantic[role] for role in ink["on"]]
     selection = data["selection"]
     hues = data["hues"]
+    ansi = data["ansi"]
     primitives = grid.primitives(
         data["base"], data["tints"]["dim"], data["neutrals"], grounds,
-        semantic[ink["apca_on"]], ink["apca"], hues["terminal"],
+        semantic[ink["apca_on"]], ink["apca"], ansi["apca"],
+        semantic[ansi["apca_on"]], hues["terminal"],
         selection["hue"],
         [semantic[role] for role in selection["ink"]])
     resolved = {}
@@ -171,7 +176,7 @@ def load_source() -> Source:
                 f"primitive name. Available primitives: {sorted(primitives)}"
             )
     return Source(primitives, semantic, Palette(**resolved), hues["terminal"],
-                  ink["apca"], ink["apca_on"])
+                  ink["apca"], ink["apca_on"], ansi["apca"], ansi["apca_on"])
 
 
 def load_palette() -> Palette:
