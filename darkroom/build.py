@@ -10,12 +10,12 @@ interface, not about a palette.
 
 Three things happen on the way out that a plain role lookup does not cover.
 
-The chrome ladder is one rung short. darkroom stacks six surfaces in one view
-— the graph ground, the bar of chrome around it, an inactive tab, a node body,
+The surface ladder is one rung short. darkroom stacks six surfaces in one view
+— the graph ground, the surround that frames it, an inactive tab, a node body,
 a hovered control, a pressed control — and the palette's neutral ramp holds
 five. The graph ground is the one that has no step to take: it sits below
 `bg`, because a tab that is open reads as continuous with the graph, so the
-chrome around it has to be the lighter of the two. It is placed one ramp step
+surround has to be the lighter of the two. It is placed one ramp step
 below `bg` rather than added to the palette, because nothing else needs it,
 and the step is measured off the five greys instead of assumed.
 
@@ -45,10 +45,10 @@ from palette import Palette, load_source
 
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
-    # Chrome. `chrome_fill` takes `bg` and the graph ground goes below it:
+    # Surround. `surround_fill` takes `bg` and the graph ground goes below it:
     # see DERIVED. `tab_inactive` is the rung that stops an unselected tab
     # from reading as a bare label on the bar.
-    "chrome_fill": "bg",
+    "surround_fill": "bg",
     "tab_inactive": "panel",
     "node_fill": "elem",
     "elem_hover": "elem_hover",
@@ -70,7 +70,7 @@ ROLE = {
     "status_info": "accent",
     # Alarm. A cut wire, the scribble that cut it, a sink and a failed run
     # are one red on purpose — the editor has one way of saying stop.
-    "connection_broken": "error",
+    "wire_broken": "error",
     "breaker_stroke": "error",
     "badge_sink": "error",
     "status_error": "error",
@@ -85,12 +85,11 @@ ROLE = {
     # progress is red or green — and the one hue left, yellow, is
     # `badge_cache` on the same head. So busy is grey: no verdict yet.
     "status_busy": "text_muted",
-    # Ports that carry no type. Position is what these say, so they take the
-    # two hues the editor already reads as a direction, and an event takes
-    # the sink marker's red because a subscription pin sits beside one.
-    # Shape is what keeps an event apart from a data port, not hue.
+    # Ports that carry no type: an `Any` input, as no output is untyped, and
+    # an event. The input keeps green, and an event takes the sink marker's
+    # red because a subscription pin sits beside one. Shape is what keeps an
+    # event apart from a data port, not hue.
     "input_port": "success",
-    "output_port": "syn_keyword",
     "event_port": "error",
 }
 
@@ -119,7 +118,7 @@ TYPE = {
     "int": "ansi_bright_yellow",
     "float": "warning_border",
     "string": "syn_string",
-    # `path` is a reference, so it takes the blue the chrome links with.
+    # `path` is a reference, so it takes the blue the interface links with.
     "path": "hint",
     # The dominant payload on this canvas earns a deliberate colour rather
     # than a hash pick: the one warm ink no named type spends.
@@ -135,25 +134,25 @@ RAMP = ["error_border", "info_border", "syn_punctuation", "text_muted"]
 # collapse without firing on drift.
 WIRE_FLOOR = 0.06
 
-# The chrome surfaces that stack in one view, darkest first. Each must be
+# The surfaces that stack in one view, darkest first. Each must be
 # lighter than the one under it, or a control disappears into its ground.
-LADDER = ("canvas_bg", "chrome_fill", "tab_inactive", "node_fill",
+LADDER = ("canvas_bg", "surround_fill", "tab_inactive", "node_fill",
           "elem_hover", "header_fill")
 
-CHROME_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
+SURFACE_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
 # The order the table is written in, and the headings it is written under.
 SECTIONS = (
-    ("Chrome — the surfaces the editor is built out of, and the inks on them.", (
-        "canvas_bg", "canvas_dot", "chrome_fill", "tab_inactive", "node_fill",
+    ("Surfaces — what the editor is built out of, and the inks on them.", (
+        "canvas_bg", "canvas_dot", "surround_fill", "tab_inactive", "node_fill",
         "node_border", "header_fill", "node_ambient_shadow", "text",
         "text_muted", "text_disabled", "elem_hover", "elem_active",
         "border_focused")),
     ("Graph — the wires, and the marks drawn over them.", (
-        "selection_rect", "connection_broken", "breaker_stroke")),
+        "selection_rect", "wire_broken", "breaker_stroke")),
     ("Ports — an untyped port's circle, and the ink beside it. A typed port\n"
      "takes its hue from the type table instead.", (
-        "input_port", "output_port", "event_port", "port_label")),
+        "input_port", "event_port", "port_label")),
     ("Badges — what a node's head says about itself.", (
         "badge_graph", "badge_sink", "badge_cache", "badge_impure")),
     ("Status — what a node's head says about its last run.", (
@@ -163,12 +162,12 @@ SECTIONS = (
 
 
 def ramp_step(primitives: dict[str, str]) -> float:
-    """The mean Oklab lightness between adjacent chrome greys.
+    """The mean Oklab lightness between adjacent surface greys.
 
     Measured off the palette rather than written down here, so the rung this
     file adds keeps the ramp's spacing when the ramp is respaced.
     """
-    lights = [color.oklab(primitives[name])[0] for name in CHROME_GREYS]
+    lights = [color.oklab(primitives[name])[0] for name in SURFACE_GREYS]
     return (lights[-1] - lights[0]) / (len(lights) - 1)
 
 
@@ -254,12 +253,12 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
         "// Generator: ayu-graphite/darkroom/build.py",
         "//",
         "// Each entry names a role darkroom paints with, the role here it is",
-        "// taken from, and the primitive that resolves to. Every colour is a",
+        "// taken from, and the primitive that resolves to. Every color is a",
         "// resting one: a port lifts under the pointer by blending toward",
         "// white, because the palette's top tint has nothing above it.",
         "//",
-        "// The graph ground is the one colour with no step of its own. The",
-        "// neutral ramp holds five chrome surfaces and darkroom stacks six, so",
+        "// The graph ground is the one color with no step of its own. The",
+        "// neutral ramp holds five surfaces and darkroom stacks six, so",
         "// the ground is placed one of that ramp's own steps below `bg`.",
         "(",
     ]
