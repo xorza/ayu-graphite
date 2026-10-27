@@ -10,12 +10,12 @@ interface, not about a palette.
 
 Three things happen on the way out that a plain role lookup does not cover.
 
-The surface ladder is one rung short. darkroom stacks six surfaces in one view
-— the graph ground, the surround that frames it, an inactive tab, a node body,
-a hovered control, a pressed control — and the palette's neutral ramp holds
-five. The graph ground is the one that has no step to take: it sits below
-`bg`, because a tab that is open reads as continuous with the graph, so the
-surround has to be the lighter of the two. It is placed one ramp step
+The surface ladder starts one rung low. darkroom stacks five surfaces in one
+view — the graph ground, the surround that frames it, a node body, a hovered
+control, a pressed control — and the graph ground has no step of the
+palette's neutral ramp to take: it sits below `bg`, because a tab that is open
+reads as continuous with the graph, so the surround has to be the lighter of
+the two. It is placed one ramp step
 below `bg` rather than added to the palette, because nothing else needs it,
 and the step is measured off the five greys instead of assumed.
 
@@ -45,10 +45,8 @@ from palette import Palette, load_source
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
     # Surround. `surround_fill` takes `bg` and the graph ground goes below it:
-    # see DERIVED. `tab_inactive` is the rung that stops an unselected tab
-    # from reading as a bare label on the bar.
+    # see DERIVED.
     "surround_fill": "bg",
-    "tab_inactive": "panel",
     "node_fill": "elem",
     "elem_hover": "elem_hover",
     "header_fill": "elem_active",
@@ -158,15 +156,15 @@ PORT_APCA = 40.0
 
 # The surfaces that stack in one view, darkest first. Each must be
 # lighter than the one under it, or a control disappears into its ground.
-LADDER = ("canvas_bg", "surround_fill", "tab_inactive", "node_fill",
-          "elem_hover", "header_fill")
+LADDER = ("canvas_bg", "surround_fill", "node_fill", "elem_hover",
+          "header_fill")
 
 SURFACE_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
 # The order the table is written in, and the headings it is written under.
 SECTIONS = (
     ("Surfaces — what the editor is built out of, and the inks on them.", (
-        "canvas_bg", "canvas_dot", "surround_fill", "tab_inactive", "node_fill",
+        "canvas_bg", "canvas_dot", "surround_fill", "node_fill",
         "node_border", "header_fill", "node_ambient_shadow", "text",
         "text_muted", "text_disabled", "elem_hover", "elem_active",
         "border_focused")),
