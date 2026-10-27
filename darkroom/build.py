@@ -10,12 +10,12 @@ interface, not about a palette.
 
 Three things happen on the way out that a plain role lookup does not cover.
 
-The chrome ladder is one rung short. darkroom stacks six surfaces in one view
-— the graph ground, the bar of chrome around it, an inactive tab, a node body,
+The surface ladder is one rung short. darkroom stacks six surfaces in one view
+— the graph ground, the surround that frames it, an inactive tab, a node body,
 a hovered control, a pressed control — and the palette's neutral ramp holds
 five. The graph ground is the one that has no step to take: it sits below
 `bg`, because a tab that is open reads as continuous with the graph, so the
-chrome around it has to be the lighter of the two. It is placed one ramp step
+surround has to be the lighter of the two. It is placed one ramp step
 below `bg` rather than added to the palette, because nothing else needs it,
 and the step is measured off the five greys instead of assumed.
 
@@ -44,10 +44,9 @@ from palette import Palette, load_source
 
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
-    # Surfaces. `surround_fill`, the menu bar, tab strip and status bar,
-    # takes `bg` and the graph ground goes below it: see DERIVED.
-    # `tab_inactive` is the rung that stops an unselected tab from reading as
-    # a bare label on the bar.
+    # Surround. `surround_fill` takes `bg` and the graph ground goes below it:
+    # see DERIVED. `tab_inactive` is the rung that stops an unselected tab
+    # from reading as a bare label on the bar.
     "surround_fill": "bg",
     "tab_inactive": "panel",
     "node_fill": "elem",
@@ -133,7 +132,7 @@ TYPE = {
     "int": "ansi_bright_yellow",
     "float": "ansi_yellow",
     "string": "syn_string",
-    # `path` is a reference, so it takes the blue the chrome links with.
+    # `path` is a reference, so it takes the blue the interface links with.
     "path": "hint",
     # The dominant payload on this canvas earns a deliberate colour rather
     # than a hash pick: the one warm ink no named type spends.
@@ -157,12 +156,12 @@ WIRE_FLOOR = 0.06
 PORT_CONTRAST = 3.0
 PORT_APCA = 40.0
 
-# The chrome surfaces that stack in one view, darkest first. Each must be
+# The surfaces that stack in one view, darkest first. Each must be
 # lighter than the one under it, or a control disappears into its ground.
 LADDER = ("canvas_bg", "surround_fill", "tab_inactive", "node_fill",
           "elem_hover", "header_fill")
 
-CHROME_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
+SURFACE_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
 # The order the table is written in, and the headings it is written under.
 SECTIONS = (
@@ -185,12 +184,12 @@ SECTIONS = (
 
 
 def ramp_step(primitives: dict[str, str]) -> float:
-    """The mean Oklab lightness between adjacent chrome greys.
+    """The mean Oklab lightness between adjacent surface greys.
 
     Measured off the palette rather than written down here, so the rung this
     file adds keeps the ramp's spacing when the ramp is respaced.
     """
-    lights = [color.oklab(primitives[name])[0] for name in CHROME_GREYS]
+    lights = [color.oklab(primitives[name])[0] for name in SURFACE_GREYS]
     return (lights[-1] - lights[0]) / (len(lights) - 1)
 
 
