@@ -26,12 +26,12 @@ blending toward white at the call site, which is what it already does for a
 port coloured by its type, so the two now lift the same way and neither one is
 a colour this file could have named.
 
-Five inks have to serve ten wires and nine marks on a node's head. The wires
-take the bright row, the normal row and the two text greys, and are held apart
-by `check`. On the head, a badge may sit beside any status, so no badge shares
-a colour with a status unless the two mean one thing — a sink and a failed
-run are one red on purpose — and the two that could not take a hue take the
-text greys.
+Five inks have to serve nine wires and nine marks on a node's head. The wires
+take the bright row and the `light` row, and `check` holds them apart from
+each other and readable on a node's body. On the head, a badge may sit beside
+any status, so no badge shares a colour with a status unless the two mean one
+thing — a sink and a failed run are one red on purpose — and the two that
+could not take a hue take the text greys.
 """
 import dataclasses
 import os
@@ -45,10 +45,11 @@ from palette import Palette, load_source
 
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
-    # Chrome. `chrome_fill` takes `bg` and the graph ground goes below it:
-    # see DERIVED. `tab_inactive` is the rung that stops an unselected tab
-    # from reading as a bare label on the bar.
-    "chrome_fill": "bg",
+    # Surfaces. `surround_fill`, the menu bar, tab strip and status bar,
+    # takes `bg` and the graph ground goes below it: see DERIVED.
+    # `tab_inactive` is the rung that stops an unselected tab from reading as
+    # a bare label on the bar.
+    "surround_fill": "bg",
     "tab_inactive": "panel",
     "node_fill": "elem",
     "elem_hover": "elem_hover",
@@ -70,7 +71,7 @@ ROLE = {
     "status_info": "accent",
     # Alarm. A cut wire, the scribble that cut it, a sink and a failed run
     # are one red on purpose — the editor has one way of saying stop.
-    "connection_broken": "error",
+    "wire_broken": "error",
     "breaker_stroke": "error",
     "badge_sink": "error",
     "status_error": "error",
@@ -85,13 +86,14 @@ ROLE = {
     # progress is red or green — and the one hue left, yellow, is
     # `badge_cache` on the same head. So busy is grey: no verdict yet.
     "status_busy": "text_muted",
-    # Ports that carry no type. Position is what these say, so they take the
-    # two hues the editor already reads as a direction, and an event takes
-    # the sink marker's red because a subscription pin sits beside one.
-    # Shape is what keeps an event apart from a data port, not hue.
-    "input_port": "success",
-    "output_port": "syn_keyword",
-    "event_port": "error",
+    # Ports that carry no type: an untyped input, and an event. Neither is a
+    # value of a type, so neither takes a hue a type or a status spends. An
+    # event is a flow and takes the text white, as Unreal draws its
+    # execution pins; an untyped input takes the muted grey, which darkroom
+    # draws as a hollow ring, telling "any type" by shape as Blender 5 tells
+    # a socket's structure.
+    "input_port": "text_muted",
+    "event_port": "text",
 }
 
 # One rung the ramp does not have. The value is the ramp's own step below
@@ -115,9 +117,10 @@ LITERAL = {"node_border": "#00000000"}
 TYPE = {
     "boolean": "error",
     # The two numbers are one hue at two tints: a family, told apart by
-    # weight.
+    # weight. The lighter is the `light` row's, the darkest yellow that
+    # still reads on a node's body.
     "int": "ansi_bright_yellow",
-    "float": "warning_border",
+    "float": "ansi_yellow",
     "string": "syn_string",
     # `path` is a reference, so it takes the blue the chrome links with.
     "path": "hint",
@@ -125,35 +128,43 @@ TYPE = {
     # than a hash pick: the one warm ink no named type spends.
     "image": "syn_keyword",
 }
-# What the bright row has left is nothing, so the ramp is the normal row's
-# red and blue — green sits 0.06 from the float wire — and the two greys.
-# The ANSI slots sit on the light row, too close to the inks for a wire.
-RAMP = ["error_border", "info_border", "syn_punctuation", "text_muted"]
+# The hues the named types leave free that read on a node's body: purple and
+# cyan from the bright row, green from the `light` row. The `normal` row and
+# the greys are refused, the first too dark on a node and the second the
+# inks a port's label is written in; `light` blue misses the APCA floor, and
+# `light` orange sits a step from the image wire.
+RAMP = ["ansi_bright_magenta", "ansi_bright_cyan", "ansi_green"]
 
 # Two wire hues closer than this in OKLab are one colour on a 2px line. The
-# floor is what the ten actually achieve, less a margin — it catches a
+# floor is what the wires actually achieve, less a margin — it catches a
 # collapse without firing on drift.
 WIRE_FLOOR = 0.06
 
+# What a port's circle and its wire must clear against a node's body to be
+# seen at all: the WCAG 2.2 ratio for a graphic a user needs (SC 1.4.11,
+# Non-text Contrast), and the APCA Lc the `light` row holds as ink on bg.
+PORT_CONTRAST = 3.0
+PORT_APCA = 40.0
+
 # The chrome surfaces that stack in one view, darkest first. Each must be
 # lighter than the one under it, or a control disappears into its ground.
-LADDER = ("canvas_bg", "chrome_fill", "tab_inactive", "node_fill",
+LADDER = ("canvas_bg", "surround_fill", "tab_inactive", "node_fill",
           "elem_hover", "header_fill")
 
 CHROME_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
 # The order the table is written in, and the headings it is written under.
 SECTIONS = (
-    ("Chrome — the surfaces the editor is built out of, and the inks on them.", (
-        "canvas_bg", "canvas_dot", "chrome_fill", "tab_inactive", "node_fill",
+    ("Surfaces — what the editor is built out of, and the inks on them.", (
+        "canvas_bg", "canvas_dot", "surround_fill", "tab_inactive", "node_fill",
         "node_border", "header_fill", "node_ambient_shadow", "text",
         "text_muted", "text_disabled", "elem_hover", "elem_active",
         "border_focused")),
     ("Graph — the wires, and the marks drawn over them.", (
-        "selection_rect", "connection_broken", "breaker_stroke")),
+        "selection_rect", "wire_broken", "breaker_stroke")),
     ("Ports — an untyped port's circle, and the ink beside it. A typed port\n"
      "takes its hue from the type table instead.", (
-        "input_port", "output_port", "event_port", "port_label")),
+        "input_port", "event_port", "port_label")),
     ("Badges — what a node's head says about itself.", (
         "badge_graph", "badge_sink", "badge_cache", "badge_impure")),
     ("Status — what a node's head says about its last run.", (
@@ -192,7 +203,7 @@ def resolve(palette: Palette, primitives: dict[str, str]) -> dict:
 
 
 def check(values: dict) -> None:
-    """The two things a palette edit could quietly break here.
+    """The three things a palette edit could quietly break here.
 
     Each is a rule darkroom's own drawing depends on and cannot state: the
     file it reads is a table of colours, and a table cannot say that two of
@@ -216,6 +227,19 @@ def check(values: dict) -> None:
                 f"the {one} and {other} wires are {gap:.3f} apart in OKLab "
                 f"({wires[one]}, {wires[other]}) — under {WIRE_FLOOR}, a 2px "
                 f"line reads as one colour")
+
+    body = values["node_fill"]
+    ports = dict(wires, input_port=values["input_port"],
+                 event_port=values["event_port"])
+    for name, hexstr in sorted(ports.items()):
+        ratio = color.contrast(hexstr, body)
+        assert ratio >= PORT_CONTRAST, (
+            f"the {name} port ({hexstr}) is {ratio:.2f}:1 on a node's body "
+            f"({body}) — under {PORT_CONTRAST}:1, it goes unseen")
+        lc = abs(color.apca(hexstr, body))
+        assert lc >= PORT_APCA, (
+            f"the {name} port ({hexstr}) is Lc {lc:.1f} on a node's body "
+            f"({body}) — under Lc {PORT_APCA}, it goes unseen")
 
 
 def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
@@ -245,7 +269,14 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
     values = resolve(palette, primitives)
     check(values)
     table = entries(values, semantic)
-    columns = emit.RonColumns.of(table.values())
+    types = values["type_colors"]
+    type_entries = [emit.RonEntry(field, types[field], key, semantic[key])
+                    for field, key in TYPE.items()]
+    ramp_entries = [emit.RonEntry("", hexstr, key, semantic[key])
+                    for key, hexstr in zip(RAMP, types["ramp"])]
+    # Measured over the type table too, so a long role there keeps its
+    # comment column.
+    columns = emit.RonColumns.of([*table.values(), *type_entries, *ramp_entries])
 
     lines = [
         "// Ayu Graphite, for darkroom — generated. Do not edit by hand.",
@@ -254,12 +285,12 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
         "// Generator: ayu-graphite/darkroom/build.py",
         "//",
         "// Each entry names a role darkroom paints with, the role here it is",
-        "// taken from, and the primitive that resolves to. Every colour is a",
+        "// taken from, and the primitive that resolves to. Every color is a",
         "// resting one: a port lifts under the pointer by blending toward",
         "// white, because the palette's top tint has nothing above it.",
         "//",
-        "// The graph ground is the one colour with no step of its own. The",
-        "// neutral ramp holds five chrome surfaces and darkroom stacks six, so",
+        "// The graph ground is the one color with no step of its own. The",
+        "// neutral ramp holds five surfaces and darkroom stacks six, so",
         "// the ground is placed one of that ramp's own steps below `bg`.",
         "(",
     ]
@@ -275,15 +306,11 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
     # names are narrower.
     nested = dataclasses.replace(
         columns, name=max(len(field) for field in TYPE) + 2)
-    types = values["type_colors"]
-    lines += [nested.row(emit.RonEntry(field, types[field], key, semantic[key]),
-                         indent=8)
-              for field, key in TYPE.items()]
+    lines += [nested.row(entry, indent=8) for entry in type_entries]
     # A RON tuple, not a list: `ramp` is a fixed-size array on the other side,
     # and serde reads one of those as a tuple.
     lines.append("        ramp: (")
-    lines += [nested.row(emit.RonEntry("", hexstr, key, semantic[key]), indent=12)
-              for key, hexstr in zip(RAMP, types["ramp"])]
+    lines += [nested.row(entry, indent=12) for entry in ramp_entries]
     lines.append("        ),")
     lines.append("    ),")
     lines.append(")")
