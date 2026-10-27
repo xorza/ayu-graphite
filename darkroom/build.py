@@ -26,12 +26,11 @@ blending toward white at the call site, which is what it already does for a
 port coloured by its type, so the two now lift the same way and neither one is
 a colour this file could have named.
 
-Five inks have to serve nine wires and nine marks on a node's head. The wires
+Five inks have to serve nine wires and the marks on a node's head. The wires
 take the bright row and the `light` row, and `check` holds them apart from
 each other and readable on a node's body. On the head, a badge may sit beside
-any status, so no badge shares a colour with a status unless the two mean one
-thing — a sink and a failed run are one red on purpose — and the two that
-could not take a hue take the text greys.
+any status, so no badge shares a colour with a status, and the mark that
+says what kind of node it is takes the text white.
 """
 import dataclasses
 import os
@@ -68,19 +67,19 @@ ROLE = {
     "selection_rect": "accent",
     "badge_graph": "accent",
     "status_info": "accent",
-    # Alarm. A cut wire, the scribble that cut it, a sink and a failed run
-    # are one red on purpose — the editor has one way of saying stop.
+    # Alarm. A cut wire, the scribble that cut it and a failed run are one
+    # red on purpose — the editor has one way of saying stop.
     "wire_broken": "error",
     "breaker_stroke": "error",
-    "badge_sink": "error",
     "status_error": "error",
     "badge_cache": "warning",
     "status_success": "success",
     "status_warning": "syn_keyword",
-    # The mark a node's head wears to say it is never cached. Every hue on
-    # the head is a status or another badge, so this one is the title's own
-    # white: a glyph beside the title, not a word in it.
-    "badge_impure": "text",
+    # The mark a node's head wears to say what kind of node it is — a sink,
+    # which runs for its effect, or one recomputed every run. A kind is not a
+    # status, and every hue on the head is a status or another badge, so this
+    # is the title's own white: a glyph beside the title, not a word in it.
+    "badge_kind": "text",
     # Busy is the status with no colour of its own — nothing about work in
     # progress is red or green — and the one hue left, yellow, is
     # `badge_cache` on the same head. So busy is grey: no verdict yet.
@@ -178,7 +177,7 @@ SECTIONS = (
      "takes its hue from the type table instead.", (
         "input_port", "event_port", "port_label")),
     ("Badges — what a node's head says about itself.", (
-        "badge_graph", "badge_sink", "badge_cache", "badge_impure")),
+        "badge_graph", "badge_cache", "badge_kind")),
     ("Status — what a node's head says about its last run.", (
         "status_success", "status_info", "status_busy", "status_warning",
         "status_error")),
