@@ -63,7 +63,6 @@ ROLE = {
     "text": "text",
     "text_muted": "text_muted",
     "port_label": "text_muted",
-    "text_disabled": "text_disabled",
     # Accent. One hue for the whole selection: the rubber band that sweeps
     # nodes up and the halo left on the ones it caught.
     "selection_rect": "accent",
@@ -105,6 +104,19 @@ ALPHA = {
     # A near-black ground takes a lot of shadow before a shadow registers
     # at all. This is the one role whose alpha is the whole point of it.
     "node_ambient_shadow": ("overlay_black", 0x80),
+}
+
+# Roles that are a palette colour at an alpha over a surface, written opaque.
+COMPOSITE = {
+    # A disabled row's ink, well under the muted one a menu's shortcut hint
+    # is written in: the palette gives both one grey, so a menu whose rows
+    # were all disabled read as live. The text ink at Fluent's
+    # `TextFillColorDisabled` alpha (0x5D on white) over the menu's surface,
+    # blended in encoded sRGB as Windows composes it. Opaque, because
+    # darkroom blends in linear light, where the same alpha lands a step from
+    # the muted grey. WCAG 2.2 SC 1.4.3 exempts an inactive control's text
+    # from contrast.
+    "text_disabled": ("text", 0x5D, "node_fill"),
 }
 
 # Roles that are not a palette colour. A card resting on this ground draws
@@ -191,6 +203,9 @@ def resolve(palette: Palette, primitives: dict[str, str]) -> dict:
     for role, (key, alpha) in ALPHA.items():
         values[role] = f"{roles[key]}{alpha:02x}"
 
+    for role, (key, alpha, ground) in COMPOSITE.items():
+        values[role] = over(roles[key], alpha, values[ground])
+
     step = ramp_step(primitives)
     for role, key in DERIVED.items():
         # A neutral's three channels are equal, so its Oklab lightness is the
@@ -202,8 +217,16 @@ def resolve(palette: Palette, primitives: dict[str, str]) -> dict:
     return values
 
 
+def over(ink: str, alpha: int, ground: str) -> str:
+    """`ink` at `alpha` (of 255) over `ground`, blended in encoded sRGB."""
+    a = alpha / 255
+    mixed = [a * f + (1 - a) * g
+             for f, g in zip(color.channels(ink), color.channels(ground))]
+    return "#" + "".join(f"{round(c * 255):02x}" for c in mixed)
+
+
 def check(values: dict) -> None:
-    """The three things a palette edit could quietly break here.
+    """The four things a palette edit could quietly break here.
 
     Each is a rule darkroom's own drawing depends on and cannot state: the
     file it reads is a table of colours, and a table cannot say that two of
@@ -241,6 +264,13 @@ def check(values: dict) -> None:
             f"the {name} port ({hexstr}) is Lc {lc:.1f} on a node's body "
             f"({body}) — under Lc {PORT_APCA}, it goes unseen")
 
+    # A disabled row must read dimmer than a live row's shortcut hint on the
+    # menu it sits in, a node's body.
+    disabled, muted = values["text_disabled"], values["text_muted"]
+    assert color.contrast(disabled, body) < color.contrast(muted, body), (
+        f"a disabled row ({disabled} on {body}) reads as strong as a "
+        f"shortcut hint ({muted}) — the menu cannot say which rows are live")
+
 
 def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
     """Every flat role, with the two columns of provenance behind it."""
@@ -250,6 +280,9 @@ def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
     out = {role: entry(role, key, semantic[key]) for role, key in ROLE.items()}
     out.update({role: entry(role, key, semantic[key])
                 for role, (key, _) in ALPHA.items()})
+    out.update({role: entry(role, key,
+                            f"{semantic[key]} at {alpha:#04x} over {ground}")
+                for role, (key, alpha, ground) in COMPOSITE.items()})
     out.update({role: entry(role, "(the ramp's step)", f"below {semantic[key]}")
                 for role, key in DERIVED.items()})
     out.update({role: entry(role, "(no outline)", "the shadow carries the edge")

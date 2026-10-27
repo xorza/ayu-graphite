@@ -23,7 +23,7 @@
     node_ambient_shadow: "#00000080",  // overlay_black        black
     text:                "#ebebeb",    // text                 gray_7
     text_muted:          "#a4a4a4",    // text_muted           gray_6
-    text_disabled:       "#a4a4a4",    // text_disabled        gray_6
+    text_disabled:       "#797979",    // text                 gray_7 at 0x5d over node_fill
     elem_hover:          "#454545",    // elem_hover           gray_4
     elem_active:         "#525252",    // elem_active          gray_5
     border_focused:      "#0078b5",    // border_focused       blue_normal
