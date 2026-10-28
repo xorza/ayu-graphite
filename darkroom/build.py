@@ -44,13 +44,12 @@ from palette import Palette, load_source
 
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
-    # Surround. `surround_fill` takes `bg` and the graph ground goes below it:
+    # Surround. `surround_bg` takes `bg` and the graph ground goes below it:
     # see DERIVED.
-    "surround_fill": "bg",
-    "node_fill": "elem",
-    "elem_hover": "elem_hover",
-    "header_fill": "elem_active",
-    "elem_active": "elem_active",
+    "surround_bg": "bg",
+    "node_bg": "elem",
+    "element_mid": "elem_hover",
+    "element_strong": "elem_active",
     "canvas_dot": "border",
     "border_focused": "border_focused",
     # Ink. `port_label` keeps its own slot rather than reading `text_muted`
@@ -60,9 +59,10 @@ ROLE = {
     "text_muted": "text_muted",
     "port_label": "text_muted",
     # Accent. One hue for the whole selection: the rubber band that sweeps
-    # nodes up and the halo left on the ones it caught.
-    "selection_rect": "accent",
-    "badge_graph": "accent",
+    # nodes up and the halo left on the ones it caught. A link, and the
+    # inspect button that opens the node's inspector, take it as well.
+    "accent": "accent",
+    "link": "accent",
     "status_info": "accent",
     # Alarm. A cut wire, the scribble that cut it and a failed run are one
     # red on purpose — the editor has one way of saying stop.
@@ -99,7 +99,7 @@ DERIVED = {"canvas_bg": "bg"}
 ALPHA = {
     # A near-black ground takes a lot of shadow before a shadow registers
     # at all. This is the one role whose alpha is the whole point of it.
-    "node_ambient_shadow": ("overlay_black", 0x80),
+    "shadow": ("overlay_black", 0x80),
 }
 
 # Roles that are a palette colour at an alpha over a surface, written opaque.
@@ -112,13 +112,20 @@ COMPOSITE = {
     # darkroom blends in linear light, where the same alpha lands a step from
     # the muted grey. WCAG 2.2 SC 1.4.3 exempts an inactive control's text
     # from contrast.
-    "text_disabled": ("text", 0x5D, "node_fill"),
+    "text_disabled": ("text", 0x5D, "node_bg"),
 }
 
 # Roles that are not a palette colour. A card resting on this ground draws
 # no outline: the shadow carries the edge, and the stroke is kept for the
 # three things that claim it — selected, breaking, missing.
-LITERAL = {"node_border": "#00000000"}
+LITERAL = {
+    "node_border": "#00000000",
+    # The checker behind a transparent image is a transparency reference, not
+    # a surface: two mid greys any image's colours read against, the same in
+    # every theme, as image editors draw it.
+    "checker_light": "#4d4d4d",
+    "checker_dark": "#333333",
+}
 
 # A wire's hue is the type flowing along it. Six types are named; the rest
 # are keyed onto RAMP by their type id.
@@ -156,25 +163,26 @@ PORT_APCA = 40.0
 
 # The surfaces that stack in one view, darkest first. Each must be
 # lighter than the one under it, or a control disappears into its ground.
-LADDER = ("canvas_bg", "surround_fill", "node_fill", "elem_hover",
-          "header_fill")
+LADDER = ("canvas_bg", "surround_bg", "node_bg", "element_mid",
+          "element_strong")
 
 SURFACE_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
 # The order the table is written in, and the headings it is written under.
 SECTIONS = (
     ("Surfaces — what the editor is built out of, and the inks on them.", (
-        "canvas_bg", "canvas_dot", "surround_fill", "node_fill",
-        "node_border", "header_fill", "node_ambient_shadow", "text",
-        "text_muted", "text_disabled", "elem_hover", "elem_active",
-        "border_focused")),
+        "canvas_bg", "canvas_dot", "surround_bg", "node_bg",
+        "node_border", "shadow", "text", "text_muted", "text_disabled",
+        "element_mid", "element_strong", "border_focused")),
     ("Graph — the wires, and the marks drawn over them.", (
-        "selection_rect", "wire_broken", "breaker_stroke")),
+        "accent", "wire_broken", "breaker_stroke")),
+    ("Viewer — the checker behind a transparent image.", (
+        "checker_light", "checker_dark")),
     ("Ports — an untyped port's circle, and the ink beside it. A typed port\n"
      "takes its hue from the type table instead.", (
         "input_port", "event_port", "port_label")),
     ("Badges — what a node's head says about itself.", (
-        "badge_graph", "badge_cache", "badge_kind")),
+        "link", "badge_cache", "badge_kind")),
     ("Status — what a node's head says about its last run.", (
         "status_success", "status_info", "status_busy", "status_warning",
         "status_error")),
@@ -247,7 +255,7 @@ def check(values: dict) -> None:
                 f"({wires[one]}, {wires[other]}) — under {WIRE_FLOOR}, a 2px "
                 f"line reads as one colour")
 
-    body = values["node_fill"]
+    body = values["node_bg"]
     ports = dict(wires, input_port=values["input_port"],
                  event_port=values["event_port"])
     for name, hexstr in sorted(ports.items()):
@@ -281,8 +289,12 @@ def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
                 for role, (key, alpha, ground) in COMPOSITE.items()})
     out.update({role: entry(role, "(the ramp's step)", f"below {semantic[key]}")
                 for role, key in DERIVED.items()})
-    out.update({role: entry(role, "(no outline)", "the shadow carries the edge")
-                for role in LITERAL})
+    literal_notes = {
+        "node_border": ("(no outline)", "the shadow carries the edge"),
+        "checker_light": ("(fixed)", "a transparency reference"),
+        "checker_dark": ("(fixed)", "a transparency reference"),
+    }
+    out.update({role: entry(role, *literal_notes[role]) for role in LITERAL})
 
     # A role left out of SECTIONS would be dropped from the file, and darkroom
     # would report it as a field its table is missing — true, and a long way
@@ -318,9 +330,9 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
         "// resting one: a port lifts under the pointer by blending toward",
         "// white, because the palette's top tint has nothing above it.",
         "//",
-        "// The graph ground is the one color with no step of its own. The",
-        "// neutral ramp holds five surfaces and darkroom stacks six, so",
-        "// the ground is placed one of that ramp's own steps below `bg`.",
+        "// The graph ground is the one color with no step of its own. darkroom",
+        "// stacks five surfaces and starts them one rung below the neutral",
+        "// ramp, so the ground is placed one of that ramp's own steps below `bg`.",
         "(",
     ]
     for heading, roles in SECTIONS:
