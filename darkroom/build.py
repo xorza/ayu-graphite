@@ -51,7 +51,6 @@ ROLE = {
     "element_mid": "elem_hover",
     "element_strong": "elem_active",
     "canvas_dot": "border",
-    "border_focused": "border_focused",
     # Ink. `port_label` keeps its own slot rather than reading `text_muted`
     # at the call site: a port row wants one strong element, and which ink
     # de-emphasizes the other two is the interface's decision to change.
@@ -173,7 +172,7 @@ SECTIONS = (
     ("Surfaces — what the editor is built out of, and the inks on them.", (
         "canvas_bg", "canvas_dot", "surround_bg", "node_bg",
         "node_border", "shadow", "text", "text_muted", "text_disabled",
-        "element_mid", "element_strong", "border_focused")),
+        "element_mid", "element_strong")),
     ("Graph — the wires, and the marks drawn over them.", (
         "accent", "wire_broken", "breaker_stroke")),
     ("Viewer — the checker behind a transparent image.", (

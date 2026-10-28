@@ -24,7 +24,6 @@
     text_disabled:  "#797979",    // text                 gray_7 at 0x5d over node_bg
     element_mid:    "#454545",    // elem_hover           gray_4
     element_strong: "#525252",    // elem_active          gray_5
-    border_focused: "#0078b5",    // border_focused       blue_normal
 
     // Graph — the wires, and the marks drawn over them.
     accent:         "#44b5ff",    // accent               blue_bright
