@@ -413,16 +413,18 @@ text_muted = 0.48
 text       = 0.27
 
 [light.semantic]
-# A raised surface — a popup, a control at rest, a chat bubble — is the white
-# rung, and the grounds step down from it: the editor ground a hover and a
-# press down, the panel one more, so the panel frames the editor as it does
-# on the dark scheme.
+# A raised surface — a popup, a chat bubble — is the white rung, and the
+# grounds step down from it: the editor ground two rungs, the panel three, so
+# the panel frames the editor as it does on the dark scheme. A hover and a
+# press step past both grounds, three and four rungs down, as a control that
+# rests on a ground must read apart from it: a field, a button and a hovered
+# menu title rest on the hover fill over the editor ground and the panel.
 bg                  = "gray_3"
 panel               = "gray_4"
 surface             = "gray_1"
 elem                = "gray_1"
-elem_hover          = "gray_2"
-elem_active         = "gray_3"
+elem_hover          = "gray_4"
+elem_active         = "gray_5"
 elem_disabled       = "gray_2"
 title_bar           = "gray_3"
 title_bar_inactive  = "gray_2"

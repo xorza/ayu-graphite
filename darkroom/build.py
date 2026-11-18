@@ -214,15 +214,16 @@ PORT_APCA = 40.0
 # be darker than its partner by MIN_LAYER, or a control disappears into its
 # ground. The dark scheme is one climb, ground to press. The light scheme
 # lifts a node off its ground as a white card, and steps hover and press
-# down from it: the ground takes the lighter of the ground and the surround,
-# as on the dark scheme it takes the darker, so an open tab stands apart
-# from its strip either way.
+# down past both grounds, as palantir rests a field and a button on the hover
+# fill over the ground and the surround: the ground takes the lighter of the
+# ground and the surround, as on the dark scheme it takes the darker, so an
+# open tab stands apart from its strip either way.
 LADDER = {
     Scheme.DARK: (("canvas_bg", "surround_bg"), ("surround_bg", "node_bg"),
                   ("node_bg", "element_mid"),
                   ("element_mid", "element_strong")),
     Scheme.LIGHT: (("surround_bg", "canvas_bg"), ("canvas_bg", "node_bg"),
-                   ("element_mid", "node_bg"),
+                   ("element_mid", "surround_bg"),
                    ("element_strong", "element_mid")),
 }
 # WCAG contrast: about one step of the neutral ramp, as tools/audit.py holds
