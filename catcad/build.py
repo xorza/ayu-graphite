@@ -29,7 +29,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import color
 import emit
-from palette import Palette, load_source
+from palette import Palette, Scheme, load_source
 
 # CatCad role -> the semantic role it is taken from. Split by what happens on
 # the way: the first group is re-emitted grey, the second passes through.
@@ -187,7 +187,7 @@ def build_catcad(p: Palette, semantic: dict[str, str],
 
 
 def main() -> None:
-    src = load_source()
+    src = load_source(Scheme.DARK)
     emit.write_text(emit.beside(__file__, "ayu-graphite.ron"),
                     build_catcad(src.palette, src.semantic, src.primitives))
 

@@ -14,7 +14,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def nsfont_archive(ps_name: str, size: float) -> bytes:
@@ -136,7 +136,7 @@ def build_terminal(p: Palette) -> dict[str, Any]:
 
 def main() -> None:
     emit.write_bytes(emit.beside(__file__, "ayu-graphite.terminal"),
-                     plistlib.dumps(build_terminal(load_palette())))
+                     plistlib.dumps(build_terminal(load_palette(Scheme.DARK))))
 
 
 if __name__ == "__main__":

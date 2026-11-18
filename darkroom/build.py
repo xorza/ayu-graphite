@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Read ../ayu-graphite.toml and emit ./ayu-graphite.ron (darkroom's palette).
+"""Read ../ayu-graphite.toml and emit darkroom's two palettes,
+./ayu-graphite-dark.ron and ./ayu-graphite-light.ron, one per scheme.
 
 darkroom is a node-graph image editor. It names one colour per role it paints
 with — the ground a graph is drawn on, a node's body and the band across its
@@ -8,39 +9,52 @@ flowing along it — and assembles its whole theme from the table this writes.
 Sizes are not here: a port's radius and a card's corner are facts about that
 interface, not about a palette.
 
-Three things happen on the way out that a plain role lookup does not cover.
+Four things happen on the way out that a plain role lookup does not cover.
 
-The surface ladder starts one rung low. darkroom stacks five surfaces in one
+The surface ladder starts one rung out. darkroom stacks five surfaces in one
 view — the graph ground, the surround that frames it, a node body, a hovered
 control, a pressed control — and the graph ground has no step of the
-palette's neutral ramp to take: it sits below `bg`, because a tab that is open
-reads as continuous with the graph, so the surround has to be the lighter of
-the two. It is placed one ramp step
-below `bg` rather than added to the palette, because nothing else needs it,
-and the step is measured off the five greys instead of assumed.
+palette's neutral ramp to take: it sits one step past `bg` toward the
+grounds' end, below it on the dark scheme and above it on the light one,
+because a tab that is open takes the graph's ground and has to stand apart
+from the surround its strip sits on. It is placed one ramp step from `bg`
+rather than added to the palette, because nothing else needs it, and the step
+is measured off the five greys instead of assumed. The light scheme lifts a
+node off that ground as white cards lift off a grey canvas in Fluent, macOS
+and FigJam, so its ladder is not one walk: see LADDER.
 
 Nothing here says what a port looks like under the pointer. Every port role
-below is a resting colour, and all of them sit on `bright`, which is the top
-of the grid — there is no tint above it to lift into. darkroom lifts a port by
-blending toward white at the call site, which is what it already does for a
-port coloured by its type, so the two now lift the same way and neither one is
-a colour this file could have named.
+below is a resting colour, and all of them sit on `bright`, which is the far
+end of the grid — there is no tint past it to lift into. darkroom lifts a port
+by blending toward `lift`, the neutral at that far end, white on the dark
+scheme and black on the light one, which is what it already does for a port
+coloured by its type, so the two lift the same way and neither one is a colour
+this file could have named.
 
-Five inks have to serve nine wires and the marks on a node's head. The wires
-take the bright row and the `light` row, and `check` holds them apart from
-each other and readable on a node's body. On the head, a badge may sit beside
-any status, so no badge shares a colour with a status, and the mark that
-says what kind of node it is takes the text white.
+The accent is palantir's dark lime on the dark scheme. It clears 1.1:1 on
+white, so the light scheme keeps its hue and solves the brightness as an ink's:
+see ACCENT.
+
+Twelve wires want more hues than the grid has columns. Five named types take
+inks of the grid; float and the six ramp slots take the hues halfway between
+neighbouring base hues, each solved on a row that reads on a node's body as
+one of the row's cells is, so no input is added and a moved base hue moves them too.
+`check` holds every wire apart from the others and readable on a node's body.
+On the head, a badge may sit beside any status, so no badge shares a colour
+with a status, and the mark that says what kind of node it is takes the text
+white.
 """
 import dataclasses
+from dataclasses import dataclass
 import os
 import sys
-from math import dist
+from math import dist, inf
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import color
 import emit
-from palette import Palette, load_source
+import grid
+from palette import Palette, Scheme, Source, load_source
 
 # darkroom role -> the semantic role it is taken from.
 ROLE = {
@@ -57,11 +71,8 @@ ROLE = {
     "text": "text",
     "text_muted": "text_muted",
     "port_label": "text_muted",
-    # Accent. One hue for the whole selection: the rubber band that sweeps
-    # nodes up and the halo left on the ones it caught. A link, and the
-    # inspect button that opens the node's inspector, take it as well.
-    "accent": "accent",
-    "link": "accent",
+    # The info status keeps Ayu's blue, which the path wire shares; the accent
+    # is palantir's (see LITERAL).
     "status_info": "accent",
     # Alarm. A cut wire, the scribble that cut it and a failed run are one
     # red on purpose — the editor has one way of saying stop.
@@ -90,16 +101,37 @@ ROLE = {
     "event_port": "text",
 }
 
-# One rung the ramp does not have. The value is the ramp's own step below
-# `bg`, measured rather than assumed — see the module docstring.
+# One rung the ramp does not have. The value is the ramp's own step from
+# `bg` toward the grounds' end, measured rather than assumed — see the module
+# docstring.
 DERIVED = {"canvas_bg": "bg"}
+# Which side of `bg` that step lands on, as the table's notes say it.
+SIDE = {Scheme.DARK: "below", Scheme.LIGHT: "above"}
 
-# Roles that are a palette colour at less than full alpha.
+# Roles that are a palette colour at less than full alpha, per scheme.
 ALPHA = {
     # A near-black ground takes a lot of shadow before a shadow registers
-    # at all. This is the one role whose alpha is the whole point of it.
-    "shadow": ("overlay_black", 0x80),
+    # at all, and a light one very little: Fluent's light `shadow16` key is
+    # black at 14 % (https://fluent2.microsoft.design/elevation), as
+    # palantir's light palette casts. This is the one role whose alpha is the
+    # whole point of it.
+    "shadow": ("overlay_black", {Scheme.DARK: 0x80, Scheme.LIGHT: 0x24}),
 }
+
+# The neutral a hover blends a port toward: the far end of the grid, past
+# every ink — see the module docstring.
+LIFT = {Scheme.DARK: "white", Scheme.LIGHT: "black"}
+
+# palantir's dark accent, which darkroom's widgets share. The dark scheme
+# takes it as it is. The light scheme keeps its Oklab hue and sits where an
+# ink of the grid would, solved as `grid.inks` places one: the most chroma
+# from the brightness nearest the grounds where it clears 4.5:1 on each
+# surface it is drawn on, as a link's text and a focus ring are, and the
+# [ink] APCA floor on a node's body. Material keeps a scheme's primary hue and
+# moves its tone the same way
+# (https://m3.material.io/styles/color/roles).
+ACCENT = "#d1ff02"
+ACCENT_ON = ("canvas_bg", "surround_bg", "node_bg", "element_mid")
 
 # Roles that are a palette colour at an alpha over a surface, written opaque.
 COMPOSITE = {
@@ -114,9 +146,15 @@ COMPOSITE = {
     "text_disabled": ("text", 0x5D, "node_bg"),
 }
 
-# Roles that are not a palette colour. A card resting on this ground draws
-# no outline: the shadow carries the edge, and the stroke is kept for the
-# three things that claim it — selected, breaking, missing.
+# Accent. One hue for the whole selection: the rubber band that sweeps nodes
+# up and the halo left on the ones it caught. A link, and the inspect button
+# that opens the node's inspector, take it as well. See ACCENT.
+ACCENT_ROLES = ("accent", "link")
+
+# Roles that are not a palette colour, the same in every scheme. A card
+# resting on its ground draws no outline: the shadow carries the edge, and
+# the stroke is kept for the three things that claim it — selected,
+# breaking, missing.
 LITERAL = {
     "node_border": "#00000000",
     # The checker behind a transparent image is a transparency reference, not
@@ -127,14 +165,11 @@ LITERAL = {
 }
 
 # A wire's hue is the type flowing along it. Six types are named; the rest
-# are keyed onto RAMP by their type id.
+# are keyed onto the ramp by their type id. Five take an ink of the grid, and
+# float takes a hue between two (see FLOAT).
 TYPE = {
     "boolean": "error",
-    # The two numbers are one hue at two tints: a family, told apart by
-    # weight. The lighter is the `light` row's, the darkest yellow that
-    # still reads on a node's body.
     "int": "ansi_bright_yellow",
-    "float": "ansi_yellow",
     "string": "syn_string",
     # `path` is a reference, so it takes the blue the interface links with.
     "path": "hint",
@@ -142,17 +177,32 @@ TYPE = {
     # than a hash pick: the one warm ink no named type spends.
     "image": "syn_keyword",
 }
-# The hues the named types leave free that read on a node's body: purple and
-# cyan from the bright row, green from the `light` row. The `normal` row and
-# the greys are refused, the first too dark on a node and the second the
-# inks a port's label is written in; `light` blue misses the APCA floor, and
-# `light` orange sits a step from the image wire.
-RAMP = ["ansi_bright_magenta", "ansi_bright_cyan", "ansi_green"]
+# The grid's cells that read on a dark scheme's node body are its bright and
+# `light` rows, and of those two cells of one hue sit closer than a wire's floor, or
+# miss a port's contrast: ten readable wires, two short of the named six and a
+# ramp of six. So float and the ramp take the hues halfway between each pair
+# of neighbouring base hues, seven, solved as cells of a row: no input is
+# added, and a base hue that moves takes them along.
+#
+# Float sits between int's yellow and string's green, so the two numbers are
+# a family told apart by hue, as a 2px wire cannot show a tint step. The
+# ramp is the other six, in hue order from red.
+FLOAT = ("yellow", "green")
+# The type table's fields, in the order the file writes them.
+FIELDS = ("boolean", "int", "float", "string", "path", "image")
+# The ramp darkroom reads, a fixed-size array there.
+RAMP_LEN = 6
+# The rows a wire may sit on: every row, of which `readable` keeps those that
+# read on a node's body — the bright and `light` rows on the dark scheme,
+# where `normal` and `dim` are too dark, and the rows past `dim` on the light
+# one. Each in-between hue takes the one, of those it reads on, that puts it
+# farthest from the nearest named wire.
+WIRE_ROWS = ("bright", "light", "normal", "dim")
 
 # Two wire hues closer than this in OKLab are one colour on a 2px line. The
 # floor is what the wires actually achieve, less a margin — it catches a
 # collapse without firing on drift.
-WIRE_FLOOR = 0.06
+WIRE_FLOOR = 0.07
 
 # What a port's circle and its wire must clear against a node's body to be
 # seen at all: the WCAG 2.2 ratio for a graphic a user needs (SC 1.4.11,
@@ -160,10 +210,24 @@ WIRE_FLOOR = 0.06
 PORT_CONTRAST = 3.0
 PORT_APCA = 40.0
 
-# The surfaces that stack in one view, darkest first. Each must be
-# lighter than the one under it, or a control disappears into its ground.
-LADDER = ("canvas_bg", "surround_bg", "node_bg", "element_mid",
-          "element_strong")
+# The surfaces that meet in one view, as (darker, lighter) pairs. Each must
+# be darker than its partner by MIN_LAYER, or a control disappears into its
+# ground. The dark scheme is one climb, ground to press. The light scheme
+# lifts a node off its ground as a white card, and steps hover and press
+# down from it: the ground takes the lighter of the ground and the surround,
+# as on the dark scheme it takes the darker, so an open tab stands apart
+# from its strip either way.
+LADDER = {
+    Scheme.DARK: (("canvas_bg", "surround_bg"), ("surround_bg", "node_bg"),
+                  ("node_bg", "element_mid"),
+                  ("element_mid", "element_strong")),
+    Scheme.LIGHT: (("surround_bg", "canvas_bg"), ("canvas_bg", "node_bg"),
+                   ("element_mid", "node_bg"),
+                   ("element_strong", "element_mid")),
+}
+# WCAG contrast: about one step of the neutral ramp, as tools/audit.py holds
+# the palette's own layers.
+MIN_LAYER = 1.10
 
 SURFACE_GREYS = ("gray_1", "gray_2", "gray_3", "gray_4", "gray_5")
 
@@ -173,8 +237,9 @@ SECTIONS = (
         "canvas_bg", "canvas_dot", "surround_bg", "node_bg",
         "node_border", "shadow", "text", "text_muted", "text_disabled",
         "element_mid", "element_strong")),
-    ("Graph — the wires, and the marks drawn over them.", (
-        "accent", "wire_broken", "breaker_stroke")),
+    ("Graph — the wires, and the marks drawn over them, and the neutral a\n"
+     "hovered port blends toward.", (
+        "accent", "wire_broken", "breaker_stroke", "lift")),
     ("Viewer — the checker behind a transparent image.", (
         "checker_light", "checker_dark")),
     ("Ports — an untyped port's circle, and the ink beside it. A typed port\n"
@@ -189,34 +254,108 @@ SECTIONS = (
 
 
 def ramp_step(primitives: dict[str, str]) -> float:
-    """The mean Oklab lightness between adjacent surface greys.
+    """The mean Oklab lightness between adjacent surface greys, unsigned.
 
     Measured off the palette rather than written down here, so the rung this
     file adds keeps the ramp's spacing when the ramp is respaced.
     """
     lights = [color.oklab(primitives[name])[0] for name in SURFACE_GREYS]
-    return (lights[-1] - lights[0]) / (len(lights) - 1)
+    return abs(lights[-1] - lights[0]) / (len(lights) - 1)
 
 
-def resolve(palette: Palette, primitives: dict[str, str]) -> dict:
+@dataclass(frozen=True)
+class Between:
+    """A wire hue halfway between the neighbouring base hues `left` and
+    `right`, solved as a cell of the tint row `row`."""
+    left: str
+    right: str
+    row: str
+    hexstr: str
+
+
+def neighbours(hues: dict[str, float]) -> list[tuple[str, str, float]]:
+    """Each pair of neighbouring base hues around the wheel, from the lowest
+    angle, with the angle halfway between them."""
+    order = sorted(hues, key=hues.__getitem__)
+    out = []
+    for left, right in zip(order, order[1:] + order[:1]):
+        span = (hues[right] - hues[left]) % 360
+        out.append((left, right, (hues[left] + span / 2) % 360))
+    return out
+
+
+def readable(hexstr: str, body: str) -> bool:
+    """Whether a port of `hexstr` is seen on a node's `body`: see `check`."""
+    return (color.contrast(hexstr, body) >= PORT_CONTRAST
+            and abs(color.apca(hexstr, body)) >= PORT_APCA)
+
+
+def betweens(src: Source, named: dict[str, str], body: str) -> list[Between]:
+    """Each hue between two neighbouring base hues, on the row of WIRE_ROWS it
+    reads on that puts it farthest from the nearest of the `named` wires."""
+    named_points = [color.oklab(hexstr) for hexstr in named.values()]
+
+    def clearance(hexstr: str) -> float:
+        point = color.oklab(hexstr)
+        return min(dist(point, other) for other in named_points)
+
+    out = []
+    for left, right, angle in neighbours(src.hues):
+        cells = {row: grid.cell(angle, src.rows[row].target, src.rows[row].line)
+                 for row in WIRE_ROWS}
+        seen = {row: hexstr for row, hexstr in cells.items()
+                if readable(hexstr, body)}
+        assert seen, (
+            f"the hue between {left} and {right} reads on no row of "
+            f"{WIRE_ROWS}: {cells}")
+        row = max(seen, key=lambda name: clearance(seen[name]))
+        out.append(Between(left, right, row, seen[row]))
+    return out
+
+
+def accent(src: Source, values: dict) -> str:
+    """The accent of `src`'s scheme: see ACCENT."""
+    if src.scheme is Scheme.DARK:
+        return ACCENT
+    hue = grid.hue_of(ACCENT)
+    spec = grid.InkSpec([values[role] for role in ACCENT_ON],
+                        values["node_bg"], src.ink_lc, src.scheme.far)
+    floor = grid.ink_floor(hue, src.scheme.near, spec)
+    best = grid.summit(lambda target: grid.ceiling(hue, target), floor,
+                       src.scheme.far)
+    return grid.cell(hue, best, inf)
+
+
+def resolve(src: Source, float_wire: Between, ramp: list[Between]) -> dict:
     """Every darkroom role, as a hex string, plus the nested type table."""
-    roles = palette.as_dict()
+    roles = src.palette.as_dict()
     values = {role: roles[key] for role, key in ROLE.items()}
     values.update(LITERAL)
-    for role, (key, alpha) in ALPHA.items():
-        values[role] = f"{roles[key]}{alpha:02x}"
+    for role, (key, alphas) in ALPHA.items():
+        values[role] = f"{roles[key]}{alphas[src.scheme]:02x}"
+    values["lift"] = src.primitives[LIFT[src.scheme]]
 
     for role, (key, alpha, ground) in COMPOSITE.items():
         values[role] = over(roles[key], alpha, values[ground])
 
-    step = ramp_step(primitives)
+    # Toward the grounds' end: down on the dark scheme, up on the light one.
+    step = ramp_step(src.primitives) * (-1 if src.scheme is Scheme.DARK else 1)
     for role, key in DERIVED.items():
         # A neutral's three channels are equal, so its Oklab lightness is the
         # cube root of its linear value and the step inverts in one line.
-        values[role] = color.grey((color.oklab(roles[key])[0] - step) ** 3)
+        lightness = color.oklab(roles[key])[0] + step
+        assert 0 < lightness <= 1, (
+            f"{role}, one ramp step from {key}, falls off the axis at Oklab "
+            f"lightness {lightness:.3f}")
+        values[role] = color.grey(lightness ** 3)
 
-    values["type_colors"] = {field: roles[key] for field, key in TYPE.items()}
-    values["type_colors"]["ramp"] = [roles[key] for key in RAMP]
+    shared = accent(src, values)
+    values.update({role: shared for role in ACCENT_ROLES})
+
+    named = {field: roles[key] for field, key in TYPE.items()}
+    values["type_colors"] = {field: named.get(field, float_wire.hexstr)
+                             for field in FIELDS}
+    values["type_colors"]["ramp"] = [wire.hexstr for wire in ramp]
     return values
 
 
@@ -228,18 +367,29 @@ def over(ink: str, alpha: int, ground: str) -> str:
     return "#" + "".join(f"{round(c * 255):02x}" for c in mixed)
 
 
-def check(values: dict) -> None:
-    """The four things a palette edit could quietly break here.
+def check(values: dict, scheme: Scheme) -> None:
+    """The five things a palette edit could quietly break here.
 
     Each is a rule darkroom's own drawing depends on and cannot state: the
     file it reads is a table of colours, and a table cannot say that two of
     its entries have to differ.
     """
-    lights = [color.luminance(values[role]) for role in LADDER]
-    for lower, upper, under, over in zip(LADDER, LADDER[1:], lights, lights[1:]):
-        assert under < over, (
-            f"{lower} ({values[lower]}) is not darker than {upper} "
-            f"({values[upper]}) — a surface that stacks on it disappears")
+    for lower, upper in LADDER[scheme]:
+        under, over_ = values[lower], values[upper]
+        assert color.luminance(under) < color.luminance(over_), (
+            f"{lower} ({under}) is not darker than {upper} ({over_}) — a "
+            f"surface that stacks on it disappears")
+        ratio = color.contrast(under, over_)
+        assert ratio >= MIN_LAYER, (
+            f"{lower} ({under}) and {upper} ({over_}) are {ratio:.3f}:1 — "
+            f"under {MIN_LAYER}:1, one surface reads as the other")
+
+    # The accent is a link's text and a focus ring on every surface it meets.
+    for ground in ACCENT_ON:
+        ratio = color.contrast(values["accent"], values[ground])
+        assert ratio >= grid.MIN_INK, (
+            f"the accent ({values['accent']}) is {ratio:.2f}:1 on {ground} "
+            f"({values[ground]}) — under {grid.MIN_INK}:1, a link goes unread")
 
     wires = dict(values["type_colors"])
     ramp = wires.pop("ramp")
@@ -275,18 +425,22 @@ def check(values: dict) -> None:
         f"shortcut hint ({muted}) — the menu cannot say which rows are live")
 
 
-def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
+def entries(values: dict, semantic: dict[str, str],
+            scheme: Scheme) -> dict[str, emit.RonEntry]:
     """Every flat role, with the two columns of provenance behind it."""
     def entry(role, key, note):
         return emit.RonEntry(role, values[role], key, note)
 
     out = {role: entry(role, key, semantic[key]) for role, key in ROLE.items()}
-    out.update({role: entry(role, key, semantic[key])
-                for role, (key, _) in ALPHA.items()})
+    out.update({role: entry(role, key, f"{semantic[key]} at "
+                            f"{alphas[scheme]:#04x}")
+                for role, (key, alphas) in ALPHA.items()})
     out.update({role: entry(role, key,
                             f"{semantic[key]} at {alpha:#04x} over {ground}")
                 for role, (key, alpha, ground) in COMPOSITE.items()})
-    out.update({role: entry(role, "(the ramp's step)", f"below {semantic[key]}")
+    side = SIDE[scheme]
+    out.update({role: entry(role, "(the ramp's step)",
+                            f"{side} {semantic[key]}")
                 for role, key in DERIVED.items()})
     literal_notes = {
         "node_border": ("(no outline)", "the shadow carries the edge"),
@@ -294,6 +448,12 @@ def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
         "checker_dark": ("(fixed)", "a transparency reference"),
     }
     out.update({role: entry(role, *literal_notes[role]) for role in LITERAL})
+    accent_note = {
+        Scheme.DARK: ("(fixed)", "palantir's dark accent"),
+        Scheme.LIGHT: ("(solved)", "its hue, placed as an ink"),
+    }[scheme]
+    out.update({role: entry(role, *accent_note) for role in ACCENT_ROLES})
+    out["lift"] = entry("lift", "(the far end)", LIFT[scheme])
 
     # A role left out of SECTIONS would be dropped from the file, and darkroom
     # would report it as a field its table is missing — true, and a long way
@@ -304,22 +464,38 @@ def entries(values: dict, semantic: dict[str, str]) -> dict[str, emit.RonEntry]:
     return out
 
 
-def build_darkroom(palette: Palette, semantic: dict[str, str],
-                   primitives: dict[str, str]) -> str:
-    values = resolve(palette, primitives)
-    check(values)
-    table = entries(values, semantic)
-    types = values["type_colors"]
-    type_entries = [emit.RonEntry(field, types[field], key, semantic[key])
-                    for field, key in TYPE.items()]
-    ramp_entries = [emit.RonEntry("", hexstr, key, semantic[key])
-                    for key, hexstr in zip(RAMP, types["ramp"])]
+def build_darkroom(src: Source) -> str:
+    palette, semantic = src.palette, src.semantic
+    roles = palette.as_dict()
+    named = {field: roles[key] for field, key in TYPE.items()}
+    wires = betweens(src, named, roles[ROLE["node_bg"]])
+    float_wire = next(wire for wire in wires if (wire.left, wire.right) == FLOAT)
+    ramp = [wire for wire in wires if wire is not float_wire]
+    assert len(ramp) == RAMP_LEN, (
+        f"{len(ramp)} hues for the ramp, which darkroom reads as {RAMP_LEN}: "
+        f"a base hue more or fewer changes darkroom's `TypeColors::ramp` too")
+    values = resolve(src, float_wire, ramp)
+    check(values, src.scheme)
+    table = entries(values, semantic, src.scheme)
+
+    def between_entry(field: str, wire: Between) -> emit.RonEntry:
+        return emit.RonEntry(field, wire.hexstr,
+                             f"(between {wire.left} and {wire.right})",
+                             f"{wire.row} row")
+
+    type_entries = [between_entry(field, float_wire) if field == "float"
+                    else emit.RonEntry(field, named[field], TYPE[field],
+                                       semantic[TYPE[field]])
+                    for field in FIELDS]
+    ramp_entries = [between_entry("", wire) for wire in ramp]
     # Measured over the type table too, so a long role there keeps its
     # comment column.
     columns = emit.RonColumns.of([*table.values(), *type_entries, *ramp_entries])
 
+    side = SIDE[src.scheme]
     lines = [
-        "// Ayu Graphite, for darkroom — generated. Do not edit by hand.",
+        f"// Ayu Graphite {src.scheme.value}, for darkroom — generated. Do not "
+        "edit by hand.",
         "//",
         "// Source:    ayu-graphite.toml",
         "// Generator: ayu-graphite/darkroom/build.py",
@@ -327,11 +503,12 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
         "// Each entry names a role darkroom paints with, the role here it is",
         "// taken from, and the primitive that resolves to. Every color is a",
         "// resting one: a port lifts under the pointer by blending toward",
-        "// white, because the palette's top tint has nothing above it.",
+        "// `lift`, because the palette's far tint has nothing past it.",
         "//",
         "// The graph ground is the one color with no step of its own. darkroom",
-        "// stacks five surfaces and starts them one rung below the neutral",
-        "// ramp, so the ground is placed one of that ramp's own steps below `bg`.",
+        "// stacks five surfaces and starts them one rung out from the neutral",
+        f"// ramp, so the ground is placed one of that ramp's own steps {side} "
+        "`bg`.",
         "(",
     ]
     for heading, roles in SECTIONS:
@@ -345,7 +522,7 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
     # The nested block keeps the table's value and comment columns; only its
     # names are narrower.
     nested = dataclasses.replace(
-        columns, name=max(len(field) for field in TYPE) + 2)
+        columns, name=max(len(field) for field in FIELDS) + 2)
     lines += [nested.row(entry, indent=8) for entry in type_entries]
     # A RON tuple, not a list: `ramp` is a fixed-size array on the other side,
     # and serde reads one of those as a tuple.
@@ -358,9 +535,9 @@ def build_darkroom(palette: Palette, semantic: dict[str, str],
 
 
 def main() -> None:
-    src = load_source()
-    emit.write_text(emit.beside(__file__, "ayu-graphite.ron"),
-                    build_darkroom(src.palette, src.semantic, src.primitives))
+    for scheme in Scheme:
+        emit.write_text(emit.beside(__file__, f"ayu-graphite-{scheme.value}.ron"),
+                        build_darkroom(load_source(scheme)))
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def alpha(hex6: str, aa: str) -> str:
@@ -266,7 +266,7 @@ def _build_syntax(p: Palette) -> dict:
 
 def main() -> None:
     emit.write_json(emit.beside(__file__, "ayu-graphite.json"),
-                    build_zed(load_palette()))
+                    build_zed(load_palette(Scheme.DARK)))
 
 
 if __name__ == "__main__":

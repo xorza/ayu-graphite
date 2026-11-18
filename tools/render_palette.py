@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from color import contrast, hk_lightness
-from palette import load_source
+from palette import Scheme, load_source
 
 OUT = os.path.join(ROOT, "palette.png")
 
@@ -156,7 +156,7 @@ def draw_semantic(draw, items, sheet, top, cols, fonts):
 
 
 def main():
-    src = load_source()
+    src = load_source(Scheme.DARK)
     semantic = list(src.palette.as_dict().items())
 
     ladder = Ladder(src.primitives)

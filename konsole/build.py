@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
@@ -54,7 +54,7 @@ def build_konsole(p: Palette) -> dict[str, dict[str, str]]:
 
 def main() -> None:
     emit.write_text(emit.beside(__file__, "ayu-graphite.colorscheme"),
-                    emit.render_ini(build_konsole(load_palette())))
+                    emit.render_ini(build_konsole(load_palette(Scheme.DARK))))
 
 
 if __name__ == "__main__":

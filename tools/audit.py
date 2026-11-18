@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Check ayu-graphite.toml against the contrast rules the targets depend on.
+"""Check ayu-graphite.toml against the contrast rules the targets depend on,
+each scheme in turn.
 
 Exits non-zero on a violation so `make audit` fails the build. Every ratio it
 prints carries an APCA Lc beside it — WCAG 2 overstates contrast at the dark
-end, and a dark theme is all dark end. The gate stays WCAG, because that is
+end, and a dark scheme is all dark end. The gate stays WCAG, because that is
 what the rules are written against.
 
-Six rules:
+Six rules, written below for the dark scheme; on the light one, "bright" and
+"dim" read as far from and near the grounds, which sit at white:
 
   layers    chrome that stacks in one view must be visually separable — a
             button whose fill equals its panel disappears (that was the KDE
@@ -46,7 +48,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import grid
 from color import apca, contrast, hk_lightness, luminance, oklch
-from palette import Palette, Source, load_source
+from palette import Palette, Scheme, Source, load_source
 
 # Separate enough to read as two layers. 1.10 is roughly one step of the
 # neutral ramp — below that the eye merges them under any gamma.
@@ -106,17 +108,20 @@ INK = {
     # Inside a selection the plain red loses too much against the blue fill;
     # KDE's Colors:Selection reaches for the bright step instead.
     "ansi_bright_red": ["selection_bg"],
-    # The word-level diff fills are backgrounds, and the ink Claude Code draws
-    # on them is its own near-white syntax foreground, not `text`.
-    "ansi_bright_white": ["diff_word_plus", "diff_word_minus"],
 }
+# The word-level diff fills are backgrounds, and the ink Claude Code draws on
+# them is its own syntax foreground, not `text`: near white on a dark scheme,
+# near black on a light one. The far end of the axis stands in for it.
+FAR_INK = {Scheme.DARK: "white", Scheme.LIGHT: "black"}
+DIFF_WORDS = ["diff_word_plus", "diff_word_minus"]
 # Bright fills are only ever written on with on_accent. accent_active is not
 # among them: its one consumer is Telegram's button ripple, which carries no
 # ink, and holding it to 4.5:1 under black would pin the whole normal row.
 FILLS = ["accent", "accent_hover", "success", "warning", "error"]
 
 
-def check_ink(p: Palette) -> list[str]:
+def check_ink(src: Source) -> list[str]:
+    p = src.palette
     d = p.as_dict()
     out = []
     for fg, surfaces in INK.items():
@@ -124,6 +129,12 @@ def check_ink(p: Palette) -> list[str]:
             if contrast(d[fg], d[s]) < MIN_INK:
                 out.append(f"ink: {fg} on {s} = {both(d[fg], d[s])} "
                            f"(< {MIN_INK}:1)")
+    far = FAR_INK[src.scheme]
+    for s in DIFF_WORDS:
+        ink = src.primitives[far]
+        if contrast(ink, d[s]) < MIN_INK:
+            out.append(f"ink: {far} on {s} = {both(ink, d[s])} "
+                       f"(< {MIN_INK}:1)")
     for fill in FILLS:
         if contrast(p.on_accent, d[fill]) < MIN_INK:
             out.append(f"ink: on_accent on {fill} = "
@@ -140,19 +151,22 @@ def check_ink_lc(src: Source) -> list[str]:
             and abs(apca(value, ground)) < src.ink_lc]
 
 
-def check_ansi(p: Palette) -> list[str]:
-    d = p.as_dict()
+def check_ansi(src: Source) -> list[str]:
+    """Per hue, dim < normal < bright in distance from the grounds: rising
+    luminance on a dark scheme, falling on a light one."""
+    d = src.palette.as_dict()
+    sign = 1 if src.scheme is Scheme.DARK else -1
     out = []
     for hue in HUES:
         dim, normal, bright = (d[f"ansi_dim_{hue}"], d[f"ansi_{hue}"],
                                d[f"ansi_bright_{hue}"])
         ld, ln, lb = luminance(dim), luminance(normal), luminance(bright)
-        if not (ld < ln < lb):
+        if not (sign * ld < sign * ln < sign * lb):
             out.append(f"ansi: {hue} not dim<normal<bright "
                        f"({dim} {ld:.3f} / {normal} {ln:.3f} / {bright} {lb:.3f})")
-        step = hk_lightness(bright) - hk_lightness(normal)
+        step = sign * (hk_lightness(bright) - hk_lightness(normal))
         if step < MIN_ANSI_STEP:
-            out.append(f"ansi: {hue} normal sits {step:.2f} L** under bright "
+            out.append(f"ansi: {hue} normal sits {step:.2f} L** short of bright "
                        f"(< {MIN_ANSI_STEP})")
     seen: dict[str, str] = {}
     for prefix in ("ansi_", "ansi_bright_"):
@@ -273,19 +287,25 @@ def report(src: Source) -> None:
 
 
 def main() -> None:
-    src = load_source()
-    p = src.palette
-    problems = (check_layers(p) + check_ink(p) + check_ink_lc(src)
-                + check_ansi(p)
-                + check_ansi_roles(src) + check_perceived(src)
-                + check_chroma(src))
-    for line in problems:
-        print(line)
-    if problems:
-        print(f"\n{len(problems)} problem(s)")
+    failed = 0
+    for scheme in Scheme:
+        src = load_source(scheme)
+        problems = (check_layers(src.palette) + check_ink(src)
+                    + check_ink_lc(src) + check_ansi(src)
+                    + check_ansi_roles(src) + check_perceived(src)
+                    + check_chroma(src))
+        print(f"{scheme.value}:")
+        for line in problems:
+            print(f"  {line}")
+        if problems:
+            print(f"  {len(problems)} problem(s)\n")
+            failed += len(problems)
+            continue
+        print("  palette ok: layers, ink, ansi, roles, perceived, chroma")
+        report(src)
+        print()
+    if failed:
         sys.exit(1)
-    print("palette ok: layers, ink, ansi, roles, perceived, chroma")
-    report(src)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ from collections import Counter
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def build_telegram(p: Palette) -> str:
@@ -281,7 +281,7 @@ def telegram_zip(palette_text: str, bg_hex: str) -> bytes:
 
 
 def main() -> None:
-    p = load_palette()
+    p = load_palette(Scheme.DARK)
     palette_text = build_telegram(p)
     emit.write_bytes(emit.beside(__file__, "ayu-graphite.tdesktop-theme"),
                      telegram_zip(palette_text, p.bg))

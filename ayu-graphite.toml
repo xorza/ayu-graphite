@@ -1,17 +1,26 @@
 # Ayu Graphite — palette (single source of truth)
 #
-# Six tables of inputs and one table of roles. grid.py derives every
-# primitive from the inputs when the file is loaded, so no hex value below
-# the roles table is written by hand.
+# Two schemes, dark and light, from one set of hues. Two tables of inputs
+# both share, then per scheme five tables of inputs and one table of roles.
+# grid.py derives every primitive from the inputs when the file is loaded, so
+# no hex value below the roles tables is written by hand.
 #
-#   [base]      seven colors. Only the hue of each survives.
-#   [hues]      which hues only a terminal draws.
-#   [tints]     the perceived brightness of `dim`, the one row that is set.
-#   [neutrals]  the grey ladder, as Oklab lightness.
-#   [ink]       the grounds ink is written on, which `bright` is solved from.
-#   [ansi]      the floor ANSI 1-6 clear as text, which `light` is solved from.
-#   [selection] the inks a selection carries, which its fill is solved from.
-#   [semantic]  roles, each naming a primitive: `red_bright`, `gray_3`.
+#   [base]               seven colors. Only the hue of each survives.
+#   [hues]               which hues only a terminal draws.
+#   [<scheme>.tints]     the perceived brightness of `dim`, the one row set.
+#   [<scheme>.neutrals]  the grey ladder, as Oklab lightness.
+#   [<scheme>.ink]       the grounds ink is written on, which `bright` is
+#                        solved from.
+#   [<scheme>.ansi]      the floor ANSI 1-6 clear as text, which `light` is
+#                        solved from.
+#   [<scheme>.selection] the inks a selection carries, which its fill is
+#                        solved from.
+#   [<scheme>.semantic]  roles, each naming a primitive: `red_bright`,
+#                        `gray_3`.
+#
+# Everything from here to THE LIGHT SCHEME is written for the dark one, whose
+# grounds sit near black and whose inks climb toward white. The light scheme
+# solves the same grid with every search running the other way: see there.
 #
 # THE GRID. Seven hues by four tints, complete. A hue is one fixed Oklab
 # angle, the angle of its base color. A tint is one fixed PERCEIVED brightness
@@ -140,14 +149,14 @@ purple = "#be41ff"
 # `bright` cell is an ink.
 terminal = ["cyan", "purple"]
 
-[tints]
+[dark.tints]
 # Fairchild-Pirrotta L**. The header says what pins it. There is no `bright`:
 # a set value drifts off the row's best point, and above it every step toward
 # white costs the whole row chroma. There is no `normal`: it is the midpoint.
 # There is no `light`: [ansi] solves it.
 dim = 42.2
 
-[ink]
+[dark.ink]
 # Every chrome ground an INK role is written on. The bright row is solved to
 # clear 4.5:1 on each. A role named here must not sit on the bright, light or
 # normal row, which are solved from it. The selection is not here: it is
@@ -161,7 +170,7 @@ on = ["bg", "panel", "surface", "elem", "title_bar", "chat_msg_bg"]
 apca    = 56
 apca_on = "bg"
 
-[ansi]
+[dark.ansi]
 # ANSI 1-6 are the row a terminal draws most text in: prompts, `ls`, `git`,
 # compiler output. The `light` row is solved so that every cell clears APCA
 # Lc `apca` as text on `apca_on`. Ayu's own dark theme gives its weakest
@@ -172,7 +181,7 @@ apca_on = "bg"
 apca    = 40
 apca_on = "bg"
 
-[selection]
+[dark.selection]
 # The fill under a selection, solved rather than taken from a row: the
 # lightest `hue` fill on which every role in `ink` clears 4.5:1, at the most
 # chroma the hue holds there. Lighter reads more clearly as a selection, so
@@ -182,7 +191,7 @@ hue = "blue"
 ink = ["text", "text_muted", "selection_fg", "accent", "success", "warning",
        "ansi_bright_red"]
 
-[neutrals]
+[dark.neutrals]
 # Oklab lightness. Saturation zero — every channel equal, no hue at all — so
 # a rung's luminance is its lightness cubed. Seven greys is the floor, not a
 # preference. Five go to chrome: bg, panel, surface, hover and press are
@@ -199,7 +208,7 @@ step       = 0.05
 text_muted = 0.72
 text       = 0.94
 
-[semantic]
+[dark.semantic]
 
 # Backgrounds / chrome. Each step must be distinguishable from the one under
 # it — a control that shares its fill with the panel it sits on disappears.
@@ -337,6 +346,172 @@ chat_msg_bg         = "gray_3"
 # number, orange the keyword and the operator, yellow the function, green the
 # string and its regex, blue the type and the attribute. Cyan and purple are
 # the terminal's, and stay out of code.
+syn_keyword         = "orange_bright"
+syn_function        = "yellow_bright"
+syn_string          = "green_bright"
+syn_string_regex    = "green_bright"
+syn_comment         = "gray_6"
+syn_number          = "red_bright"
+syn_type            = "blue_bright"
+syn_operator        = "orange_bright"
+syn_attribute       = "blue_bright"
+syn_punctuation     = "gray_7"
+syn_doc             = "gray_6"
+syn_string_special  = "orange_bright"
+syn_predictive      = "blue_normal"
+
+
+# THE LIGHT SCHEME. The same seven hues, solved against grounds near white,
+# so each row is the dark scheme's turned over: `dim` sits nearest the
+# grounds as the palest row, the inks are the darkest cells, and every search
+# that climbs above walks down instead. Material 3 builds its light scheme so,
+# from the dark end of the same tonal palettes its dark scheme takes from the
+# light end (https://m3.material.io/styles/color/roles), where Ayu keeps a
+# separate palette with its own base colors per scheme
+# (https://github.com/ayu-theme/ayu-colors/tree/master/themes), which lets
+# the hues of the two drift apart.
+#
+# The rungs are named outward from the grounds in both schemes, so `gray_1`
+# is the ground's end and `gray_7` the body text, and a role that names a
+# rung means the same place in either.
+
+[light.tints]
+# The status fills: the palest row, as Material's light containers sit at
+# tone 90 (https://m3.material.io/styles/color/roles). `normal` sits midway
+# to the inks.
+dim = 90.0
+
+[light.ink]
+on = ["bg", "panel", "surface", "elem", "title_bar", "chat_msg_bg"]
+apca    = 56
+apca_on = "bg"
+
+[light.ansi]
+# The rule the dark scheme's 40 follows: the most the row holds and still
+# sits 3 points of L** short of every bright cell. Blue's ink sits palest,
+# so it sets the floor here.
+apca    = 58
+apca_on = "bg"
+
+[light.selection]
+# The darkest `hue` fill on which every ink clears 4.5:1: dark inks lose
+# contrast as the fill darkens, so it stops where the weakest meets the floor.
+hue = "blue"
+ink = ["text", "text_muted", "selection_fg", "accent", "success", "warning",
+       "ansi_bright_red"]
+
+[light.neutrals]
+# Oklab lightness, stepping down from white. A raised surface is the white
+# itself, as Fluent, macOS and FigJam lift a white card off a grey ground, so
+# `floor` is 1. Near white an Oklab step buys less contrast than near black,
+# so the step is smaller here: 0.036 clears 1.10:1 between every pair of the
+# five. `text_muted` holds 4.5:1 on the darkest ground, `panel` on `gray_4`,
+# and `text` sits off black, as Material keeps light text at 87 % black.
+floor      = 1.0
+step       = 0.036
+text_muted = 0.48
+text       = 0.27
+
+[light.semantic]
+# A raised surface — a popup, a control at rest, a chat bubble — is the white
+# rung, and the grounds step down from it: the editor ground a hover and a
+# press down, the panel one more, so the panel frames the editor as it does
+# on the dark scheme.
+bg                  = "gray_3"
+panel               = "gray_4"
+surface             = "gray_1"
+elem                = "gray_1"
+elem_hover          = "gray_2"
+elem_active         = "gray_3"
+elem_disabled       = "gray_2"
+title_bar           = "gray_3"
+title_bar_inactive  = "gray_2"
+overlay_black       = "black"
+
+border              = "gray_5"
+border_focused      = "blue_normal"
+
+text                = "gray_7"
+text_muted          = "gray_6"
+text_disabled       = "gray_6"
+
+accent              = "blue_bright"
+accent_hover        = "blue_bright"
+accent_active       = "blue_normal"
+success             = "green_bright"
+warning             = "yellow_bright"
+error               = "red_bright"
+hint                = "blue_bright"
+
+# The inks are the dark cells, so what is written on a filled one is white.
+on_accent           = "white"
+on_accent_muted     = "blue_dim"
+
+selection_bg        = "selection"
+selection_fg        = "gray_7"
+
+info_bg             = "blue_dim"
+info_border         = "blue_normal"
+hint_bg             = "blue_dim"
+hint_border         = "blue_normal"
+success_bg          = "green_dim"
+success_border      = "green_normal"
+warning_bg          = "yellow_dim"
+warning_border      = "yellow_normal"
+error_bg            = "red_dim"
+error_border        = "red_normal"
+diagnostic_muted_bg = "gray_5"
+
+diff_term_plus      = "green_bright"
+diff_term_minus     = "red_bright"
+diff_word_plus      = "green_normal"
+diff_word_minus     = "red_normal"
+
+line_number         = "gray_5"
+line_number_active  = "gray_7"
+line_number_hover   = "gray_7"
+scrollbar_thumb     = "gray_6"
+drop_target         = "gray_6"
+search_highlight    = "blue_bright"
+search_match_active = "orange_bright"
+
+# Every family steps away from the ground, dim < normal < bright, as on the
+# dark scheme. Black stays the dark family and white the light one, as light
+# terminal themes keep them (Solarized Light's black is a dark tone and its
+# white a light one, https://ethanschoonover.com/solarized/), so black's
+# bright is the body text and white's sits on the panel's rung.
+ansi_black          = "gray_6"
+ansi_red            = "red_light"
+ansi_green          = "green_light"
+ansi_yellow         = "yellow_light"
+ansi_blue           = "blue_light"
+ansi_magenta        = "purple_light"
+ansi_cyan           = "cyan_light"
+ansi_white          = "gray_2"
+
+ansi_bright_black   = "gray_7"
+ansi_bright_red     = "red_bright"
+ansi_bright_green   = "green_bright"
+ansi_bright_yellow  = "yellow_bright"
+ansi_bright_blue    = "blue_bright"
+ansi_bright_magenta = "purple_bright"
+ansi_bright_cyan    = "cyan_bright"
+ansi_bright_white   = "gray_4"
+
+ansi_dim_black      = "gray_5"
+ansi_dim_red        = "red_dim"
+ansi_dim_green      = "green_dim"
+ansi_dim_yellow     = "yellow_dim"
+ansi_dim_blue       = "blue_dim"
+ansi_dim_magenta    = "purple_dim"
+ansi_dim_cyan       = "cyan_dim"
+ansi_dim_white      = "white"
+
+player_bg           = "gray_6"
+
+chat_check          = "green_bright"
+chat_msg_bg         = "gray_1"
+
 syn_keyword         = "orange_bright"
 syn_function        = "yellow_bright"
 syn_string          = "green_bright"

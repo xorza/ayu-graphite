@@ -58,8 +58,9 @@ install: all
 	./install.sh
 
 # Every target writes into its own directory, so the generated files are the
-# whole of `<target>/ayu-graphite.*`. ayu-graphite.toml is a source file (the
+# whole of `<target>/ayu-graphite.*`, and of `<target>/ayu-graphite-*.*` for a
+# target that writes one file per scheme. ayu-graphite.toml is a source file (the
 # hand-edited single source of truth) and sits at the root, out of that reach.
 clean:
-	rm -f $(addsuffix /ayu-graphite.*,$(TARGETS)) palette.png
+	rm -f $(addsuffix /ayu-graphite.*,$(TARGETS)) $(addsuffix /ayu-graphite-*.*,$(TARGETS)) palette.png
 	rm -rf brave/ayu-graphite

@@ -3,6 +3,7 @@
 Single source of truth for the shape of ayu-graphite.toml. Every target builder
 imports from here, so a new token is one edit instead of one per target."""
 import dataclasses
+import functools
 import os
 try:
     import tomllib  # py311+
@@ -11,6 +12,7 @@ except ModuleNotFoundError:
 from dataclasses import dataclass
 
 import grid
+from grid import Scheme
 
 TOML = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "ayu-graphite.toml")
@@ -125,14 +127,17 @@ class Palette:
 
 @dataclass
 class Source:
-    """The whole file, for a reader that needs the names as well as the values:
-    the audit checks the tint rows the primitives are named by, and the two RON
-    targets print the ref each role resolved through. The primitives are the
-    grid derived from [base], [hues], [tints], [neutrals], [ink], [ansi] and
-    [selection], not a table of the file. `terminal` is the [hues] list, which
-    the audit needs to know which cells sit level, `ink_lc` the APCA floor
-    it holds the inks to on the role `ink_lc_on`, and `ansi_lc` the one it
-    holds ANSI 1-6 to on `ansi_lc_on`."""
+    """One scheme of the file, for a reader that needs the names as well as
+    the values: the audit checks the tint rows the primitives are named by,
+    and the two RON targets print the ref each role resolved through. The
+    primitives are the grid derived from [base], [hues] and the scheme's
+    [<scheme>.tints], [.neutrals], [.ink], [.ansi] and [.selection], not a
+    table of the file. `terminal` is the [hues] list, which the audit needs
+    to know which cells sit level, `ink_lc` the APCA floor it holds the inks
+    to on the role `ink_lc_on`, and `ansi_lc` the one it holds ANSI 1-6 to on
+    `ansi_lc_on`. `hues` and `rows` are what solved the grid, for a target
+    that solves a hue it has no column for."""
+    scheme: Scheme
     primitives: dict[str, str]
     semantic: dict[str, str]
     palette: Palette
@@ -141,29 +146,45 @@ class Source:
     ink_lc_on: str
     ansi_lc: float
     ansi_lc_on: str
+    hues: dict[str, float]
+    rows: dict[str, grid.Row]
 
 
-def load_source() -> Source:
-    """Read ayu-graphite.toml, derive the primitives, and resolve [semantic].
+@functools.cache
+def read_toml() -> dict:
+    """ayu-graphite.toml, read once however many schemes a builder loads."""
+    with open(TOML, "rb") as f:
+        return tomllib.load(f)
+
+
+def load_source(scheme: Scheme) -> Source:
+    """Derive `scheme`'s primitives and resolve its [<scheme>.semantic].
 
     A semantic value is either a literal `#rrggbb` (escape hatch) or the name
     of a primitive. Anything that doesn't resolve is a hard error — we'd
     rather break the build than silently render a typo as a missing key
     fallback elsewhere."""
-    with open(TOML, "rb") as f:
-        data = tomllib.load(f)
-    semantic = data["semantic"]
-    ink = data["ink"]
-    grounds = [semantic[role] for role in ink["on"]]
-    selection = data["selection"]
-    hues = data["hues"]
-    ansi = data["ansi"]
-    primitives = grid.primitives(
-        data["base"], data["tints"]["dim"], data["neutrals"], grounds,
-        semantic[ink["apca_on"]], ink["apca"], ansi["apca"],
-        semantic[ansi["apca_on"]], hues["terminal"],
-        selection["hue"],
-        [semantic[role] for role in selection["ink"]])
+    data = read_toml()
+    own = data[scheme.value]
+    semantic = own["semantic"]
+    ink = own["ink"]
+    selection = own["selection"]
+    terminal = data["hues"]["terminal"]
+    ansi = own["ansi"]
+    solved = grid.primitives(grid.Inputs(
+        base=data["base"],
+        dim=own["tints"]["dim"],
+        ladder=own["neutrals"],
+        grounds=[semantic[role] for role in ink["on"]],
+        editor=semantic[ink["apca_on"]],
+        lc=ink["apca"],
+        terminal_lc=ansi["apca"],
+        terminal_on=semantic[ansi["apca_on"]],
+        terminal=terminal,
+        selection_hue=selection["hue"],
+        selection_inks=[semantic[role] for role in selection["ink"]],
+        scheme=scheme))
+    primitives = solved.cells
     resolved = {}
     for key, value in semantic.items():
         if value.startswith("#"):
@@ -172,13 +193,15 @@ def load_source() -> Source:
             resolved[key] = primitives[value]
         else:
             raise KeyError(
-                f"semantic.{key} = {value!r} is neither a hex literal nor a "
-                f"primitive name. Available primitives: {sorted(primitives)}"
+                f"{scheme.value}.semantic.{key} = {value!r} is neither a hex "
+                f"literal nor a primitive name. Available primitives: "
+                f"{sorted(primitives)}"
             )
-    return Source(primitives, semantic, Palette(**resolved), hues["terminal"],
-                  ink["apca"], ink["apca_on"], ansi["apca"], ansi["apca_on"])
+    return Source(scheme, primitives, semantic, Palette(**resolved), terminal,
+                  ink["apca"], ink["apca_on"], ansi["apca"], ansi["apca_on"],
+                  solved.hues, solved.rows)
 
 
-def load_palette() -> Palette:
+def load_palette(scheme: Scheme) -> Palette:
     """Just the roles, which is all a target builder reads."""
-    return load_source().palette
+    return load_source(scheme).palette

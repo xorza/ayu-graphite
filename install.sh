@@ -64,7 +64,8 @@ if [[ "$(uname)" == "Linux" ]]; then
 fi
 
 install_into_checkout catcad/ayu-graphite.ron   "$HOME/Projects/CatCad/catcad/src/look/palette"
-install_into_checkout darkroom/ayu-graphite.ron "$HOME/Projects/Darkroom/darkroom/assets"
+install_into_checkout darkroom/ayu-graphite-dark.ron  "$HOME/Projects/Darkroom/darkroom/assets"
+install_into_checkout darkroom/ayu-graphite-light.ron "$HOME/Projects/Darkroom/darkroom/assets"
 
 # The two targets with no scriptable import path at all. Telegram Desktop takes
 # a theme only through its own settings dialog, and Brave only sideloads an

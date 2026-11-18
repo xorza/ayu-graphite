@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def h(color: str) -> str:
@@ -452,7 +452,7 @@ def render(node, indent: int = 0) -> str:
 
 def main() -> None:
     emit.write_text(emit.beside(__file__, "ayu-graphite.tgios-theme"),
-                    render(build_ios(load_palette())) + "\n")
+                    render(build_ios(load_palette(Scheme.DARK))) + "\n")
 
 
 if __name__ == "__main__":

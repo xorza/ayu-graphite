@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
 import grid
 from color import contrast
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def faintest_ink(ground: str) -> str:
@@ -85,7 +85,7 @@ def build_brave(p: Palette) -> dict:
 
 def main() -> None:
     emit.write_json(emit.beside(__file__, "ayu-graphite/manifest.json"),
-                    build_brave(load_palette()))
+                    build_brave(load_palette(Scheme.DARK)))
 
 
 if __name__ == "__main__":

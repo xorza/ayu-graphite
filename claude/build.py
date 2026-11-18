@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import emit
-from palette import Palette, load_palette
+from palette import Palette, Scheme, load_palette
 
 
 def rgb(hex6: str) -> str:
@@ -99,7 +99,7 @@ def build_claude(p: Palette) -> dict:
 
 def main() -> None:
     emit.write_json(emit.beside(__file__, "ayu-graphite.json"),
-                    build_claude(load_palette()))
+                    build_claude(load_palette(Scheme.DARK)))
 
 
 if __name__ == "__main__":

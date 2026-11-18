@@ -2,7 +2,7 @@
 
 A variant of [Ayu](https://github.com/dempfi/ayu) with higher-contrast text and chrome, for [Zed](https://zed.dev), [Claude Code](https://claude.com/claude-code), Telegram, KDE Plasma / Konsole, Brave, macOS Terminal, CatCad, and darkroom.
 
-`ayu-graphite.toml` is the only thing you edit. It holds seven base colors, the hues that stand apart from the row rule, one tint brightness, the grounds the other two tints are solved from, the inks the selection fill is solved from, one grey ladder, and the roles that name cells of the grid those make. `grid.py` solves the grid when the file is loaded. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a base color, a tint or a role and run `make`.
+`ayu-graphite.toml` is the only thing you edit. It holds seven base colors and the hues that stand apart from the row rule, shared by two schemes, dark and light; and per scheme, one tint brightness, the grounds the other tints are solved from, the inks the selection fill is solved from, one grey ladder, and the roles that name cells of the grid those make. The light scheme solves the same grid with every search running away from white instead of black. Every target builds the dark scheme; darkroom builds both. `grid.py` solves the grid when the file is loaded. Every target builder is a pure transformer — it loads the TOML and writes its theme file. To shift the theme, change a base color, a tint or a role and run `make`.
 
 ```
 ayu-graphite.toml       SINGLE SOURCE OF TRUTH — base colors, tints, greys, roles
@@ -20,7 +20,7 @@ kde/build.py            → ayu-graphite.colors (Plasma color scheme)
 konsole/build.py        → ayu-graphite.colorscheme
 brave/build.py          → ayu-graphite/manifest.json (Chromium theme extension)
 catcad/build.py         → ayu-graphite.ron (CatCad, neutralised greys)
-darkroom/build.py       → ayu-graphite.ron (darkroom, one derived ground)
+darkroom/build.py       → ayu-graphite-{dark,light}.ron (darkroom, both schemes)
 tools/audit.py          contrast rules — runs before every build, fails on a violation
 tools/render_palette.py renders palette.png — every token as a labeled swatch
 ```
@@ -46,5 +46,5 @@ make install    # copy generated themes into their app dirs (Telegram and Brave 
 - **Telegram iOS** — send `telegram_ios/ayu-graphite.tgios-theme` to Saved Messages from another client (or AirDrop it), tap the file, "Apply Theme".
 - **Brave** — `brave://extensions` → Developer mode → "Load unpacked" → `brave/ayu-graphite`. Brave's new-tab background images paint over `ntp_background`; turn them off in `brave://settings/newTab` for the flat panel.
 - **macOS Terminal** — `make install` writes the profile into Terminal's own preferences and selects it. Quit Terminal first: a running one rewrites all of its preferences when it quits, over the top of the new profile. Do not open the `.terminal` file — Terminal imports it as a *new* profile on every open ("Ayu Graphite 1", "Ayu Graphite 2", ...), and the one you have selected stays as it was.
-- **darkroom** — `make install` writes the table into the checkout at `~/Projects/Darkroom`; it is embedded at build time, so rebuild to see it. The palette carries one colour it does not take from a role: the graph ground sits a ramp step below `bg`, because darkroom stacks six surfaces where the neutral ramp holds five.
+- **darkroom** — `make install` writes both tables, dark and light, into the checkout at `~/Projects/Darkroom`; they are embedded at build time, so rebuild to see them, and darkroom's Preferences pick the scheme. The tables carry colours they do not take from a role: the graph ground sits a ramp step past `bg` toward the grounds' end, because darkroom starts its five surfaces one rung out from the neutral ramp; the dark accent is palantir's dark lime, which darkroom's widgets share, and the light one keeps its hue, solved as an ink; `lift`, the neutral a hovered port blends toward, is the far end of the axis; and float and the six ramp wires take the hues halfway between neighbouring base hues, solved as cells of a row that reads on a node's body, as the grid's readable cells give ten wires and darkroom draws twelve.
 - **CatCad** — `make install` writes the table into the checkout at `~/Projects/CatCad`; it is embedded at build time, so rebuild to see it. This is the one target whose greys are neutralised: a CAD viewport is mostly one large flat surface, so it states neutrality rather than inheriting whatever the ramp leans.
